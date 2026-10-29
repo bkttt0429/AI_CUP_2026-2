@@ -1,6 +1,6 @@
 # 問題本質與架構（玩家辨識）
 
-最後更新：2026-10-29（開案）。資料與規則見 [TASK.md](TASK.md)；棋力預測那邊的對應文件是 AI_CUP_2026-1 的 `docs/ARCHITECTURE.md` 與 `METHOD_NOTES.md`，這裡只寫不同的部分。
+最後更新：2026-10-29（開案；(1)(2a)(5) 的第一版程式見 METHOD_NOTES §2.2）。資料與規則見 [TASK.md](TASK.md)；棋力預測那邊的對應文件是 AI_CUP_2026-1 的 `docs/ARCHITECTURE.md` 與 `METHOD_NOTES.md`，這裡只寫不同的部分。
 
 ## 1. 問題本質
 
