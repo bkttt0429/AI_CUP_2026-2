@@ -1,0 +1,14 @@
+data/
+dataset_raw/
+models/
+release/
+.venv/
+__pycache__/
+*.pyc
+*.npz
+*.pt
+*.ckpt
+*.h5
+results/**/*.csv
+results/**/*.csv.gz
+!results/**/meta*.json
