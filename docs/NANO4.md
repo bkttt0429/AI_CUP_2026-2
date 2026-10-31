@@ -48,3 +48,23 @@ sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 24 -t 02:00:00 -J pidsub s
 ```
 
 exit 0 且 `submission_player.csv.report.json` 的 `problems` 為空才上傳；`dropped_games`、`fallback_questions` 要是空的（不是就先貼出來）。在這之前先做 `docs/ARCHITECTURE.md` §4 的檔案檢查（候選庫對訓練集逐局比對等）。
+
+## 4. 供競賽二用：測試玩家是否在訓練集裡（`scripts/pid_rank_overlap.py`；AI_CUP_2026-1 issue #22）
+
+CPU 一支工作。讀 100 萬局只取前 12 手（24 核約 10 分鐘，RAM 數 GB），擬合 8,007 人 × 黑／白兩個開局模型，fold 1 校準 τ、fold 0 評一次（與 `fold0_fused_opp_proba.csv` 同一組 9,872 題），再做同一人多題合併的檢查：
+
+```bash
+cd ~/AICUP_2026-1
+sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 24 -t 02:00:00 -J rankovl scripts/nano4/run.sbatch python -I ../AICUP_2026-2/scripts/pid_rank_overlap.py --scores results/scores --calib-fold 1 --eval-fold 0 --fused-proba results/l1b/fold0_fused_opp_proba.csv --siblings --workers 24 --out ../AICUP_2026-2/results/rank_overlap.json
+```
+
+貼回 AI_CUP_2026-1 issue #22：校準折的 Top-1／Top-5 按 n 與 τ；評估折的 Top-1／Top-5 按 n、`id_rank_score`、margin ≥ τ 的比例與精確率、認對／認錯的 margin 分位數；`combined` vs `fused_opp`（差、CI）；`siblings` 每個 n 的 `top1_same_player`。`rank_overlap.json` 進 git（本倉庫）。RAM 不夠就把 `--workers` 降到 12。
+
+11/04 拿到官方檔案後（τ 取 json 的 `calibration.tau`）：
+
+```bash
+sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 24 -t 02:00:00 -J rankovlT scripts/nano4/run.sbatch python -I ../AICUP_2026-2/scripts/pid_rank_overlap.py --test-csv data/tests/rank_prediction_test_public.csv data/tests/rank_prediction_test_private.csv --tau <tau> --workers 24 --out ../AICUP_2026-2/results/rank_overlap_test.json --out-table ../AICUP_2026-2/results/rank_overlap_test.csv
+```
+
+貼回 `share_above_tau`（按 n）與 margin 分位數；和 fold 0 認對／認錯的分布比。是否採用由使用者決定。
+
