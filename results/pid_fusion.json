@@ -1,0 +1,41 @@
+{
+ "components": [
+  "opening",
+  "style"
+ ],
+ "weights": [
+  5.563673503095856,
+  4.224903286718133
+ ],
+ "cfg": {
+  "depth": 12,
+  "alpha": 2.0,
+  "beta": 5.0,
+  "shrink": 0.1
+ },
+ "fitted_on_pools": [
+  [
+   1,
+   2
+  ],
+  [
+   3,
+   4
+  ]
+ ],
+ "questions": 2631,
+ "git_head": "2dd2351",
+ "git_dirty": false,
+ "code_sha256": "8cf8dbbd0a7e9024e4ed529c7a55497b48b8f487944f4fceec2567d9f644a2f7",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu"
+}
