@@ -28,6 +28,15 @@ sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 24 -t 02:00:00 -J pidcv sc
 
 讀法：`opening` 單獨 ≥ baseline 0.28 代表 H1 成立；`fusion vs opening` 通過代表風格統計有獨立增益（H2 的第一部分）。都達到就用 `predict_pid.py` 準備 11/04 的第一版提交；沒達到就看 by n 與 top5 判斷是模型還是證據的問題，記進 METHOD_NOTES。
 
+**結果（nano4，2026-10-31）**：pytest 11 passed（job 656155）；CV job 656156，24 核 2 分 36 秒；fusion 0.9483、opening 0.9408、style 0.6818，預先指定 `fusion vs opening` +0.0075 [+0.0049, +0.0104] 過（METHOD_NOTES §2.2）。`pid_cv.json`、`pid_fusion.json` 在 `main`。
+
+**洩漏稽核**（`scripts/pid_audit.py`，只報告；nano4 job 656405，`results/pid_audit.json`）：同樣的候選庫，查重複棋譜（含 8 重對稱）、去重後的分數、開局模型按讀到的手數、候選局在玩家間打亂的負對照、前 12 手完全重複率。`--n-players`／`--cand-games`／`--folds-csv` 與 `pid_cv.py` 同義（測試用）。
+
+```bash
+cd ~/AICUP_2026-1
+sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 24 -t 02:00:00 -J pidaudit scripts/nano4/run.sbatch python -I ../AICUP_2026-2/scripts/pid_audit.py --pools 1,2 3,4 --workers 24 --out ../AICUP_2026-2/results/pid_audit.json
+```
+
 ## 3. 11/04：官方檔案 → 提交（`scripts/predict_pid.py`）
 
 ```bash
