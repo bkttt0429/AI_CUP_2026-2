@@ -48,7 +48,8 @@ def score(model, qs_keys, moves, qs, players, truth):
 
 
 def audit_pool(games, folds_df, folds, a):
-    cands, qs, info = pools.make_pool(games, folds_df, folds, seed=a.seed, pool_id="p" + "".join(map(str, folds)))
+    cands, qs, info = pools.make_pool(games, folds_df, folds, n_players=a.n_players, cand_games=a.cand_games, seed=a.seed,
+                                      pool_id="p" + "".join(map(str, folds)))
     keys = sorted(set(cands["game_key"]) | {k for ks in qs["game_keys"] for k in ks})
     sgfs = {k: v[0] for k, v in load_games(keys, aicup_pid.TRAIN_DIR).items()}
     moves = parse_all(sgfs, a.workers)
@@ -95,7 +96,7 @@ def audit_pool(games, folds_df, folds, a):
     # (4) negative control: the same games, candidates shuffled between players
     rng = np.random.RandomState(a.seed)
     all_keys = cands["game_key"].to_numpy(dtype=str)[rng.permutation(len(cands))]
-    shuffled = {p: list(all_keys[i * pools.CAND_GAMES:(i + 1) * pools.CAND_GAMES]) for i, p in enumerate(players)}
+    shuffled = {p: list(all_keys[i * a.cand_games:(i + 1) * a.cand_games]) for i, p in enumerate(players)}
     control = score(OpeningModel(depth=a.depth).fit({p: [moves[k] for k in ks] for p, ks in shuffled.items()}), q_keys, moves, qs, players, truth)
     # (5) first 12 moves seen in the player's own candidates vs a random other candidate's
     heads = {p: {head(moves[k]) for k in ks} for p, ks in by_player.items()}
@@ -108,7 +109,7 @@ def audit_pool(games, folds_df, folds, a):
             hit_own += h in heads[p]
             hit_other += h in heads[o]
             n += 1
-    out = {"folds": list(folds), "questions": int(len(qs)), "query_games": n_query, "unique_candidate_games": uniq_cands, "candidate_games": int(len(cands)),
+    out = {"folds": list(folds), "pool": info, "questions": int(len(qs)), "query_games": n_query, "unique_candidate_games": uniq_cands, "candidate_games": int(len(cands)),
            "query_dup_in_own_candidates": int(same), "query_dup_in_other_candidates": int(other), "query_repeats_within_player": int(q_repeat),
            "without_duplicates": nodup, "questions_without_duplicates": int(ok.sum()), "opening_by_depth": by_depth, "negative_control": control,
            "first12_in_own_candidates": hit_own / max(n, 1), "first12_in_random_other_candidates": hit_other / max(n, 1)}
@@ -122,6 +123,9 @@ def audit_pool(games, folds_df, folds, a):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--pools", nargs="+", default=["1,2", "3,4"])
+    ap.add_argument("--n-players", type=int, default=pools.N_CANDIDATES)
+    ap.add_argument("--cand-games", type=int, default=pools.CAND_GAMES)
+    ap.add_argument("--folds-csv", default=str(FOLDS_CSV))
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--depth", type=int, default=12)
     ap.add_argument("--workers", type=int, default=1)
@@ -130,11 +134,12 @@ def main(argv=None):
     specs = parse_pools(a.pools)
     if any(0 in f for f in specs):
         ap.error("fold 0 is kept for the final check")
-    folds_df = pd.read_csv(FOLDS_CSV, dtype={"player_id": str})
+    folds_df = pd.read_csv(a.folds_csv, dtype={"player_id": str})
     games = pools.black_games(aicup_pid.TRAIN_DIR)
     res = [audit_pool(games, folds_df, f, a) for f in specs]
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text(to_json({"pools": res, "seed": a.seed, "depth": a.depth, **environment("cpu")}, indent=1) + "\n")
+    Path(a.out).write_text(to_json({"pools": res, "seed": a.seed, "depth": a.depth, "n_players": a.n_players, "cand_games": a.cand_games,
+                                    **environment("cpu")}, indent=1) + "\n")
     print(f"wrote {a.out}")
     return 0
 
