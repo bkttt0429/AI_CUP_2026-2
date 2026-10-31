@@ -22,13 +22,14 @@ for d in (ROOT / "src", ROOT / "scripts"):
     if str(d) not in sys.path:
         sys.path.insert(0, str(d))
 import aicup_pid  # noqa: E402  (AI_CUP_2026-1 on sys.path)
-from aicup.ladder import environment, to_json  # noqa: E402
+from aicup.ladder import to_json  # noqa: E402
 from aicup.scoring import load_games  # noqa: E402
 from aicup_pid import pools  # noqa: E402
 from aicup_pid.components import features_all, parse_all, score_questions  # noqa: E402
 from aicup_pid.opening import OpeningModel, canonical  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
 from aicup_pid.style import StyleModel  # noqa: E402
+from aicup_pid.provenance import pid_environment  # noqa: E402
 from pid_cv import evaluate, parse_pools  # noqa: E402
 
 DEPTHS = (1, 2, 4, 6, 8, 12, 20, 30)
@@ -139,7 +140,7 @@ def main(argv=None):
     res = [audit_pool(games, folds_df, f, a) for f in specs]
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json({"pools": res, "seed": a.seed, "depth": a.depth, "n_players": a.n_players, "cand_games": a.cand_games,
-                                    **environment("cpu")}, indent=1) + "\n")
+                                    **pid_environment("cpu")}, indent=1) + "\n")
     print(f"wrote {a.out}")
     return 0
 

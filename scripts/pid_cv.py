@@ -23,13 +23,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 import aicup_pid  # noqa: E402  (AI_CUP_2026-1 on sys.path)
-from aicup.ladder import environment, to_json  # noqa: E402
+from aicup.ladder import to_json  # noqa: E402
 from aicup.scoring import load_games  # noqa: E402
 from aicup_pid import pools  # noqa: E402
 from aicup_pid.components import COMPONENTS, fit_models, score_questions  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
 from aicup_pid.stats import paired_player_bootstrap  # noqa: E402
+from aicup_pid.provenance import pid_environment  # noqa: E402
 
 PRE = [("fusion", "opening")]
 REPORT = [("style", "opening"), ("fusion", "style")]
@@ -136,14 +137,14 @@ def main(argv=None):
                   + f"  -> {'PASS' if d['pass'] else 'no'}", flush=True)
     overall = {c: float(np.mean(np.concatenate(per_q_all[c]))) for c in per_q_all}
     out = {"pools": [p for p in results], "overall_score": overall, "comparisons": comps, "cfg": cfg, "n_players": a.n_players,
-           "cand_games": a.cand_games, "seed": a.seed, "questions": int(len(pid)), **environment("cpu")}
+           "cand_games": a.cand_games, "seed": a.seed, "questions": int(len(pid)), **pid_environment("cpu")}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out}")
     if a.fusion_out:
         fus = Fusion().fit([np.vstack([r["S"][c] for r in runs]) for c in COMPONENTS], np.concatenate([r["truth"] for r in runs]))
         doc = {"components": list(COMPONENTS), "weights": fus.w.tolist(), "cfg": cfg, "fitted_on_pools": [r["info"]["folds"] for r in runs],
-               "questions": int(len(pid)), **environment("cpu")}
+               "questions": int(len(pid)), **pid_environment("cpu")}
         Path(a.fusion_out).parent.mkdir(parents=True, exist_ok=True)
         Path(a.fusion_out).write_text(to_json(doc, indent=1) + "\n")
         print(f"wrote {a.fusion_out}: weights {np.round(fus.w, 4).tolist()}")

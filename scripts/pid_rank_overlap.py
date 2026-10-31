@@ -35,7 +35,7 @@ for d in (ROOT / "src", ROOT / "scripts"):
         sys.path.insert(0, str(d))
 import aicup_pid  # noqa: E402  (AI_CUP_2026-1 on sys.path)
 from aicup.l1bcv import players_from_scores  # noqa: E402
-from aicup.ladder import environment, to_json  # noqa: E402
+from aicup.ladder import to_json  # noqa: E402
 from aicup.metric import LEVELS, RANK_TO_IDX, expected_score_decision, score as official_score  # noqa: E402
 from aicup.pilot import pilot_questions  # noqa: E402
 from aicup.qeval import SIZES, balanced_mean_over_n, paired_diff  # noqa: E402
@@ -43,6 +43,7 @@ from aicup.scoring import read_scored_games  # noqa: E402
 from aicup.submission import read_test  # noqa: E402
 from aicup_pid.opening import OpeningModel, parse_prefix  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
+from aicup_pid.provenance import pid_environment  # noqa: E402
 
 COLORS = ("B", "W")
 _MODELS = {}  # set before forking the scoring workers
@@ -190,7 +191,10 @@ def combine(questions, ident, proba, tau, n_boot):
     have = key.isin(pt.index).to_numpy()
     if not have.any():
         raise ValueError("no evaluation question is in the --fused-proba table")
-    P = pt.loc[key[have], [f"fused_opp_avg_p_{lv}" for lv in LEVELS]].to_numpy(dtype=float)
+    prefix = next((pre for pre in ("fused_opp_avg_p_", "fused_opp_p_") if f"{pre}{LEVELS[0]}" in pt.columns), None)
+    if prefix is None:
+        raise ValueError("--fused-proba needs fused_opp_avg_p_<rank> (fold0_fused_opp_proba.csv) or fused_opp_p_<rank> (oof_fused_opp_proba.csv) columns")
+    P = pt.loc[key[have], [f"{prefix}{lv}" for lv in LEVELS]].to_numpy(dtype=float)
     y, n = ident["y"][have], ident["n"][have]
     fused = np.array([expected_score_decision(p) for p in P])
     use_id = ident["margin"][have] >= tau
@@ -286,7 +290,7 @@ def main(argv=None):
             if a.out_table:
                 Path(a.out_table).parent.mkdir(parents=True, exist_ok=True)
                 table.to_csv(a.out_table, index=False)
-            out = {"mode": "test", "test_csv": a.test_csv, "candidates": {"players": len(players), "games": int(len(games))}, "depth": a.depth, **summary, **environment("cpu")}
+            out = {"mode": "test", "test_csv": a.test_csv, "candidates": {"players": len(players), "games": int(len(games))}, "depth": a.depth, **summary, **pid_environment("cpu")}
             Path(a.out).parent.mkdir(parents=True, exist_ok=True)
             Path(a.out).write_text(to_json(out, indent=1) + "\n")
             print(f"wrote {a.out}")
@@ -334,7 +338,7 @@ def main(argv=None):
     except (FileNotFoundError, ValueError, KeyError) as e:
         print(e, file=sys.stderr)
         return 2
-    out.update({"seconds": time.time() - t0, **environment("cpu")})
+    out.update({"seconds": time.time() - t0, **pid_environment("cpu")})
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out} ({time.time() - t0:.0f} s)")
