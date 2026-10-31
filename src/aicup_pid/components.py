@@ -1,0 +1,55 @@
+"""Build the per-candidate score matrices of a pool for the ladder's components (shared by pid_cv.py and predict_pid.py)."""
+import multiprocessing as mp
+
+import numpy as np
+
+from aicup_pid.opening import OpeningModel, parse
+from aicup_pid.style import StyleModel, game_features
+
+COMPONENTS = ("opening", "style")
+
+
+def _features(sgf):
+    return game_features(parse(sgf))
+
+
+def parse_all(sgfs, workers=1):
+    """{game_key: parsed moves}."""
+    keys = list(sgfs)
+    if workers > 1:
+        with mp.get_context("fork").Pool(workers) as pool:
+            moves = pool.map(parse, [sgfs[k] for k in keys], chunksize=256)
+    else:
+        moves = [parse(sgfs[k]) for k in keys]
+    return dict(zip(keys, moves))
+
+
+def features_all(sgfs, workers=1):
+    """{game_key: style feature row}."""
+    keys = list(sgfs)
+    if workers > 1:
+        with mp.get_context("fork").Pool(workers) as pool:
+            rows = pool.map(_features, [sgfs[k] for k in keys], chunksize=64)
+    else:
+        rows = [_features(sgfs[k]) for k in keys]
+    return dict(zip(keys, rows))
+
+
+def fit_models(cand_keys_by_player, sgfs, cfg, workers=1):
+    """(OpeningModel, StyleModel, parsed moves, feature rows) fitted on the candidates' games; sgfs covers every key used."""
+    moves = parse_all(sgfs, workers)
+    feats = features_all(sgfs, workers)
+    opening = OpeningModel(depth=cfg.get("depth", 12), alpha=cfg.get("alpha", 2.0), beta=cfg.get("beta", 5.0))
+    opening.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
+    style = StyleModel(shrink=cfg.get("shrink", 0.1))
+    style.fit({p: np.stack([feats[k] for k in keys]) for p, keys in cand_keys_by_player.items()})
+    if opening.players != style.players:
+        raise ValueError("the two models disagree on the candidate order")
+    return opening, style, moves, feats
+
+
+def score_questions(opening, style, question_keys, moves, feats):
+    """{component: [Q, C]} for questions given as lists of game keys."""
+    S_o = np.stack([opening.log_scores([moves[k] for k in keys]) for keys in question_keys]) if question_keys else np.zeros((0, len(opening.players)))
+    S_s = np.stack([style.log_scores(np.stack([feats[k] for k in keys])) for keys in question_keys]) if question_keys else np.zeros((0, len(style.players)))
+    return {"opening": S_o, "style": S_s}
