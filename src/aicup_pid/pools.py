@@ -166,3 +166,45 @@ def validate_submission(path, question_ids, pool_players, expect_rows=None):
     if expect_rows is not None and len(df) != expect_rows:
         problems.append(f"{len(df)} rows, expected {expect_rows}")
     return problems
+
+
+def make_pool_one_per_player(games, folds_df, folds, n_players=N_CANDIDATES, cand_games=CAND_GAMES, per_size=100, sizes=SIZES, seed=0, pool_id="sim"):
+    """Like make_pool, but every chosen player gets exactly one question (the official design: 400 questions for 400
+    candidates, 100 per size). Sizes are handed out largest first, at most per_size players each, only to players with
+    >= cand_games + size Black games; a player left over takes the largest size they can afford. info adds
+    one_per_player and per_size. ValueError when no player is eligible."""
+    sizes = sorted(int(m) for m in sizes)
+    elig = eligible_players(games, folds_df, folds, cand_games + sizes[0])
+    if len(elig) == 0:
+        raise ValueError(f"folds {list(folds)}: no player has >= {cand_games + sizes[0]} Black games")
+    rng = np.random.RandomState(seed)
+    chosen = elig.iloc[np.sort(rng.permutation(len(elig))[:n_players])]
+    order = chosen.sort_values(["n_black", "player_id"], ascending=[False, True], kind="stable")
+    assigned = {}
+    for m in sorted(sizes, reverse=True):
+        slots = int(per_size)
+        for p in order.itertuples():
+            if slots == 0:
+                break
+            if p.player_id in assigned or p.n_black < cand_games + m:
+                continue
+            assigned[p.player_id] = m
+            slots -= 1
+    for p in order.itertuples():
+        if p.player_id not in assigned:
+            assigned[p.player_id] = max(m for m in sizes if p.n_black >= cand_games + m)
+    by_player = games.groupby("player_id")["game_key"].apply(sorted).to_dict()
+    cand_rows, q_rows = [], []
+    for p in chosen.itertuples():
+        keys = by_player[p.player_id]
+        keys = [keys[i] for i in _player_rng(seed, p.player_id).permutation(len(keys))]
+        cand_rows += [{"player_id": p.player_id, "rank": p.rank, "game_key": k} for k in keys[:cand_games]]
+        m = assigned[p.player_id]
+        q_rows.append({"question_id": f"{pool_id}_q_{len(q_rows) + 1:04d}", "player_id": p.player_id, "rank": p.rank,
+                       "n_games": m, "game_keys": keys[cand_games:cand_games + m]})
+    cands = pd.DataFrame(cand_rows, columns=["player_id", "rank", "game_key"])
+    qs = pd.DataFrame(q_rows, columns=["question_id", "player_id", "rank", "n_games", "game_keys"])
+    info = {"folds": [int(f) for f in folds], "seed": int(seed), "eligible": int(len(elig)), "players": int(len(chosen)),
+            "cand_games": int(cand_games), "questions": int(len(qs)), "questions_by_n": {str(m): int((qs["n_games"] == m).sum()) for m in sizes},
+            "players_by_rank": {lv: int((chosen["rank"] == lv).sum()) for lv in LEVELS}, "one_per_player": True, "per_size": int(per_size)}
+    return cands, qs, info

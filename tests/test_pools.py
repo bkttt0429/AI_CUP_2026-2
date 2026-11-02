@@ -59,3 +59,28 @@ def test_official_readers_score_and_submission(tmp_path):
     assert any("public question after a private" in p for p in pools.validate_submission(out, ["priv_q_0001", "pub_q_0001"], pool_players))
     pd.DataFrame({"question_id": ["pub_q_0001"], "top_1": ["p1"]}).to_csv(out, index=False)
     assert pools.validate_submission(out, ["pub_q_0001"], pool_players)[0].startswith("header")
+
+
+def test_one_per_player_fills_sizes_greedily():
+    frame, folds_df = training_frame(folds=(1, 2), players_per_fold=6, games_per_player=60)  # 30 Black games each
+    cands, qs, info = pools.make_pool_one_per_player(black_table(frame), folds_df, [1, 2], n_players=8, cand_games=10, per_size=2,
+                                                     sizes=(5, 10, 15, 20), seed=0)
+    assert info["players"] == 8 and info["one_per_player"] is True and info["per_size"] == 2
+    assert len(qs) == 8 and qs["player_id"].is_unique
+    assert qs["n_games"].value_counts().to_dict() == {20: 2, 15: 2, 10: 2, 5: 2}
+    assert (cands.groupby("player_id").size() == 10).all()
+    for r in qs.itertuples():
+        own = set(cands[cands["player_id"] == r.player_id]["game_key"])
+        assert len(r.game_keys) == r.n_games and not set(r.game_keys) & own
+    assert info["questions_by_n"] == {"5": 2, "10": 2, "15": 2, "20": 2}
+    # reproducible
+    cands2, qs2, _ = pools.make_pool_one_per_player(black_table(frame), folds_df, [1, 2], n_players=8, cand_games=10, per_size=2, seed=0)
+    assert cands2.equals(cands) and qs2["game_keys"].tolist() == qs["game_keys"].tolist()
+
+
+def test_one_per_player_short_players_get_the_largest_affordable_size():
+    frame, folds_df = training_frame(folds=(1,), players_per_fold=3, games_per_player=32)  # 16 Black games: 6 spare after 10 candidates
+    cands, qs, info = pools.make_pool_one_per_player(black_table(frame), folds_df, [1], n_players=3, cand_games=10, per_size=1,
+                                                     sizes=(5, 10, 15, 20), seed=0)
+    assert len(qs) == 3 and sorted(qs["n_games"]) == [5, 5, 5]
+    assert info["questions_by_n"] == {"5": 3, "10": 0, "15": 0, "20": 0}
