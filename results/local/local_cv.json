@@ -227,7 +227,7 @@
     1.180191033814988
    ],
    "local_vocabulary": 1531,
-   "seconds": 77.55191779136658
+   "seconds": 79.48271322250366
   },
   {
    "pool": {
@@ -456,7 +456,7 @@
     1.1349283952018046
    ],
    "local_vocabulary": 1532,
-   "seconds": 77.50450444221497
+   "seconds": 76.8321762084961
   }
  ],
  "overall_score": {
@@ -547,7 +547,7 @@
   "start": 12
  },
  "questions": 2631,
- "seconds": 165.96510934829712,
+ "seconds": 166.9298493862152,
  "git_head": "24207b2",
  "git_dirty": false,
  "code_sha256": "087f80e747ba6b925fda3dc0ea30d6c3c79966a62a7f90e053ba495b9a7c0cb7",
@@ -562,6 +562,6 @@
  ],
  "torch_version": "2.14.1+cu126",
  "device_name": "cpu",
- "pid_git_head": "c6bf65a",
- "pid_git_dirty": false
+ "pid_git_head": "87c42aa",
+ "pid_git_dirty": true
 }

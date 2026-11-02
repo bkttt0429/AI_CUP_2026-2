@@ -1,0 +1,172 @@
+{
+ "n_questions_checks": 800,
+ "n_questions_submission": 800,
+ "n_compared": 800,
+ "n_top1_equal": 773,
+ "n_top1_differ": 27,
+ "differences": [
+  {
+   "question_id": "pub_q_0016",
+   "checks": "pub_p_c975f7eca1794548",
+   "submission": "pub_p_412e5651030c3e6a"
+  },
+  {
+   "question_id": "pub_q_0038",
+   "checks": "pub_p_d3bc87b85bd681d2",
+   "submission": "pub_p_7685e9b29f16c727"
+  },
+  {
+   "question_id": "pub_q_0087",
+   "checks": "pub_p_e6b83edd4e6fb412",
+   "submission": "pub_p_b85fd975820ef818"
+  },
+  {
+   "question_id": "pub_q_0102",
+   "checks": "pub_p_b244089301e75e83",
+   "submission": "pub_p_0e31fd49e699200d"
+  },
+  {
+   "question_id": "pub_q_0111",
+   "checks": "pub_p_5feea93760b44c89",
+   "submission": "pub_p_66b13753034b70cd"
+  },
+  {
+   "question_id": "pub_q_0117",
+   "checks": "pub_p_03b338b4acfd73df",
+   "submission": "pub_p_fde925e24e03c799"
+  },
+  {
+   "question_id": "pub_q_0143",
+   "checks": "pub_p_9725826204ae91b9",
+   "submission": "pub_p_9c18cc170458d9b4"
+  },
+  {
+   "question_id": "pub_q_0161",
+   "checks": "pub_p_203353e1157a09a2",
+   "submission": "pub_p_d0a7df6eec8733a7"
+  },
+  {
+   "question_id": "pub_q_0165",
+   "checks": "pub_p_595f5f592ca28d6c",
+   "submission": "pub_p_42f653d4fb76229f"
+  },
+  {
+   "question_id": "pub_q_0172",
+   "checks": "pub_p_f281443b4ef62bac",
+   "submission": "pub_p_63e8014f5eb57e8e"
+  },
+  {
+   "question_id": "pub_q_0206",
+   "checks": "pub_p_5ffe91a1bd0faf99",
+   "submission": "pub_p_504cc61a481269c5"
+  },
+  {
+   "question_id": "pub_q_0223",
+   "checks": "pub_p_2e6a5b455a3ea6ae",
+   "submission": "pub_p_f033bc996c08329c"
+  },
+  {
+   "question_id": "pub_q_0225",
+   "checks": "pub_p_b85fd975820ef818",
+   "submission": "pub_p_6fe72d00579e3d19"
+  },
+  {
+   "question_id": "pub_q_0231",
+   "checks": "pub_p_d4dba2d635cb4e05",
+   "submission": "pub_p_f7d82a26adda20b3"
+  },
+  {
+   "question_id": "pub_q_0261",
+   "checks": "pub_p_63e8014f5eb57e8e",
+   "submission": "pub_p_e3b571ab990fe08f"
+  },
+  {
+   "question_id": "pub_q_0297",
+   "checks": "pub_p_4132d71295455efe",
+   "submission": "pub_p_713a9b2bd83d53c5"
+  },
+  {
+   "question_id": "pub_q_0331",
+   "checks": "pub_p_260bcad61e04f43d",
+   "submission": "pub_p_66b13753034b70cd"
+  },
+  {
+   "question_id": "pub_q_0359",
+   "checks": "pub_p_448189622ab910a1",
+   "submission": "pub_p_e92429fd1f5675eb"
+  },
+  {
+   "question_id": "pub_q_0371",
+   "checks": "pub_p_18eaa282f1e8fe25",
+   "submission": "pub_p_5ffe91a1bd0faf99"
+  },
+  {
+   "question_id": "pub_q_0389",
+   "checks": "pub_p_982f5120cdec33fc",
+   "submission": "pub_p_432029b06fe580bf"
+  }
+ ],
+ "checks_without_top1": [],
+ "missing_in_submission": [],
+ "missing_in_checks": [],
+ "truth_score": {
+  "score": 0.9513703577576597,
+  "top1": 0.93875,
+  "top5": 0.985,
+  "mrr": 0.9583958333333333,
+  "n": 800,
+  "by_n": {
+   "5": {
+    "score": 0.8719840544674349,
+    "top1": 0.84,
+    "top5": 0.955,
+    "mrr": 0.88925,
+    "n": 200
+   },
+   "10": {
+    "score": 0.9429791849456316,
+    "top1": 0.93,
+    "top5": 0.985,
+    "mrr": 0.9518333333333334,
+    "n": 200
+   },
+   "15": {
+    "score": 0.9936787944117144,
+    "top1": 0.99,
+    "top5": 1.0,
+    "mrr": 0.995,
+    "n": 200
+   },
+   "20": {
+    "score": 0.9968393972058572,
+    "top1": 0.995,
+    "top5": 1.0,
+    "mrr": 0.9975,
+    "n": 200
+   }
+  },
+  "n_truth_rows": 800
+ },
+ "checks": "../BK_AICUP_2026-2/results/checks/mock_official_checks.json",
+ "submission": "../BK_AICUP_2026-2/results/mock_official_f3/submission_player.csv",
+ "truth": [
+  "../BK_AICUP_2026-2/data/mock_official/truth_public.csv",
+  "../BK_AICUP_2026-2/data/mock_official/truth_private.csv"
+ ],
+ "git_head": "24207b2",
+ "git_dirty": false,
+ "code_sha256": "087f80e747ba6b925fda3dc0ea30d6c3c79966a62a7f90e053ba495b9a7c0cb7",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "87c42aa",
+ "pid_git_dirty": true
+}

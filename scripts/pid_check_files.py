@@ -28,7 +28,7 @@ if str(ROOT / "src") not in sys.path:
 import aicup_pid  # noqa: E402  (AI_CUP_2026-1 on sys.path)
 from aicup.ladder import to_json  # noqa: E402
 from aicup_pid import checks, pools  # noqa: E402
-from aicup_pid.components import COMPONENTS, features_all, fit_from_parsed, parse_all, score_questions  # noqa: E402
+from aicup_pid.components import ALL_COMPONENTS, features_all, fit_from_parsed, fit_local, parse_all, score_components  # noqa: E402
 from aicup_pid.dedup import build_training_index, hash_games  # noqa: E402
 from aicup_pid.fusion import Fusion  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
@@ -45,7 +45,7 @@ def _fmt(x, nd=4):
     return "none" if x is None else f"{x:.{nd}f}"
 
 
-def check_pool(cand_path, q_path, fus, cfg, a, index, log=print):
+def check_pool(cand_path, q_path, fus, cfg, a, index, comps=("opening", "style"), log=print):
     """The checks of one pool: (result dict, {candidate key: hash}) ."""
     t0 = time.time()
     cands = pools.read_candidates(cand_path)
@@ -80,14 +80,16 @@ def check_pool(cand_path, q_path, fus, cfg, a, index, log=print):
     q_moves = [moves[k] for k in leg_q["usable_keys"]]
     c_moves = [moves[k] for k in leg_c["usable_keys"]]
     shift = {str(k): checks.opening_shift(q_moves, c_moves, k, n_null=a.n_null, seed=a.seed) for k in SHIFT_DEPTHS}
-    si = checks.self_identification(by_player, moves, feats, cfg, fus.w, seed=a.seed, model_games=a.model_games)
+    si_weights = fus.w if list(comps) == ["opening", "style"] else np.array([1.0, 1.0])  # check 7 is defined on the production pair
+    si = checks.self_identification(by_player, moves, feats, cfg, si_weights, seed=a.seed, model_games=a.model_games)
     # the main line on the official questions (as predict_pid.py fits it), for the Top-1 collisions and the margins
     opening, style = fit_from_parsed(by_player, moves, feats, cfg)
+    local = fit_local(by_player, moves, cfg) if "local" in comps else None
     q_usable = [[k for k in keys if k in usable] for keys in q_keys]
     idx = [i for i, keys in enumerate(q_usable) if keys]
     if idx:
-        S = score_questions(opening, style, [q_usable[i] for i in idx], moves, feats)
-        S_f = fus.scores([S[c] for c in COMPONENTS])
+        S = score_components(comps, opening, style, [q_usable[i] for i in idx], moves, feats, local)
+        S_f = fus.scores([S[c] for c in comps])
     else:
         S_f = np.zeros((0, len(opening.players)))
     n_games = np.array([questions[i]["declared_games"] for i in idx], dtype=int)
@@ -150,8 +152,9 @@ def main(argv=None):
     t0 = time.time()
     try:
         doc = json.loads(Path(a.fusion).read_text())
-        if list(doc["components"]) != list(COMPONENTS):
-            raise ValueError(f"{a.fusion}: components {doc['components']} != {list(COMPONENTS)}")
+        comps = list(doc["components"])
+        if not comps or len(set(comps)) != len(comps) or any(c not in ALL_COMPONENTS for c in comps) or len(doc["weights"]) != len(comps):
+            raise ValueError(f"{a.fusion}: components {comps} must be a non-empty subset of {list(ALL_COMPONENTS)} with one weight each")
         fus = Fusion()
         fus.w = np.asarray(doc["weights"], dtype=float)
         cfg = doc.get("cfg", {})
@@ -161,7 +164,7 @@ def main(argv=None):
             print(f"training index: {len(index.meta)} games in {index.seconds:.0f} s", flush=True)
         results, hashes = [], []
         for cand_path, q_path in zip(a.candidates, a.questions):
-            r, hc = check_pool(cand_path, q_path, fus, cfg, a, index)
+            r, hc = check_pool(cand_path, q_path, fus, cfg, a, index, comps=comps)
             results.append(r)
             hashes.append(hc)
     except (FileNotFoundError, ValueError, KeyError) as e:

@@ -85,6 +85,11 @@ def test_predict_pid_cli(tmp_path, capsys):
     (tmp_path / "opening.json").write_text(json.dumps({"components": ["opening"], "weights": [1.0], "cfg": {"depth": 8}}))
     assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "opening.json"), "--out", str(tmp_path / "op.csv")]) == 0
     assert json.loads((tmp_path / "op.csv").with_suffix(".report.json").read_text())["fusion"]["components"] == ["opening"]
+    # the three-component fusion3 document (line B2) fits the local model too
+    (tmp_path / "fusion3.json").write_text(json.dumps({"components": ["opening", "style", "local"], "weights": [1.0, 0.5, 0.3], "cfg": {"depth": 8, "local_start": 0}}))
+    assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "fusion3.json"), "--out", str(tmp_path / "f3.csv"), "--assign", "auto"]) == 0
+    rep3 = json.loads((tmp_path / "f3.csv").with_suffix(".report.json").read_text())
+    assert rep3["fusion"]["components"] == ["opening", "style", "local"] and rep3["problems"] == [] and len(pd.read_csv(tmp_path / "f3.csv")) == 6
     (tmp_path / "bad.json").write_text(json.dumps({"components": ["foo"], "weights": [1.0]}))
     assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "bad.json"), "--out", str(out)]) == 2
     (tmp_path / "bad2.json").write_text(json.dumps({"components": ["opening", "style"], "weights": [1.0]}))

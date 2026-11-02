@@ -3,10 +3,13 @@ import multiprocessing as mp
 
 import numpy as np
 
+from aicup_pid.local import LocalModel
 from aicup_pid.opening import OpeningModel, parse
 from aicup_pid.style import StyleModel, game_features
 
-COMPONENTS = ("opening", "style")
+COMPONENTS = ("opening", "style")  # the production fusion
+OPTIONAL = ("local",)  # line B2 (fusion3): fitted only when a fusion document names it
+ALL_COMPONENTS = (*COMPONENTS, *OPTIONAL)
 
 
 def _features(sgf):
@@ -59,3 +62,29 @@ def score_questions(opening, style, question_keys, moves, feats):
     S_o = np.stack([opening.log_scores([moves[k] for k in keys]) for keys in question_keys]) if question_keys else np.zeros((0, len(opening.players)))
     S_s = np.stack([style.log_scores(np.stack([feats[k] for k in keys])) for keys in question_keys]) if question_keys else np.zeros((0, len(style.players)))
     return {"opening": S_o, "style": S_s}
+
+
+def fit_local(cand_keys_by_player, moves, cfg):
+    """LocalModel on the candidates' parsed games (cfg keys local_alpha, local_beta, local_start)."""
+    model = LocalModel(alpha=cfg.get("local_alpha", 2.0), beta=cfg.get("local_beta", 5.0), start=cfg.get("local_start", 12))
+    return model.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
+
+
+def score_local(model, question_keys, moves):
+    """[Q, C] local-shape log scores for questions given as lists of game keys."""
+    if not question_keys:
+        return np.zeros((0, len(model.players)))
+    return np.stack([model.log_scores([moves[k] for k in keys]) for keys in question_keys])
+
+
+def score_components(comps, opening, style, question_keys, moves, feats, local=None):
+    """{component: [Q, C]} for the named components (the two production ones plus 'local' when a model is given)."""
+    S = score_questions(opening, style, question_keys, moves, feats)
+    if "local" in comps:
+        if local is None:
+            raise ValueError("the fusion names 'local' but no local model was fitted")
+        if local.players != opening.players:
+            raise ValueError("the local model disagrees on the candidate order")
+        S["local"] = score_local(local, question_keys, moves)
+    return {c: S[c] for c in comps}
+

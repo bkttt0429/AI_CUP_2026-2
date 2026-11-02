@@ -79,6 +79,20 @@ def test_cli_cross_pool_duplicates(tmp_path):
     assert res["cross_pool_candidate_dups"] == 64 and res["pools"][0]["question_vs_candidate_dups"] == 0
 
 
+def test_cli_three_component_document(tmp_path):
+    frame, _ = training_frame(folds=(1,), players_per_fold=4, games_per_player=40, seed=9)
+    cp, qp, _ = official_files(tmp_path, frame, "pub_")
+    f3 = tmp_path / "fusion3.json"
+    f3.write_text(json.dumps({"components": ["opening", "style", "local"], "weights": [1.0, 0.5, 0.3], "cfg": {"depth": 8, "local_start": 0}}))
+    out = tmp_path / "checks3.json"
+    assert pid_check_files.main(["--candidates", str(cp), "--questions", str(qp), "--fusion", str(f3), "--no-training", "--out", str(out), "--model-games", "6", "--n-null", "3"]) == 0
+    res = json.loads(out.read_text())
+    assert res["fusion"]["components"] == ["opening", "style", "local"] and len(res["pools"][0]["main_line"]["top1"]) == 3
+    assert res["pools"][0]["self_identification"]["n_candidates"] == 4  # check 7 stays on the production pair
+    (tmp_path / "bad.json").write_text(json.dumps({"components": ["opening", "style"], "weights": [1.0]}))
+    assert pid_check_files.main(["--candidates", str(cp), "--questions", str(qp), "--fusion", str(tmp_path / "bad.json"), "--no-training", "--out", str(out)]) == 2
+
+
 def test_cli_refuses_unpaired_files(tmp_path):
     with pytest.raises(SystemExit):
         pid_check_files.main(["--candidates", "a.csv", "b.csv", "--questions", "c.csv", "--fusion", "f.json", "--out", str(tmp_path / "x.json")])

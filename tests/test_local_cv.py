@@ -12,9 +12,13 @@ def test_local_cv_cli(tmp_path, monkeypatch, capsys):
     folds_csv = tmp_path / "folds.csv"
     folds_df.to_csv(folds_csv, index=False)
     out = tmp_path / "local_cv.json"
+    fus = tmp_path / "pid_fusion3.json"
     args = ["--pools", "1,2", "3,4", "--n-players", "8", "--cand-games", "10", "--depth", "8", "--start", "0", "--n-boot", "50",
-            "--folds-csv", str(folds_csv), "--out", str(out)]
+            "--folds-csv", str(folds_csv), "--out", str(out), "--fusion-out", str(fus)]
     assert pid_local_cv.main(args) == 0
+    doc = json.loads(fus.read_text())
+    assert doc["components"] == ["opening", "style", "local"] and len(doc["weights"]) == 3 and doc["fitted_on_pools"] == [[1, 2], [3, 4]]
+    assert doc["cfg"] == {"depth": 8, "alpha": 2.0, "beta": 5.0, "shrink": 0.1, "local_alpha": 2.0, "local_beta": 5.0, "local_start": 0}
     res = json.loads(out.read_text())
     assert len(res["pools"]) == 2
     for p in res["pools"]:

@@ -79,6 +79,7 @@ def main(argv=None):
     ap.add_argument("--max-questions", type=int, default=0, help="smoke tests only")
     ap.add_argument("--folds-csv", default=str(FOLDS_CSV))
     ap.add_argument("--out", required=True)
+    ap.add_argument("--fusion-out", default=None, help="write the three-component fusion weights fitted on all pools (for predict_pid.py)")
     a = ap.parse_args(argv)
     t0 = time.time()
     try:
@@ -138,6 +139,13 @@ def main(argv=None):
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out}")
+    if a.fusion_out:
+        fus = Fusion().fit([np.vstack([r["S"][c] for r in runs]) for c in THREE], np.concatenate([r["truth"] for r in runs]))
+        doc = {"components": list(THREE), "weights": fus.w.tolist(), "cfg": {**cfg, "local_alpha": a.local_alpha, "local_beta": a.local_beta, "local_start": a.start},
+               "fitted_on_pools": [r["info"]["folds"] for r in runs], "questions": int(len(pid)), **pid_environment("cpu")}
+        Path(a.fusion_out).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.fusion_out).write_text(to_json(doc, indent=1) + "\n")
+        print(f"wrote {a.fusion_out}: weights {np.round(fus.w, 4).tolist()}")
     return 0
 
 

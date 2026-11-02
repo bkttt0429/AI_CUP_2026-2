@@ -3,7 +3,8 @@
 
 For each (candidates, questions) pair -- public first, then private -- the candidates' games fit the opening and style
 models of that pool, every question's games are scored against the 400 candidates, the components are fused with the
-weights of --fusion (scripts/pid_cv.py --fusion-out; its components may be a subset, e.g. opening alone as the fallback) and the
+weights of --fusion (scripts/pid_cv.py --fusion-out, or pid_local_cv.py --fusion-out for the three-component fusion3; the
+components may be a subset, e.g. opening alone as the fallback) and the
 best five distinct candidates are written; --assign on|auto replaces the Top-1 by the one-to-one assignment (line B3). The submission is
 validated (header, order, pool membership, distinct ids, --expect-rows) before exit; a report JSON goes next to it.
 Exit codes: 2 input/format problems, 1 validation failure.
@@ -29,7 +30,7 @@ from aicup.ladder import to_json  # noqa: E402
 from aicup.submission import check_game  # noqa: E402
 from aicup_pid import checks, pools  # noqa: E402
 from aicup_pid.assign import assign_topk, assignment_report  # noqa: E402
-from aicup_pid.components import COMPONENTS, fit_models, score_questions  # noqa: E402
+from aicup_pid.components import ALL_COMPONENTS, COMPONENTS, fit_local, fit_models, score_components  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
 
@@ -58,8 +59,9 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign=
     log(f"{Path(cand_path).name}: {len(by_player)} candidates, {len(cands)} games; {Path(q_path).name}: {len(questions)} questions, "
         f"{sum(len(k) for k in q_keys)} games ({len(dropped)} dropped)", flush=True)
     opening, style, moves, feats = fit_models(by_player, sgfs, cfg, workers=workers)
+    local = fit_local(by_player, moves, cfg) if "local" in comps else None
     usable = [k for k in q_keys if k]
-    S = score_questions(opening, style, usable, moves, feats)
+    S = score_components(comps, opening, style, usable, moves, feats, local)
     S_f = fus.scores([S[c] for c in comps]) if usable else np.zeros((0, len(opening.players)))
     n_games = np.array([q["declared_games"] for q, keys in zip(questions, q_keys) if keys], dtype=int)
     collisions = checks.top1_collisions(S_f, n_games)
@@ -99,8 +101,8 @@ def main(argv=None):
     try:
         doc = json.loads(Path(a.fusion).read_text())
         comps = list(doc["components"])
-        if not comps or len(set(comps)) != len(comps) or any(c not in COMPONENTS for c in comps):
-            raise ValueError(f"{a.fusion}: components {comps} must be a non-empty subset of {list(COMPONENTS)}")
+        if not comps or len(set(comps)) != len(comps) or any(c not in ALL_COMPONENTS for c in comps):
+            raise ValueError(f"{a.fusion}: components {comps} must be a non-empty subset of {list(ALL_COMPONENTS)}")
         if len(doc["weights"]) != len(comps):
             raise ValueError(f"{a.fusion}: {len(doc['weights'])} weights for {len(comps)} components")
         fus = Fusion()
