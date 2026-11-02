@@ -73,8 +73,21 @@ def test_predict_pid_cli(tmp_path, capsys):
     rep_r = json.loads((tmp_path / "rep.csv").with_suffix(".report.json").read_text())["pools"][0]
     assert rep_r["n_candidate_games_used"] == rep_r["n_candidate_games"] == 96 and rep_r["candidate_game_ids_unique"] is False
     assert pd.read_csv(tmp_path / "rep.csv", dtype=str)["top_1"].tolist() == sub["top_1"].tolist()[:3]
-    # a fusion document with other components is refused
-    (tmp_path / "bad.json").write_text(json.dumps({"components": ["opening"], "weights": [1.0]}))
+    # the assignment modes: on applies it; auto applies it only when the Top-1 picks are (nearly) distinct
+    assert predict_pid.main([*args, "--assign", "on"]) == 0
+    rep_on = json.loads(out.with_suffix(".report.json").read_text())["pools"][0]["assign"]
+    assert rep_on["mode"] == "on" and rep_on["applied"] is True and rep_on["top1_collisions"]["n_questions"] == 3 and "n_top1_changed" in rep_on
+    assert predict_pid.main([*args, "--assign", "auto"]) == 0
+    rep_auto = json.loads(out.with_suffix(".report.json").read_text())["pools"][0]["assign"]
+    assert rep_auto["applied"] == rep_auto["top1_collisions"]["one_to_one_likely"]
+    assert rep["pools"][0]["assign"] == {"mode": "off", "applied": False, "top1_collisions": rep["pools"][0]["assign"]["top1_collisions"], "n_top1_changed": 0}
+    # a fusion document may name a subset of the components (the opening-only fallback); unknown names or a weight mismatch are refused
+    (tmp_path / "opening.json").write_text(json.dumps({"components": ["opening"], "weights": [1.0], "cfg": {"depth": 8}}))
+    assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "opening.json"), "--out", str(tmp_path / "op.csv")]) == 0
+    assert json.loads((tmp_path / "op.csv").with_suffix(".report.json").read_text())["fusion"]["components"] == ["opening"]
+    (tmp_path / "bad.json").write_text(json.dumps({"components": ["foo"], "weights": [1.0]}))
     assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "bad.json"), "--out", str(out)]) == 2
+    (tmp_path / "bad2.json").write_text(json.dumps({"components": ["opening", "style"], "weights": [1.0]}))
+    assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "bad2.json"), "--out", str(out)]) == 2
     with pytest.raises(SystemExit):
         predict_pid.main(["--candidates", str(cp1), "--questions", str(qp1), str(qp2), "--fusion", str(fus), "--out", str(out)])
