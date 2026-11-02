@@ -36,10 +36,10 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, log=print):
     t0 = time.time()
     cands = pools.read_candidates(cand_path)
     questions = pools.read_questions(q_path)
-    sgfs = {f"c:{r.game_id}": r.sgf for r in cands.itertuples()}
+    sgfs = {f"c:{i}:{r.game_id}": r.sgf for i, r in enumerate(cands.itertuples())}  # positional: game_id need not be unique
     by_player = {}
-    for r in cands.itertuples():
-        by_player.setdefault(r.player_id, []).append(f"c:{r.game_id}")
+    for i, r in enumerate(cands.itertuples()):
+        by_player.setdefault(r.player_id, []).append(f"c:{i}:{r.game_id}")
     q_keys, dropped = [], []
     for q in questions:
         keys = []
@@ -69,6 +69,7 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, log=print):
             fallback.append(q["question_id"])
     margins = (np.sort(S_f, axis=1)[:, -1] - np.sort(S_f, axis=1)[:, -2]).tolist() if usable else []
     report = {"candidates": str(cand_path), "questions": str(q_path), "n_candidates": len(by_player), "n_candidate_games": int(len(cands)),
+              "n_candidate_games_used": int(sum(len(k) for k in by_player.values())), "candidate_game_ids_unique": bool(cands["game_id"].is_unique),
               "n_questions": len(questions), "dropped_games": dropped, "fallback_questions": fallback, "median_top1_margin": float(np.median(margins)) if margins else None,
               "seconds": time.time() - t0}
     return rows, report, set(by_player)

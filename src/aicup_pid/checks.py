@@ -217,7 +217,7 @@ def num_games_counts(questions):
 
 
 def record_properties(sgfs, game_ids):
-    """SGF property identifiers (games containing each), game_id examples, whether the ids are all numeric and sorted."""
+    """SGF property identifiers (games containing each), game_id examples, whether the ids are all numeric, sorted and unique."""
     props = Counter()
     for sgf in sgfs.values():
         props.update(set(properties(sgf)))
@@ -230,4 +230,5 @@ def record_properties(sgfs, game_ids):
         sorted_flag = bool(all(a <= b for a, b in zip(vals, vals[1:])))
     else:
         sorted_flag = bool(all(str(a) <= str(b) for a, b in zip(ids, ids[1:])))
-    return {"properties": dict(props), "game_id_examples": [str(g) for g in ids[:5]], "game_id_all_numeric": numeric, "game_id_sorted_in_file": sorted_flag}
+    return {"properties": dict(props), "game_id_examples": [str(g) for g in ids[:5]], "game_id_all_numeric": numeric, "game_id_sorted_in_file": sorted_flag,
+            "game_id_unique": bool(len(set(map(str, ids))) == len(ids)), "n_game_ids": len(ids)}

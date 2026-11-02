@@ -6,7 +6,7 @@ import pytest
 import pid_cv
 import predict_pid
 from aicup_pid import pools
-from tests.synth import black_table, sgf_lookup, training_frame
+from tests.synth import black_table, official_files, sgf_lookup, training_frame
 
 
 def _patch_data(monkeypatch, frame, folds_df, tmp_path):
@@ -45,31 +45,11 @@ def test_pid_cv_cli(tmp_path, monkeypatch, capsys):
     assert json.loads((tmp_path / "one.json").read_text())["pools"][0]["fusion_weights"] is None
 
 
-def _official_files(tmp_path, frame, prefix, n_q=3):
-    """Candidates (all Black games of each player but the last four) and questions (those four, 2 or 4 games) in the official format."""
-    black = frame[frame["color"] == "B"]
-    cand_rows, q_rows = [], []
-    for i, (pid, g) in enumerate(black.groupby("player_id")):
-        games = g["sgf_content"].tolist()
-        cand_rows += [{"game_id": f"g_{len(cand_rows) + 1:07d}", "player_id": f"{prefix}p_{pid}", "sgf_content": s, "color": "B"} for s in games[:-4]]
-        if i < n_q:
-            qg = games[-4:] if i % 2 else games[-2:]
-            row = {"question_id": f"{prefix}q_{i + 1:04d}", "num_games": len(qg)}
-            for j in range(20):
-                row[f"sgf_{j + 1}"] = qg[j] if j < len(qg) else ""
-                row[f"color_{j + 1}"] = "B" if j < len(qg) else ""
-            q_rows.append(row)
-    cp, qp = tmp_path / f"cands_{prefix}csv", tmp_path / f"test_{prefix}csv"
-    pd.DataFrame(cand_rows).to_csv(cp, index=False)
-    pd.DataFrame(q_rows).to_csv(qp, index=False)
-    return cp, qp, [f"{prefix}p_{pid}" for pid in black["player_id"].unique()]
-
-
 def test_predict_pid_cli(tmp_path, capsys):
     frame_pub, _ = training_frame(folds=(1,), players_per_fold=6, games_per_player=40, seed=5)
     frame_priv, _ = training_frame(folds=(2,), players_per_fold=6, games_per_player=40, seed=6)
-    cp1, qp1, pub_players = _official_files(tmp_path, frame_pub, "pub_")
-    cp2, qp2, priv_players = _official_files(tmp_path, frame_priv, "priv_")
+    cp1, qp1, pub_players = official_files(tmp_path, frame_pub, "pub_")
+    cp2, qp2, priv_players = official_files(tmp_path, frame_priv, "priv_")
     fus = tmp_path / "fusion.json"
     fus.write_text(json.dumps({"components": ["opening", "style"], "weights": [1.0, 0.5], "cfg": {"depth": 8}}))
     out = tmp_path / "submission_player.csv"
@@ -84,6 +64,15 @@ def test_predict_pid_cli(tmp_path, capsys):
     # the planted openings make the true player the Top-1 for most questions
     truth = {f"pub_q_{i + 1:04d}": f"pub_p_{pid}" for i, pid in enumerate(frame_pub[frame_pub['color'] == 'B']['player_id'].unique()[:3])}
     assert sum(sub.set_index("question_id").loc[q, "top_1"] == t for q, t in truth.items()) >= 2
+    # candidate game ids that repeat (unique only within a player, as in the training files) must not drop any game
+    cands = pd.read_csv(cp1, dtype=str, keep_default_na=False)
+    cands["game_id"] = [f"g_{i % 16:03d}" for i in range(len(cands))]
+    cp_rep = tmp_path / "cands_repeated.csv"
+    cands.to_csv(cp_rep, index=False)
+    assert predict_pid.main(["--candidates", str(cp_rep), "--questions", str(qp1), "--fusion", str(fus), "--out", str(tmp_path / "rep.csv")]) == 0
+    rep_r = json.loads((tmp_path / "rep.csv").with_suffix(".report.json").read_text())["pools"][0]
+    assert rep_r["n_candidate_games_used"] == rep_r["n_candidate_games"] == 96 and rep_r["candidate_game_ids_unique"] is False
+    assert pd.read_csv(tmp_path / "rep.csv", dtype=str)["top_1"].tolist() == sub["top_1"].tolist()[:3]
     # a fusion document with other components is refused
     (tmp_path / "bad.json").write_text(json.dumps({"components": ["opening"], "weights": [1.0]}))
     assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "bad.json"), "--out", str(out)]) == 2

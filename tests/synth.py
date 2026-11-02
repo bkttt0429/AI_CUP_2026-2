@@ -94,3 +94,24 @@ def black_table(frame):
 def sgf_lookup(frame):
     keys = frame["rank"] + ":" + frame["game_id"]
     return dict(zip(keys, zip(frame["sgf_content"], frame["color"])))
+
+
+def official_files(tmp_path, frame, prefix, n_q=3):
+    """Candidates (all Black games of each player but the last four) and questions (those four, 2 or 4 games) in the official format."""
+    black = frame[frame["color"] == "B"]
+    cand_rows, q_rows = [], []
+    for i, (pid, g) in enumerate(black.groupby("player_id")):
+        games = g["sgf_content"].tolist()
+        for s in games[:-4]:
+            cand_rows.append({"game_id": f"g_{len(cand_rows) + 1:07d}", "player_id": f"{prefix}p_{pid}", "sgf_content": s, "color": "B"})
+        if i < n_q:
+            qg = games[-4:] if i % 2 else games[-2:]
+            row = {"question_id": f"{prefix}q_{i + 1:04d}", "num_games": len(qg)}
+            for j in range(20):
+                row[f"sgf_{j + 1}"] = qg[j] if j < len(qg) else ""
+                row[f"color_{j + 1}"] = "B" if j < len(qg) else ""
+            q_rows.append(row)
+    cp, qp = tmp_path / f"cands_{prefix}csv", tmp_path / f"test_{prefix}csv"
+    pd.DataFrame(cand_rows).to_csv(cp, index=False)
+    pd.DataFrame(q_rows).to_csv(qp, index=False)
+    return cp, qp, [f"{prefix}p_{pid}" for pid in black["player_id"].unique()]

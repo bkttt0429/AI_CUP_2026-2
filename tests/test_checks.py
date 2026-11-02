@@ -100,3 +100,4 @@ def test_num_games_and_record_properties():
     assert checks.record_properties({}, ["10", "9", "100"])["game_id_sorted_in_file"] is False
     assert checks.record_properties({}, ["9", "10", "100"])["game_id_sorted_in_file"] is True
     assert checks.record_properties({}, [])["game_id_sorted_in_file"] is None
+    assert checks.record_properties({}, ["a", "a", "b"])["game_id_unique"] is False and p["game_id_unique"] is True and p["n_game_ids"] == 2
