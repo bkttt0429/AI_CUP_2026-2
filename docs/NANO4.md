@@ -81,6 +81,7 @@ sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J pids
    - `one-to-one likely {pub_: True, priv_: True}` → 一人一題，支線 B3 可以上。
    - 另看：`illegal records`（`predict_pid.py` 會丟掉同樣的局，數量要一致）、`question-vs-candidate duplicates`（應 0）、`num_games`（各 100）。
 3. 第一版提交：§3 的 `predict_pid.py` 指令。`exit 0`、`problems` 空、`dropped_games` 與 `fallback_questions` 空才上傳；上傳前跑 `pid_reconcile.py --checks results/checks/official_checks.json --submission results/submission/submission_player.csv --out results/checks/official_reconcile.json`（不給 `--truth`），`top_1 agree 800/800`、exit 0 才上傳。
+   - **B3（CV 通過，§5.1）**：若 `flags` 的 `one-to-one likely` 兩庫都 True（第 8 項 ≥ 350）且使用者同意，第二版提交 = 同一指令加 `--assign auto`，寫到另一個 `--out`（例如 `results/submission_assign/submission_player.csv`）；report 的 `assign.applied`、`n_top1_changed` 貼回 issue。對帳時 `pid_reconcile.py` 的 Top-1 會有差異（差異題數應等於 `n_top1_changed`），這是預期的。每日 5 次上傳、最後一次生效：先交 fusion 版看 Public，再交 assign 版比較。
 4. 結果（`official_checks.json`、`submission_player.report.json`、Public 分數）貼到 issue，寫進 METHOD_NOTES；Public 分數對自我辨識分數的落差決定支線的優先序（分岔計畫 §3.2、§3.3）。
 
 ## 5. 支線 B（分岔計畫 §4；全部 CPU、`-c 12`、fold 0 不碰；結果 JSON 進 git）
