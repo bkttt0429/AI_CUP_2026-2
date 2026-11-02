@@ -41,7 +41,7 @@ REPORT = [("local", "style"), ("local", "opening")]
 
 def run_pool(games, folds_df, folds, a, cfg, log=print):
     t0 = time.time()
-    cands, qs, info = pools.make_pool(games, folds_df, folds, n_players=a.n_players, cand_games=a.cand_games, seed=a.seed, pool_id="p" + "".join(map(str, folds)))
+    cands, qs, info = pools.make_pool(games, folds_df, folds, n_players=a.n_players, cand_games=a.cand_games, seed=a.seed, pool_id="p" + "".join(map(str, folds)), order=a.order)
     if a.max_questions:
         qs = qs.iloc[:a.max_questions].reset_index(drop=True)
     keys = sorted(set(cands["game_key"]) | {k for ks in qs["game_keys"] for k in ks})
@@ -75,6 +75,7 @@ def main(argv=None):
     ap.add_argument("--local-beta", type=float, default=5.0)
     ap.add_argument("--start", type=int, default=12, help="first ply whose Black moves give local tokens (12 = after the opening model's window)")
     ap.add_argument("--workers", type=int, default=1)
+    ap.add_argument("--order", choices=list(pools.ORDERS), default="shuffle", help="how a player's games are split: shuffle (default) or file = earliest games as the candidate's (drift stress test)")
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--max-questions", type=int, default=0, help="smoke tests only")
     ap.add_argument("--folds-csv", default=str(FOLDS_CSV))
@@ -135,7 +136,7 @@ def main(argv=None):
             print(f"[{group}] {x} vs {z}: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  pools " + " ".join(f"{v:+.4f}" for v in per_pool)
                   + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)
     out = {"pools": results, "overall_score": {c: float(np.mean(np.concatenate(per_q_all[c]))) for c in per_q_all}, "comparisons": comps, "cfg": cfg,
-           "local_cfg": {"alpha": a.local_alpha, "beta": a.local_beta, "start": a.start}, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
+           "local_cfg": {"alpha": a.local_alpha, "beta": a.local_beta, "start": a.start}, "order": a.order, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out}")

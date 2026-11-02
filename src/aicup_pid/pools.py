@@ -50,11 +50,26 @@ def _player_rng(seed, player_id):
     return np.random.RandomState(int(hashlib.sha256(f"{seed}:{player_id}".encode()).hexdigest()[:8], 16))
 
 
-def make_pool(games, folds_df, folds, n_players=N_CANDIDATES, cand_games=CAND_GAMES, sizes=SIZES, seed=0, pool_id="sim"):
+ORDERS = ("shuffle", "file")
+
+
+def _player_keys(keys, order, seed, player_id):
+    """A player's game keys in the split order: 'shuffle' (seeded by the player id) or 'file' (the training files' order, i.e.
+    sorted game_key: the rank prefix is constant per player and the ids are zero-padded)."""
+    if order not in ORDERS:
+        raise ValueError(f"order must be one of {ORDERS}, not {order!r}")
+    keys = sorted(keys)
+    if order == "file":
+        return keys
+    return [keys[i] for i in _player_rng(seed, player_id).permutation(len(keys))]
+
+
+def make_pool(games, folds_df, folds, n_players=N_CANDIDATES, cand_games=CAND_GAMES, sizes=SIZES, seed=0, pool_id="sim", order="shuffle"):
     """A simulated pool: (candidates: player_id, rank, game_key; questions: question_id, player_id, rank, n_games, game_keys;
     info). Up to n_players eligible players (RandomState(seed)); per player the Black games are shuffled with a seed from
     the player id, the first cand_games are the candidate's, the rest give one question per size (ascending) while games
-    remain, disjoint. ValueError when no player is eligible."""
+    remain, disjoint. order 'file' takes the player's first cand_games games in the training files' order as the candidate's
+    and the later ones as questions (a stress test for drift). ValueError when no player is eligible."""
     sizes = sorted(int(m) for m in sizes)
     elig = eligible_players(games, folds_df, folds, cand_games + sizes[0])
     if len(elig) == 0:
@@ -64,8 +79,7 @@ def make_pool(games, folds_df, folds, n_players=N_CANDIDATES, cand_games=CAND_GA
     by_player = games.groupby("player_id")["game_key"].apply(sorted).to_dict()
     cand_rows, q_rows = [], []
     for p in chosen.itertuples():
-        keys = by_player[p.player_id]
-        keys = [keys[i] for i in _player_rng(seed, p.player_id).permutation(len(keys))]
+        keys = _player_keys(by_player[p.player_id], order, seed, p.player_id)
         cand_rows += [{"player_id": p.player_id, "rank": p.rank, "game_key": k} for k in keys[:cand_games]]
         rest = keys[cand_games:]
         for m in sizes:
@@ -78,7 +92,7 @@ def make_pool(games, folds_df, folds, n_players=N_CANDIDATES, cand_games=CAND_GA
     qs = pd.DataFrame(q_rows, columns=["question_id", "player_id", "rank", "n_games", "game_keys"])
     info = {"folds": [int(f) for f in folds], "seed": int(seed), "eligible": int(len(elig)), "players": int(len(chosen)),
             "cand_games": int(cand_games), "questions": int(len(qs)), "questions_by_n": {str(m): int((qs["n_games"] == m).sum()) for m in sizes},
-            "players_by_rank": {lv: int((chosen["rank"] == lv).sum()) for lv in LEVELS}}
+            "players_by_rank": {lv: int((chosen["rank"] == lv).sum()) for lv in LEVELS}, "order": order}
     return cands, qs, info
 
 
@@ -168,7 +182,7 @@ def validate_submission(path, question_ids, pool_players, expect_rows=None):
     return problems
 
 
-def make_pool_one_per_player(games, folds_df, folds, n_players=N_CANDIDATES, cand_games=CAND_GAMES, per_size=100, sizes=SIZES, seed=0, pool_id="sim"):
+def make_pool_one_per_player(games, folds_df, folds, n_players=N_CANDIDATES, cand_games=CAND_GAMES, per_size=100, sizes=SIZES, seed=0, pool_id="sim", order="shuffle"):
     """Like make_pool, but every chosen player gets exactly one question (the official design: 400 questions for 400
     candidates, 100 per size). Sizes are handed out largest first, at most per_size players each, only to players with
     >= cand_games + size Black games; a player left over takes the largest size they can afford. info adds
@@ -179,25 +193,24 @@ def make_pool_one_per_player(games, folds_df, folds, n_players=N_CANDIDATES, can
         raise ValueError(f"folds {list(folds)}: no player has >= {cand_games + sizes[0]} Black games")
     rng = np.random.RandomState(seed)
     chosen = elig.iloc[np.sort(rng.permutation(len(elig))[:n_players])]
-    order = chosen.sort_values(["n_black", "player_id"], ascending=[False, True], kind="stable")
+    ranked = chosen.sort_values(["n_black", "player_id"], ascending=[False, True], kind="stable")
     assigned = {}
     for m in sorted(sizes, reverse=True):
         slots = int(per_size)
-        for p in order.itertuples():
+        for p in ranked.itertuples():
             if slots == 0:
                 break
             if p.player_id in assigned or p.n_black < cand_games + m:
                 continue
             assigned[p.player_id] = m
             slots -= 1
-    for p in order.itertuples():
+    for p in ranked.itertuples():
         if p.player_id not in assigned:
             assigned[p.player_id] = max(m for m in sizes if p.n_black >= cand_games + m)
     by_player = games.groupby("player_id")["game_key"].apply(sorted).to_dict()
     cand_rows, q_rows = [], []
     for p in chosen.itertuples():
-        keys = by_player[p.player_id]
-        keys = [keys[i] for i in _player_rng(seed, p.player_id).permutation(len(keys))]
+        keys = _player_keys(by_player[p.player_id], order, seed, p.player_id)
         cand_rows += [{"player_id": p.player_id, "rank": p.rank, "game_key": k} for k in keys[:cand_games]]
         m = assigned[p.player_id]
         q_rows.append({"question_id": f"{pool_id}_q_{len(q_rows) + 1:04d}", "player_id": p.player_id, "rank": p.rank,
@@ -206,5 +219,5 @@ def make_pool_one_per_player(games, folds_df, folds, n_players=N_CANDIDATES, can
     qs = pd.DataFrame(q_rows, columns=["question_id", "player_id", "rank", "n_games", "game_keys"])
     info = {"folds": [int(f) for f in folds], "seed": int(seed), "eligible": int(len(elig)), "players": int(len(chosen)),
             "cand_games": int(cand_games), "questions": int(len(qs)), "questions_by_n": {str(m): int((qs["n_games"] == m).sum()) for m in sizes},
-            "players_by_rank": {lv: int((chosen["rank"] == lv).sum()) for lv in LEVELS}, "one_per_player": True, "per_size": int(per_size)}
+            "players_by_rank": {lv: int((chosen["rank"] == lv).sum()) for lv in LEVELS}, "one_per_player": True, "per_size": int(per_size), "order": order}
     return cands, qs, info

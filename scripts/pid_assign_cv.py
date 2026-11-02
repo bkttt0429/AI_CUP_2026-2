@@ -51,10 +51,10 @@ def build_group(games, folds_df, folds, a, cfg, log=print):
     """All seeds' one-per-player pools of one fold set (plus the control pool), games parsed once."""
     t0 = time.time()
     made = [(pools.make_pool_one_per_player(games, folds_df, folds, n_players=a.n_players, cand_games=a.cand_games, per_size=a.per_size, seed=s,
-                                             pool_id=f"p{''.join(map(str, folds))}s{s}"), False) for s in a.seeds]
+                                             pool_id=f"p{''.join(map(str, folds))}s{s}", order=a.order), False) for s in a.seeds]
     if a.control:
         cands, qs, info = pools.make_pool(games, folds_df, folds, n_players=a.n_players, cand_games=a.cand_games, seed=a.seeds[0],
-                                          pool_id=f"c{''.join(map(str, folds))}")
+                                          pool_id=f"c{''.join(map(str, folds))}", order=a.order)
         pick = np.sort(np.random.RandomState(a.seeds[0]).permutation(len(qs))[:a.control_questions])
         made.append(((cands, qs.iloc[pick].reset_index(drop=True), {**info, "questions": int(len(pick)), "control": True}), True))
     keys = sorted({k for (cands, qs, _), _ in made for k in cands["game_key"]} | {k for (_, qs, _), _ in made for ks in qs["game_keys"] for k in ks})
@@ -86,6 +86,7 @@ def main(argv=None):
     ap.add_argument("--control", action="store_true", help="report-only pool per fold set with repeated players")
     ap.add_argument("--control-questions", type=int, default=None, help="questions in the control pool (default: --n-players)")
     ap.add_argument("--workers", type=int, default=1)
+    ap.add_argument("--order", choices=list(pools.ORDERS), default="shuffle", help="how a player's games are split: shuffle (default) or file = earliest games as the candidate's (drift stress test)")
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--folds-csv", default=str(FOLDS_CSV))
     ap.add_argument("--out", required=True)
@@ -148,7 +149,7 @@ def main(argv=None):
           + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)
     out = {"pools": results, "overall_score": {"fusion": float(qf.mean()), "assign": float(qa.mean())},
            "comparisons": {"pre_specified": {"assign vs fusion": d}}, "control": controls, "cfg": cfg, "seeds": a.seeds, "n_players": a.n_players,
-           "cand_games": a.cand_games, "per_size": a.per_size, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
+           "cand_games": a.cand_games, "per_size": a.per_size, "order": a.order, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out}")

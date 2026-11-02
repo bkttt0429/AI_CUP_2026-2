@@ -84,3 +84,22 @@ def test_one_per_player_short_players_get_the_largest_affordable_size():
                                                      sizes=(5, 10, 15, 20), seed=0)
     assert len(qs) == 3 and sorted(qs["n_games"]) == [5, 5, 5]
     assert info["questions_by_n"] == {"5": 3, "10": 0, "15": 0, "20": 0}
+
+
+def test_file_order_split_takes_the_earliest_games_as_candidates():
+    frame, folds_df = training_frame(folds=(1,), players_per_fold=4, games_per_player=40)  # 20 Black games each
+    games = black_table(frame)
+    cands, qs, info = pools.make_pool(games, folds_df, [1], n_players=4, cand_games=10, sizes=(5,), seed=0, order="file")
+    assert info["order"] == "file"
+    for p, g in cands.groupby("player_id"):
+        own = sorted(games[games["player_id"] == p]["game_key"])
+        assert sorted(g["game_key"]) == own[:10]
+        q = qs[qs["player_id"] == p]["game_keys"].iloc[0]
+        assert list(q) == own[10:15]
+    shuffled, _, info_s = pools.make_pool(games, folds_df, [1], n_players=4, cand_games=10, sizes=(5,), seed=0)
+    assert info_s["order"] == "shuffle" and sorted(shuffled["game_key"]) != sorted(cands["game_key"])
+    c1, q1, i1 = pools.make_pool_one_per_player(games, folds_df, [1], n_players=4, cand_games=10, per_size=4, sizes=(5, 10), seed=0, order="file")
+    assert i1["order"] == "file" and all(list(r.game_keys)[0] > max(c1[c1["player_id"] == r.player_id]["game_key"]) for r in q1.itertuples())
+    with pytest.raises(ValueError):
+        pools.make_pool(games, folds_df, [1], n_players=4, cand_games=10, order="random")
+
