@@ -35,16 +35,22 @@ def features_all(sgfs, workers=1):
     return dict(zip(keys, rows))
 
 
-def fit_models(cand_keys_by_player, sgfs, cfg, workers=1):
-    """(OpeningModel, StyleModel, parsed moves, feature rows) fitted on the candidates' games; sgfs covers every key used."""
-    moves = parse_all(sgfs, workers)
-    feats = features_all(sgfs, workers)
+def fit_from_parsed(cand_keys_by_player, moves, feats, cfg):
+    """(OpeningModel, StyleModel) fitted on already parsed games: moves / feats cover every key of cand_keys_by_player."""
     opening = OpeningModel(depth=cfg.get("depth", 12), alpha=cfg.get("alpha", 2.0), beta=cfg.get("beta", 5.0))
     opening.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
     style = StyleModel(shrink=cfg.get("shrink", 0.1))
     style.fit({p: np.stack([feats[k] for k in keys]) for p, keys in cand_keys_by_player.items()})
     if opening.players != style.players:
         raise ValueError("the two models disagree on the candidate order")
+    return opening, style
+
+
+def fit_models(cand_keys_by_player, sgfs, cfg, workers=1):
+    """(OpeningModel, StyleModel, parsed moves, feature rows) fitted on the candidates' games; sgfs covers every key used."""
+    moves = parse_all(sgfs, workers)
+    feats = features_all(sgfs, workers)
+    opening, style = fit_from_parsed(cand_keys_by_player, moves, feats, cfg)
     return opening, style, moves, feats
 
 
