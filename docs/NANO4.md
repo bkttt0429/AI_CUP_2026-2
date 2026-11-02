@@ -12,7 +12,7 @@ cd ~ && git clone https://github.com/bkttt0429/AI_CUP_2026-2 BK_AICUP_2026-2   #
 
 ```bash
 cd ~/BK_AICUP_2026-1
-sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -t 00:30:00 -J pidtest scripts/nano4/run.sbatch python -I -m pytest -q ../BK_AICUP_2026-2/tests
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -t 00:30:00 -J pidtest scripts/nano4/run.sbatch python -I -m pytest -q ../BK_AICUP_2026-2/tests
 ```
 
 ## 2. 模擬候選庫的 CV（CPU；`scripts/pid_cv.py`；2026-10-29，issue #1）
@@ -21,7 +21,7 @@ sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -t 00:30:00 -J pidtest script
 
 ```bash
 cd ~/BK_AICUP_2026-1
-sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidcv scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_cv.py --pools 1,2 3,4 --workers 12 --out ../BK_AICUP_2026-2/results/pid_cv.json --fusion-out ../BK_AICUP_2026-2/results/pid_fusion.json
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J pidcv scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_cv.py --pools 1,2 3,4 --workers 12 --out ../BK_AICUP_2026-2/results/pid_cv.json --fusion-out ../BK_AICUP_2026-2/results/pid_fusion.json
 ```
 
 要貼回 issue #1 的：每庫的 `eligible`／`players`／`questions_by_n`／`players_by_rank`（抽到的候選人幾乎都是重度玩家，看看等級分布），三列（`opening`、`style`、`fusion`）的 score／top1／top5／mrr 與 by n，三條比較，融合權重，秒數。`pid_cv.json`、`pid_fusion.json` 進 git。預期：讀 100 萬局的 player／color 欄約 1–2 分鐘，每庫約 6 萬局的解析與風格特徵用 24 核約 5–10 分鐘，開局模型評分每庫約 1–2 分鐘。
@@ -34,14 +34,14 @@ sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidcv sc
 
 ```bash
 cd ~/BK_AICUP_2026-1
-sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidaudit scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_audit.py --pools 1,2 3,4 --workers 12 --out ../BK_AICUP_2026-2/results/pid_audit.json
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J pidaudit scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_audit.py --pools 1,2 3,4 --workers 12 --out ../BK_AICUP_2026-2/results/pid_audit.json
 ```
 
 ## 3. 11/04：官方檔案 → 提交（`scripts/predict_pid.py`）
 
 ```bash
 cd ~/BK_AICUP_2026-1
-sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidsub scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/predict_pid.py \
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J pidsub scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/predict_pid.py \
     --candidates ../BK_AICUP_2026-2/data/tests/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/tests/player_identification_candidates_private.csv \
     --questions ../BK_AICUP_2026-2/data/tests/player_identification_test_public.csv ../BK_AICUP_2026-2/data/tests/player_identification_test_private.csv \
     --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/submission/submission_player.csv --expect-rows 800 --workers 12
@@ -57,8 +57,8 @@ exit 0 且 `submission_player.report.json` 的 `problems` 為空才上傳；`dro
 
 ```bash
 cd ~/BK_AICUP_2026-1
-sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 01:00:00 -J pidmock scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_mock_official.py --pools 1,2 3,4 --out-dir ../BK_AICUP_2026-2/data/mock_official --seed 0
-sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidchk scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_check_files.py \
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 01:00:00 -J pidmock scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_mock_official.py --pools 1,2 3,4 --out-dir ../BK_AICUP_2026-2/data/mock_official --seed 0
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J pidchk scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_check_files.py \
     --candidates ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv \
     --questions ../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv \
     --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/checks/mock_official_checks.json --workers 12
@@ -69,7 +69,7 @@ mock 的 CSV 在 `data/`（不進 git）；`results/checks/*.json` 進 git。202
 演練的第二半：提交路徑本身也在 mock 上跑一次，並用 `pid_reconcile.py` 對帳（檢查腳本的 `main_line.top1` 對 `submission_player.csv` 的 `top_1` 必須逐題相同）、順便用真值檔算 mock 分數：
 
 ```bash
-sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidsubmock scripts/nano4/run.sbatch bash -c 'python -I ../BK_AICUP_2026-2/scripts/predict_pid.py --candidates ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv --questions ../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/mock_official/submission_player.csv --expect-rows 800 --workers 12 && python -I ../BK_AICUP_2026-2/scripts/pid_reconcile.py --checks ../BK_AICUP_2026-2/results/checks/mock_official_checks.json --submission ../BK_AICUP_2026-2/results/mock_official/submission_player.csv --truth ../BK_AICUP_2026-2/data/mock_official/truth_public.csv ../BK_AICUP_2026-2/data/mock_official/truth_private.csv --out ../BK_AICUP_2026-2/results/checks/mock_official_reconcile.json'
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J pidsubmock scripts/nano4/run.sbatch bash -c 'python -I ../BK_AICUP_2026-2/scripts/predict_pid.py --candidates ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv --questions ../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/mock_official/submission_player.csv --expect-rows 800 --workers 12 && python -I ../BK_AICUP_2026-2/scripts/pid_reconcile.py --checks ../BK_AICUP_2026-2/results/checks/mock_official_checks.json --submission ../BK_AICUP_2026-2/results/mock_official/submission_player.csv --truth ../BK_AICUP_2026-2/data/mock_official/truth_public.csv ../BK_AICUP_2026-2/data/mock_official/truth_private.csv --out ../BK_AICUP_2026-2/results/checks/mock_official_reconcile.json'
 ```
 
 ### 4.2 11/04 當天
@@ -82,3 +82,26 @@ sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidsubmo
    - 另看：`illegal records`（`predict_pid.py` 會丟掉同樣的局，數量要一致）、`question-vs-candidate duplicates`（應 0）、`num_games`（各 100）。
 3. 第一版提交：§3 的 `predict_pid.py` 指令。`exit 0`、`problems` 空、`dropped_games` 與 `fallback_questions` 空才上傳；上傳前跑 `pid_reconcile.py --checks results/checks/official_checks.json --submission results/submission/submission_player.csv --out results/checks/official_reconcile.json`（不給 `--truth`），`top_1 agree 800/800`、exit 0 才上傳。
 4. 結果（`official_checks.json`、`submission_player.report.json`、Public 分數）貼到 issue，寫進 METHOD_NOTES；Public 分數對自我辨識分數的落差決定支線的優先序（分岔計畫 §3.2、§3.3）。
+
+## 5. 支線 B（分岔計畫 §4；全部 CPU、`-c 12`、fold 0 不碰；結果 JSON 進 git）
+
+### 5.1 B3 全局配對（`scripts/pid_assign_cv.py`）
+
+每人一題的模擬候選庫（folds 1+2、3+4 各 5 個 seed，每庫 400 人、各 n 100 題），融合權重交叉擬合（用另一個 fold 組的庫），兩臂：`fusion`（逐題 Top-5）與 `assign`（Hungarian 定 Top-1，其餘照原順序）。預先指定 `assign vs fusion`：玩家 bootstrap、兩個 fold 組同向、整體 ≥ 0.003 或 n=5 ≥ 0.005。`--control` 另加每個 fold 組一個「玩家會重複」的對照庫（只報告：一人一題不成立時配對的傷害，以及 Top-1 不同候選人數能不能分出兩種設計）。
+
+```bash
+cd ~/BK_AICUP_2026-1
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J b3cv scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_assign_cv.py --pools 1,2 3,4 --seeds 0 1 2 3 4 --control --workers 12 --out ../BK_AICUP_2026-2/results/assign/assign_cv.json
+```
+
+提交端：`predict_pid.py --assign auto`（該庫 400 題的 Top-1 有 ≥ 350 個不同候選人才套用；`on` 強制、`off` 預設）。11/04 用不用由 CV 結果 + `pid_check_files.py` 第 8 項 + 使用者決定。
+
+### 5.2 B1 開局模型超參（`scripts/pid_opening_sweep.py`）
+
+pid_cv 的兩個模擬庫（seed 0），風格模型只擬合一次；base（depth 12、α 2、β 5、α_full 1）與事先指定的格子（depth 8／16／20、α 1／4、β 2／10、α_full 0.5／2／1000=關掉完整前綴）各重擬開局模型、交叉擬合融合權重，每個設定 vs base 於融合分數（同一套門檻）。
+
+```bash
+sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 03:00:00 -J b1sweep scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_opening_sweep.py --pools 1,2 3,4 --workers 12 --out ../BK_AICUP_2026-2/results/opening/opening_sweep.json
+```
+
+通過的設定要接進提交，得重跑 `pid_cv.py --fusion-out` 產生新的 `pid_fusion.json`（`cfg` 跟著進文件），並開「[提交]」issue。

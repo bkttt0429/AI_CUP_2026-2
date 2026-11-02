@@ -80,7 +80,7 @@ def test_one_per_player_short_players_get_the_largest_affordable_size():
 
 - [ ] **Step 2: 跑測試確認失敗**
 
-Run: `cd ~/AICUP_2026-1 && sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -t 00:20:00 -J pidt1 scripts/nano4/run.sbatch python -I -m pytest -q ../BK_AICUP_2026-2/tests/test_pools.py`
+Run: `cd ~/AICUP_2026-1 && sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -t 00:20:00 -J pidt1 scripts/nano4/run.sbatch python -I -m pytest -q ../BK_AICUP_2026-2/tests/test_pools.py`
 Expected: FAIL，`AttributeError: ... has no attribute 'make_pool_one_per_player'`
 
 - [ ] **Step 3: 實作 `make_pool_one_per_player`**：重用 `eligible_players` 與 `_player_rng`；被選玩家依 `n_black` 降冪、同局數依 `player_id`，對 `sorted(sizes, reverse=True)` 逐一分配。
@@ -327,17 +327,17 @@ def test_mock_official_writes_official_format(tmp_path, monkeypatch):
 
 - [ ] **Step 1: 全套測試**
 
-Run: `cd ~/BK_AICUP_2026-1 && sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -t 00:30:00 -J pidtest scripts/nano4/run.sbatch python -I -m pytest -q ../BK_AICUP_2026-2/tests`
+Run: `cd ~/BK_AICUP_2026-1 && sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -t 00:30:00 -J pidtest scripts/nano4/run.sbatch python -I -m pytest -q ../BK_AICUP_2026-2/tests`
 Expected: 全部 passed（原 13 + 新增）
 
 - [ ] **Step 2: 產生 mock 官方檔**
 
-Run: `sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 01:00:00 -J pidmock scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_mock_official.py --pools 1,2 3,4 --out-dir ../BK_AICUP_2026-2/data/mock_official --seed 0`
+Run: `sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 01:00:00 -J pidmock scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_mock_official.py --pools 1,2 3,4 --out-dir ../BK_AICUP_2026-2/data/mock_official --seed 0`
 Expected: 兩庫各 400 位候選人、每人一題；`mock_info.json` 的 `questions_by_n` 盡量各 100
 
 - [ ] **Step 3: 在 mock 上跑檢查腳本（含訓練索引）**
 
-Run: `sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidchk scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_check_files.py --candidates ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv --questions ../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/checks/mock_official_checks.json --workers 12`
+Run: `sbatch --exclude=25a-hgpn[001,003,004,007,009,039,062] -c 12 -t 02:00:00 -J pidchk scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_check_files.py --candidates ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv --questions ../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/checks/mock_official_checks.json --workers 12`
 Expected（正控制）：兩庫候選局與測試局 100% 在訓練集、`A1_training_overlap` True、每位候選人對應恰一個訓練 `player_id`；測試局不在候選局；開局位移旗標 False；自我辨識分數（這是第 7 項的參考值）與 Top-1 碰撞的 `distinct_top1`（一人一題的 mock 應 ≥ 350）。記下秒數。
 
 - [ ] **Step 4: 寫文件、結果進 git、Commit**
