@@ -9,7 +9,7 @@ Exit codes: 2 input/format problems, 1 validation failure.
 
   python -I scripts/predict_pid.py --candidates tests/player_identification_candidates_public.csv tests/player_identification_candidates_private.csv \\
       --questions tests/player_identification_test_public.csv tests/player_identification_test_private.csv \\
-      --fusion results/pid_fusion.json --out results/submission_player.csv --expect-rows 800 --workers 24
+      --fusion results/pid_fusion.json --out results/submission_player.csv --expect-rows 800 --workers 12
 """
 import argparse
 import json
@@ -24,11 +24,12 @@ if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 import aicup_pid  # noqa: E402
 TRAIN_DIR = aicup_pid.TRAIN_DIR  # the shared data location (also puts AI_CUP_2026-1 on sys.path)
-from aicup.ladder import environment, to_json  # noqa: E402
+from aicup.ladder import to_json  # noqa: E402
 from aicup.submission import check_game  # noqa: E402
 from aicup_pid import pools  # noqa: E402
 from aicup_pid.components import COMPONENTS, fit_models, score_questions  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
+from aicup_pid.provenance import pid_environment  # noqa: E402
 
 
 def predict_pool(cand_path, q_path, fus, cfg, workers, log=print):
@@ -105,7 +106,7 @@ def main(argv=None):
         return 2
     pools.write_submission(rows, a.out)
     problems = pools.validate_submission(a.out, [q for q, _ in rows], pool_players, a.expect_rows)
-    report = {"submission": str(a.out), "rows": len(rows), "pools": reports, "fusion": doc, "problems": problems, **environment("cpu")}
+    report = {"submission": str(a.out), "rows": len(rows), "pools": reports, "fusion": doc, "problems": problems, **pid_environment("cpu")}
     Path(a.out).with_suffix(".report.json").write_text(to_json(report, indent=1) + "\n")
     if problems:
         print("\n".join(problems), file=sys.stderr)

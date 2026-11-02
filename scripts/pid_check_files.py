@@ -12,7 +12,7 @@ num_games counts (9) and the record properties (10). Everything is a report; the
 
   python -I scripts/pid_check_files.py --candidates data/tests/player_identification_candidates_public.csv data/tests/player_identification_candidates_private.csv \\
       --questions data/tests/player_identification_test_public.csv data/tests/player_identification_test_private.csv \\
-      --fusion results/pid_fusion.json --out results/checks/official_checks.json --workers 24
+      --fusion results/pid_fusion.json --out results/checks/official_checks.json --workers 12
 """
 import argparse
 import json
