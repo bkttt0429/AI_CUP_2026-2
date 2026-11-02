@@ -5,5 +5,6 @@
 - 任務、資料與規則：[docs/TASK.md](docs/TASK.md)
 - 問題本質、方法梯子與驗證協議：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - 方法筆記（已確認的事實與收斂的決策）：[METHOD_NOTES.md](METHOD_NOTES.md)
+- 分岔計畫（2026-11-03，主線／11/04 檔案檢查的 A1／A2／A3／支線 B、C）：[docs/superpowers/specs/2026-11-03-pid-fork-plan-design.md](docs/superpowers/specs/2026-11-03-pid-fork-plan-design.md)；檔案檢查腳本的實作計畫：[docs/superpowers/plans/2026-11-03-pid-check-files.md](docs/superpowers/plans/2026-11-03-pid-check-files.md)
 
 訓練資料和棋力預測競賽（[AI_CUP_2026-1](https://github.com/bkttt0429/AI_CUP_2026-1)）**完全相同**（100 萬局、8,007 位玩家）；SGF 解析、KataGo 特徵、位置快取、評分與 nano4 的操作都沿用那個倉庫的 `aicup` 套件，本倉庫只放玩家辨識專用的程式與結果。資料、權重與虛擬環境不進 git。

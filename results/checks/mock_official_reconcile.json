@@ -1,0 +1,71 @@
+{
+ "n_questions_checks": 800,
+ "n_questions_submission": 800,
+ "n_compared": 800,
+ "n_top1_equal": 800,
+ "n_top1_differ": 0,
+ "differences": [],
+ "checks_without_top1": [],
+ "missing_in_submission": [],
+ "missing_in_checks": [],
+ "truth_score": {
+  "score": 0.9474229319587257,
+  "top1": 0.935,
+  "top5": 0.98,
+  "mrr": 0.9542499999999999,
+  "n": 800,
+  "by_n": {
+   "5": {
+    "score": 0.8532838114706118,
+    "top1": 0.825,
+    "top5": 0.935,
+    "mrr": 0.8703333333333333,
+    "n": 200
+   },
+   "10": {
+    "score": 0.9522109303350049,
+    "top1": 0.94,
+    "top5": 0.985,
+    "mrr": 0.9591666666666666,
+    "n": 200
+   },
+   "15": {
+    "score": 0.9905181916175715,
+    "top1": 0.985,
+    "top5": 1.0,
+    "mrr": 0.9925,
+    "n": 200
+   },
+   "20": {
+    "score": 0.9936787944117144,
+    "top1": 0.99,
+    "top5": 1.0,
+    "mrr": 0.995,
+    "n": 200
+   }
+  },
+  "n_truth_rows": 800
+ },
+ "checks": "../BK_AICUP_2026-2/results/checks/mock_official_checks.json",
+ "submission": "../BK_AICUP_2026-2/results/mock_official/submission_player.csv",
+ "truth": [
+  "../BK_AICUP_2026-2/data/mock_official/truth_public.csv",
+  "../BK_AICUP_2026-2/data/mock_official/truth_private.csv"
+ ],
+ "git_head": "24207b2",
+ "git_dirty": false,
+ "code_sha256": "087f80e747ba6b925fda3dc0ea30d6c3c79966a62a7f90e053ba495b9a7c0cb7",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "0529dad",
+ "pid_git_dirty": true
+}

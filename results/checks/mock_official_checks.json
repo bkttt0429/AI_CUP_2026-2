@@ -1,0 +1,4660 @@
+{
+ "pools": [
+  {
+   "prefix": "pub_",
+   "candidates": "../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv",
+   "questions": "../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv",
+   "n_candidates": 400,
+   "n_candidate_games": 40000,
+   "candidates_without_usable_games": [],
+   "n_questions": 400,
+   "num_games": {
+    "5": 100,
+    "10": 100,
+    "15": 100,
+    "20": 100
+   },
+   "legality": {
+    "candidates": {
+     "n": 40000,
+     "n_bad": 0,
+     "errors": [],
+     "handicap_counts": {
+      "0": 31741,
+      "1": 6990,
+      "2": 566,
+      "6": 31,
+      "5": 112,
+      "7": 26,
+      "3": 413,
+      "4": 109,
+      "8": 4,
+      "9": 8
+     }
+    },
+    "questions": {
+     "n": 5000,
+     "n_bad": 0,
+     "errors": [],
+     "handicap_counts": {
+      "0": 3908,
+      "1": 944,
+      "3": 65,
+      "5": 15,
+      "6": 5,
+      "2": 50,
+      "4": 10,
+      "7": 3
+     }
+    }
+   },
+   "lengths": {
+    "candidates": {
+     "n": 40000,
+     "moves": {
+      "p05": 130.0,
+      "p25": 185.0,
+      "p50": 227.0,
+      "p75": 261.0,
+      "p95": 299.0,
+      "mean": 221.695575
+     },
+     "black_moves": {
+      "p05": 65.0,
+      "p25": 93.0,
+      "p50": 114.0,
+      "p75": 131.0,
+      "p95": 150.0,
+      "mean": 111.096075
+     }
+    },
+    "questions": {
+     "n": 5000,
+     "moves": {
+      "p05": 128.0,
+      "p25": 184.0,
+      "p50": 227.0,
+      "p75": 260.0,
+      "p95": 298.0500000000002,
+      "mean": 221.2978
+     },
+     "black_moves": {
+      "p05": 64.0,
+      "p25": 92.0,
+      "p50": 114.0,
+      "p75": 130.0,
+      "p95": 149.05000000000018,
+      "mean": 110.8942
+     }
+    }
+   },
+   "training_overlap": {
+    "candidates": {
+     "n_games_checked": 40000,
+     "n_dup_games": 40000,
+     "n_players_with_dups": 400,
+     "players_single_training_id": 400,
+     "players_multiple_training_ids": 0,
+     "same_id_players": 0,
+     "by_player": {
+      "pub_p_007505ec1606b2cd": {
+       "007505ec1606b2cd": 100
+      },
+      "pub_p_01924fe4d1f76188": {
+       "01924fe4d1f76188": 100
+      },
+      "pub_p_01b97a8c195e06a8": {
+       "01b97a8c195e06a8": 100
+      },
+      "pub_p_01fac2ce584baf40": {
+       "01fac2ce584baf40": 100
+      },
+      "pub_p_021a4215ce28d8f7": {
+       "021a4215ce28d8f7": 100
+      },
+      "pub_p_021ceaedb68903da": {
+       "021ceaedb68903da": 100
+      },
+      "pub_p_02789c927541a7dd": {
+       "02789c927541a7dd": 100
+      },
+      "pub_p_02bc178be69eb4cb": {
+       "02bc178be69eb4cb": 100
+      },
+      "pub_p_032dc0d4dd69d699": {
+       "032dc0d4dd69d699": 100
+      },
+      "pub_p_033e3c22f2a703e5": {
+       "033e3c22f2a703e5": 100
+      },
+      "pub_p_03b338b4acfd73df": {
+       "03b338b4acfd73df": 100
+      },
+      "pub_p_062e703b1589398d": {
+       "062e703b1589398d": 100
+      },
+      "pub_p_07c6d20836ea7958": {
+       "07c6d20836ea7958": 100
+      },
+      "pub_p_0830f39de24a91ab": {
+       "0830f39de24a91ab": 100
+      },
+      "pub_p_08edad3abe990898": {
+       "08edad3abe990898": 100
+      },
+      "pub_p_0958da62bcea8c30": {
+       "0958da62bcea8c30": 100
+      },
+      "pub_p_0aae1cf37d922dc5": {
+       "0aae1cf37d922dc5": 100
+      },
+      "pub_p_0acdac509332d93a": {
+       "0acdac509332d93a": 100
+      },
+      "pub_p_0e31fd49e699200d": {
+       "0e31fd49e699200d": 100
+      },
+      "pub_p_0e46e487fbd633c9": {
+       "0e46e487fbd633c9": 100
+      },
+      "pub_p_0ef525ec8df2248e": {
+       "0ef525ec8df2248e": 100
+      },
+      "pub_p_0f1e25ecedca3fe5": {
+       "0f1e25ecedca3fe5": 100
+      },
+      "pub_p_0fb1dc933f6887fb": {
+       "0fb1dc933f6887fb": 100
+      },
+      "pub_p_0fc2363bb6c9b86f": {
+       "0fc2363bb6c9b86f": 100
+      },
+      "pub_p_100d09e812b61c14": {
+       "100d09e812b61c14": 100
+      },
+      "pub_p_10a6d1bc7c4bb1a7": {
+       "10a6d1bc7c4bb1a7": 100
+      },
+      "pub_p_10b8d1008251e54d": {
+       "10b8d1008251e54d": 100
+      },
+      "pub_p_110d6f55bbb268e8": {
+       "110d6f55bbb268e8": 100
+      },
+      "pub_p_1183221053cfe387": {
+       "1183221053cfe387": 100
+      },
+      "pub_p_11cc9179ec654ea0": {
+       "11cc9179ec654ea0": 100
+      },
+      "pub_p_120862160bb6663b": {
+       "120862160bb6663b": 100
+      },
+      "pub_p_122c39c6ecef6589": {
+       "122c39c6ecef6589": 100
+      },
+      "pub_p_12bc53d6cc603658": {
+       "12bc53d6cc603658": 100
+      },
+      "pub_p_12febe358a831d50": {
+       "12febe358a831d50": 100
+      },
+      "pub_p_1371aec1c07775a6": {
+       "1371aec1c07775a6": 100
+      },
+      "pub_p_137f7b47307e10fe": {
+       "137f7b47307e10fe": 100
+      },
+      "pub_p_137f8e46a7d18c5b": {
+       "137f8e46a7d18c5b": 100
+      },
+      "pub_p_13ea41df8f19b1d7": {
+       "13ea41df8f19b1d7": 100
+      },
+      "pub_p_14cbbd436c8fc2c5": {
+       "14cbbd436c8fc2c5": 100
+      },
+      "pub_p_15aa19273bd61b32": {
+       "15aa19273bd61b32": 100
+      },
+      "pub_p_167b8fe0ad5b3853": {
+       "167b8fe0ad5b3853": 100
+      },
+      "pub_p_18cac98af3f2b8b4": {
+       "18cac98af3f2b8b4": 100
+      },
+      "pub_p_18eaa282f1e8fe25": {
+       "18eaa282f1e8fe25": 100
+      },
+      "pub_p_1973ae2cc83d4dbc": {
+       "1973ae2cc83d4dbc": 100
+      },
+      "pub_p_19c9fe042b784baf": {
+       "19c9fe042b784baf": 100
+      },
+      "pub_p_1bf7c97a1e6855eb": {
+       "1bf7c97a1e6855eb": 100
+      },
+      "pub_p_1c73b2ad0d211c03": {
+       "1c73b2ad0d211c03": 100
+      },
+      "pub_p_1ce6c40202046ad6": {
+       "1ce6c40202046ad6": 100
+      },
+      "pub_p_1d617601d2504345": {
+       "1d617601d2504345": 100
+      },
+      "pub_p_1e0b7a98275bee6d": {
+       "1e0b7a98275bee6d": 100
+      }
+     },
+     "players_not_listed": 350
+    },
+    "questions": {
+     "n_games_checked": 5000,
+     "n_dup_games": 5000,
+     "n_players_with_dups": 400,
+     "players_single_training_id": 400,
+     "players_multiple_training_ids": 0,
+     "same_id_players": 0,
+     "by_player": {
+      "pub_q_0001": {
+       "01b97a8c195e06a8": 10
+      },
+      "pub_q_0002": {
+       "02789c927541a7dd": 20
+      },
+      "pub_q_0003": {
+       "0958da62bcea8c30": 20
+      },
+      "pub_q_0004": {
+       "18eaa282f1e8fe25": 15
+      },
+      "pub_q_0005": {
+       "22e0228828fdbae4": 15
+      },
+      "pub_q_0006": {
+       "3b6ffa98abb9c4f7": 20
+      },
+      "pub_q_0007": {
+       "3d749e982c436292": 20
+      },
+      "pub_q_0008": {
+       "3f6dd2e1cd03d54f": 20
+      },
+      "pub_q_0009": {
+       "4188d067b6b22535": 10
+      },
+      "pub_q_0010": {
+       "48dc4fc98b978e2d": 15
+      },
+      "pub_q_0011": {
+       "4d8f1eb1b0281c1b": 20
+      },
+      "pub_q_0012": {
+       "5f07f65538c7e316": 15
+      },
+      "pub_q_0013": {
+       "61530f4acb43c55b": 20
+      },
+      "pub_q_0014": {
+       "6202362a49fab8be": 15
+      },
+      "pub_q_0015": {
+       "62adc1a5ead83ca0": 20
+      },
+      "pub_q_0016": {
+       "6443ceef801e916f": 5
+      },
+      "pub_q_0017": {
+       "64b8c58e8a263227": 20
+      },
+      "pub_q_0018": {
+       "765f57a7d86b6d4a": 20
+      },
+      "pub_q_0019": {
+       "8078f48a697710c1": 15
+      },
+      "pub_q_0020": {
+       "854e00133427ca50": 20
+      },
+      "pub_q_0021": {
+       "86752d50d3a7c248": 5
+      },
+      "pub_q_0022": {
+       "8eb62a130907b843": 15
+      },
+      "pub_q_0023": {
+       "912b146a692aeece": 5
+      },
+      "pub_q_0024": {
+       "929dbba62c8c69d8": 10
+      },
+      "pub_q_0025": {
+       "99f45303bf969314": 20
+      },
+      "pub_q_0026": {
+       "a0f54096aa0d24a1": 10
+      },
+      "pub_q_0027": {
+       "a75a866a80077792": 20
+      },
+      "pub_q_0028": {
+       "be77fdafa9e24aec": 5
+      },
+      "pub_q_0029": {
+       "ce94ebe60be93eaa": 15
+      },
+      "pub_q_0030": {
+       "cf097ff199e8e510": 5
+      },
+      "pub_q_0031": {
+       "dd24e339ffba6578": 20
+      },
+      "pub_q_0032": {
+       "e0af5bbe5a623c4b": 10
+      },
+      "pub_q_0033": {
+       "ec17f0fcb11c9b2e": 5
+      },
+      "pub_q_0034": {
+       "edae8d92ae809032": 10
+      },
+      "pub_q_0035": {
+       "f033bc996c08329c": 15
+      },
+      "pub_q_0036": {
+       "f4e90cb2ba945550": 10
+      },
+      "pub_q_0037": {
+       "f914d06a91e8b1bc": 20
+      },
+      "pub_q_0038": {
+       "fb86150e9378e592": 10
+      },
+      "pub_q_0039": {
+       "137f8e46a7d18c5b": 10
+      },
+      "pub_q_0040": {
+       "1e0b7a98275bee6d": 10
+      },
+      "pub_q_0041": {
+       "20d800a72e614466": 15
+      },
+      "pub_q_0042": {
+       "21baeec1b694a8c7": 10
+      },
+      "pub_q_0043": {
+       "2232dc2dfc9fd0de": 20
+      },
+      "pub_q_0044": {
+       "309d78fe7abf0642": 15
+      },
+      "pub_q_0045": {
+       "33013dc1e2472960": 10
+      },
+      "pub_q_0046": {
+       "3ae7c7faafa65585": 10
+      },
+      "pub_q_0047": {
+       "4377f8235747721b": 10
+      },
+      "pub_q_0048": {
+       "4eba86dd3d4ee33c": 20
+      },
+      "pub_q_0049": {
+       "55dd1044d51e8c84": 15
+      },
+      "pub_q_0050": {
+       "60a09eaebc7bd0e3": 10
+      }
+     },
+     "players_not_listed": 350
+    }
+   },
+   "question_vs_candidate_dups": 0,
+   "question_vs_candidate_examples": [],
+   "question_vs_question_dups": 0,
+   "question_vs_question_examples": [],
+   "opening_shift": {
+    "4": {
+     "k": 4,
+     "n_query": 5000,
+     "n_candidate": 40000,
+     "observed": 0.3615623200499636,
+     "null": [
+      0.35714787447565033,
+      0.36069322732077164,
+      0.36047637344628974,
+      0.35673908973369856,
+      0.3542057032336563,
+      0.3667296100042324,
+      0.35443223774769994,
+      0.3592538397837356,
+      0.3601467421203565,
+      0.3590733644372872,
+      0.35775194066430704,
+      0.35687323360867007,
+      0.3597309237682387,
+      0.35256537731029464,
+      0.3626005610525899,
+      0.3630748856817571,
+      0.3668304595527488,
+      0.36553625733728895,
+      0.35824535225969484,
+      0.3602276356165298
+     ],
+     "null_mean": 0.35961673445777487,
+     "null_max": 0.3668304595527488,
+     "ratio_to_null_max": 0.9856387620886,
+     "flag": false
+    },
+    "8": {
+     "k": 8,
+     "n_query": 5000,
+     "n_candidate": 40000,
+     "observed": 0.9621356764575655,
+     "null": [
+      0.9613970024247894,
+      0.9602252146262868,
+      0.9602626928566536,
+      0.9593925942541174,
+      0.9605027851566817,
+      0.9628330257013155,
+      0.9631209689869014,
+      0.9591250335395392,
+      0.9594831190903121,
+      0.9565129942734336,
+      0.9588111720855667,
+      0.959732198545707,
+      0.9622518712745557,
+      0.9588098248258131,
+      0.9605513994744522,
+      0.9615261312836145,
+      0.9602408949402295,
+      0.9603313363510579,
+      0.9579903389907535,
+      0.960759779143404
+     ],
+     "null_mean": 0.9601930188912593,
+     "null_max": 0.9631209689869014,
+     "ratio_to_null_max": 0.9989769794646125,
+     "flag": false
+    }
+   },
+   "self_identification": {
+    "n_candidates": 400,
+    "n_skipped": 0,
+    "n_questions": 1600,
+    "model_games": 50,
+    "scores": {
+     "opening": {
+      "score": 0.9272494632792815,
+      "top1": 0.911875,
+      "top5": 0.974375,
+      "mrr": 0.9371666666666667,
+      "n": 1600,
+      "by_n": {
+       "5": {
+        "score": 0.8348079848967273,
+        "top1": 0.8075,
+        "top5": 0.9275,
+        "mrr": 0.85425,
+        "n": 400
+       },
+       "10": {
+        "score": 0.9262893618484652,
+        "top1": 0.905,
+        "top5": 0.98,
+        "mrr": 0.9377083333333335,
+        "n": 400
+       },
+       "15": {
+        "score": 0.9703720969547556,
+        "top1": 0.9625,
+        "top5": 0.9975,
+        "mrr": 0.9761250000000001,
+        "n": 400
+       },
+       "20": {
+        "score": 0.9775284094171783,
+        "top1": 0.9725,
+        "top5": 0.9925,
+        "mrr": 0.9805833333333334,
+        "n": 400
+       }
+      }
+     },
+     "style": {
+      "score": 0.6169442193822833,
+      "top1": 0.56375,
+      "top5": 0.815,
+      "mrr": 0.6589791666666666,
+      "n": 1600,
+      "by_n": {
+       "5": {
+        "score": 0.39911615950069207,
+        "top1": 0.3425,
+        "top5": 0.6225,
+        "mrr": 0.4467083333333333,
+        "n": 400
+       },
+       "10": {
+        "score": 0.574654415611449,
+        "top1": 0.515,
+        "top5": 0.795,
+        "mrr": 0.6211249999999999,
+        "n": 400
+       },
+       "15": {
+        "score": 0.706973563953668,
+        "top1": 0.6525,
+        "top5": 0.8925,
+        "mrr": 0.74675,
+        "n": 400
+       },
+       "20": {
+        "score": 0.7870327384633237,
+        "top1": 0.745,
+        "top5": 0.95,
+        "mrr": 0.8213333333333332,
+        "n": 400
+       }
+      }
+     },
+     "fusion": {
+      "score": 0.9363753869810404,
+      "top1": 0.920625,
+      "top5": 0.979375,
+      "mrr": 0.9454270833333334,
+      "n": 1600,
+      "by_n": {
+       "5": {
+        "score": 0.8524695893559756,
+        "top1": 0.8225,
+        "top5": 0.9375,
+        "mrr": 0.8703333333333333,
+        "n": 400
+       },
+       "10": {
+        "score": 0.9345064780323841,
+        "top1": 0.915,
+        "top5": 0.985,
+        "mrr": 0.9451666666666667,
+        "n": 400
+       },
+       "15": {
+        "score": 0.974919451542691,
+        "top1": 0.965,
+        "top5": 0.9975,
+        "mrr": 0.9796666666666667,
+        "n": 400
+       },
+       "20": {
+        "score": 0.9836060289931103,
+        "top1": 0.98,
+        "top5": 0.9975,
+        "mrr": 0.9865416666666667,
+        "n": 400
+       }
+      }
+     }
+    },
+    "fusion_margin_quantiles": {
+     "p05": 0.5745909104022137,
+     "p25": 2.923106566638075,
+     "p50": 5.403383340227327,
+     "p75": 8.632998138186924,
+     "p95": 15.90469316840557,
+     "mean": 6.4290608813130685
+    },
+    "candidates_misidentified": 97
+   },
+   "main_line": {
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 400,
+     "distinct_top1": 377,
+     "expected_random": 253.03235509572292,
+     "by_n": {
+      "5": 97,
+      "10": 97,
+      "15": 100,
+      "20": 99
+     },
+     "one_to_one_likely": true
+    },
+    "margin_quantiles": {
+     "p05": 0.6406805950468625,
+     "p25": 3.4706473447075923,
+     "p50": 6.062440965064508,
+     "p75": 9.454403636302061,
+     "p95": 16.358166431859864,
+     "mean": 7.015950038861226
+    },
+    "questions_without_usable_games": 0,
+    "top1": [
+     [
+      "pub_q_0001",
+      "pub_p_01b97a8c195e06a8"
+     ],
+     [
+      "pub_q_0002",
+      "pub_p_02789c927541a7dd"
+     ],
+     [
+      "pub_q_0003",
+      "pub_p_0958da62bcea8c30"
+     ],
+     [
+      "pub_q_0004",
+      "pub_p_18eaa282f1e8fe25"
+     ],
+     [
+      "pub_q_0005",
+      "pub_p_22e0228828fdbae4"
+     ],
+     [
+      "pub_q_0006",
+      "pub_p_3b6ffa98abb9c4f7"
+     ],
+     [
+      "pub_q_0007",
+      "pub_p_3d749e982c436292"
+     ],
+     [
+      "pub_q_0008",
+      "pub_p_3f6dd2e1cd03d54f"
+     ],
+     [
+      "pub_q_0009",
+      "pub_p_4188d067b6b22535"
+     ],
+     [
+      "pub_q_0010",
+      "pub_p_48dc4fc98b978e2d"
+     ],
+     [
+      "pub_q_0011",
+      "pub_p_4d8f1eb1b0281c1b"
+     ],
+     [
+      "pub_q_0012",
+      "pub_p_5f07f65538c7e316"
+     ],
+     [
+      "pub_q_0013",
+      "pub_p_61530f4acb43c55b"
+     ],
+     [
+      "pub_q_0014",
+      "pub_p_6202362a49fab8be"
+     ],
+     [
+      "pub_q_0015",
+      "pub_p_62adc1a5ead83ca0"
+     ],
+     [
+      "pub_q_0016",
+      "pub_p_c975f7eca1794548"
+     ],
+     [
+      "pub_q_0017",
+      "pub_p_64b8c58e8a263227"
+     ],
+     [
+      "pub_q_0018",
+      "pub_p_765f57a7d86b6d4a"
+     ],
+     [
+      "pub_q_0019",
+      "pub_p_8078f48a697710c1"
+     ],
+     [
+      "pub_q_0020",
+      "pub_p_854e00133427ca50"
+     ],
+     [
+      "pub_q_0021",
+      "pub_p_86752d50d3a7c248"
+     ],
+     [
+      "pub_q_0022",
+      "pub_p_8eb62a130907b843"
+     ],
+     [
+      "pub_q_0023",
+      "pub_p_912b146a692aeece"
+     ],
+     [
+      "pub_q_0024",
+      "pub_p_929dbba62c8c69d8"
+     ],
+     [
+      "pub_q_0025",
+      "pub_p_99f45303bf969314"
+     ],
+     [
+      "pub_q_0026",
+      "pub_p_a0f54096aa0d24a1"
+     ],
+     [
+      "pub_q_0027",
+      "pub_p_a75a866a80077792"
+     ],
+     [
+      "pub_q_0028",
+      "pub_p_be77fdafa9e24aec"
+     ],
+     [
+      "pub_q_0029",
+      "pub_p_ce94ebe60be93eaa"
+     ],
+     [
+      "pub_q_0030",
+      "pub_p_cf097ff199e8e510"
+     ],
+     [
+      "pub_q_0031",
+      "pub_p_dd24e339ffba6578"
+     ],
+     [
+      "pub_q_0032",
+      "pub_p_e0af5bbe5a623c4b"
+     ],
+     [
+      "pub_q_0033",
+      "pub_p_ec17f0fcb11c9b2e"
+     ],
+     [
+      "pub_q_0034",
+      "pub_p_edae8d92ae809032"
+     ],
+     [
+      "pub_q_0035",
+      "pub_p_f033bc996c08329c"
+     ],
+     [
+      "pub_q_0036",
+      "pub_p_f4e90cb2ba945550"
+     ],
+     [
+      "pub_q_0037",
+      "pub_p_f914d06a91e8b1bc"
+     ],
+     [
+      "pub_q_0038",
+      "pub_p_d3bc87b85bd681d2"
+     ],
+     [
+      "pub_q_0039",
+      "pub_p_137f8e46a7d18c5b"
+     ],
+     [
+      "pub_q_0040",
+      "pub_p_1e0b7a98275bee6d"
+     ],
+     [
+      "pub_q_0041",
+      "pub_p_20d800a72e614466"
+     ],
+     [
+      "pub_q_0042",
+      "pub_p_21baeec1b694a8c7"
+     ],
+     [
+      "pub_q_0043",
+      "pub_p_2232dc2dfc9fd0de"
+     ],
+     [
+      "pub_q_0044",
+      "pub_p_309d78fe7abf0642"
+     ],
+     [
+      "pub_q_0045",
+      "pub_p_33013dc1e2472960"
+     ],
+     [
+      "pub_q_0046",
+      "pub_p_3ae7c7faafa65585"
+     ],
+     [
+      "pub_q_0047",
+      "pub_p_4377f8235747721b"
+     ],
+     [
+      "pub_q_0048",
+      "pub_p_4eba86dd3d4ee33c"
+     ],
+     [
+      "pub_q_0049",
+      "pub_p_55dd1044d51e8c84"
+     ],
+     [
+      "pub_q_0050",
+      "pub_p_60a09eaebc7bd0e3"
+     ],
+     [
+      "pub_q_0051",
+      "pub_p_63558642f6b86d68"
+     ],
+     [
+      "pub_q_0052",
+      "pub_p_67d5555ec695dcff"
+     ],
+     [
+      "pub_q_0053",
+      "pub_p_681cac4934cac661"
+     ],
+     [
+      "pub_q_0054",
+      "pub_p_6ea45d6012988748"
+     ],
+     [
+      "pub_q_0055",
+      "pub_p_7685e9b29f16c727"
+     ],
+     [
+      "pub_q_0056",
+      "pub_p_8595ec0a67989a49"
+     ],
+     [
+      "pub_q_0057",
+      "pub_p_94b6810f30696c1e"
+     ],
+     [
+      "pub_q_0058",
+      "pub_p_9506f5aa28656525"
+     ],
+     [
+      "pub_q_0059",
+      "pub_p_99fd3b5da6b389c1"
+     ],
+     [
+      "pub_q_0060",
+      "pub_p_a12343e79afafefd"
+     ],
+     [
+      "pub_q_0061",
+      "pub_p_aa2a7221bde5e5c5"
+     ],
+     [
+      "pub_q_0062",
+      "pub_p_b5f052f20869d384"
+     ],
+     [
+      "pub_q_0063",
+      "pub_p_b8d2b46e8588cf53"
+     ],
+     [
+      "pub_q_0064",
+      "pub_p_bf0d32b0a1bce4e4"
+     ],
+     [
+      "pub_q_0065",
+      "pub_p_c54ef60745271464"
+     ],
+     [
+      "pub_q_0066",
+      "pub_p_c79075e0b9a07c2f"
+     ],
+     [
+      "pub_q_0067",
+      "pub_p_c793e3ec1c5b3646"
+     ],
+     [
+      "pub_q_0068",
+      "pub_p_c94662691a4809f7"
+     ],
+     [
+      "pub_q_0069",
+      "pub_p_c975f7eca1794548"
+     ],
+     [
+      "pub_q_0070",
+      "pub_p_c9c11faf3063c31c"
+     ],
+     [
+      "pub_q_0071",
+      "pub_p_d204a39b4124b867"
+     ],
+     [
+      "pub_q_0072",
+      "pub_p_e3ced48c0f41ef15"
+     ],
+     [
+      "pub_q_0073",
+      "pub_p_e48455e222a34a53"
+     ],
+     [
+      "pub_q_0074",
+      "pub_p_e6b83edd4e6fb412"
+     ],
+     [
+      "pub_q_0075",
+      "pub_p_e92429fd1f5675eb"
+     ],
+     [
+      "pub_q_0076",
+      "pub_p_eb91425bd7c3b58d"
+     ],
+     [
+      "pub_q_0077",
+      "pub_p_eff81692323795f8"
+     ],
+     [
+      "pub_q_0078",
+      "pub_p_01924fe4d1f76188"
+     ],
+     [
+      "pub_q_0079",
+      "pub_p_0830f39de24a91ab"
+     ],
+     [
+      "pub_q_0080",
+      "pub_p_0e46e487fbd633c9"
+     ],
+     [
+      "pub_q_0081",
+      "pub_p_10b8d1008251e54d"
+     ],
+     [
+      "pub_q_0082",
+      "pub_p_1c73b2ad0d211c03"
+     ],
+     [
+      "pub_q_0083",
+      "pub_p_1d617601d2504345"
+     ],
+     [
+      "pub_q_0084",
+      "pub_p_2483f15c049c7a49"
+     ],
+     [
+      "pub_q_0085",
+      "pub_p_265a271b4c848159"
+     ],
+     [
+      "pub_q_0086",
+      "pub_p_28636538a2075710"
+     ],
+     [
+      "pub_q_0087",
+      "pub_p_e6b83edd4e6fb412"
+     ],
+     [
+      "pub_q_0088",
+      "pub_p_34e26badc3c9fa53"
+     ],
+     [
+      "pub_q_0089",
+      "pub_p_371cfa67479681d3"
+     ],
+     [
+      "pub_q_0090",
+      "pub_p_4e26ab407c2495c9"
+     ],
+     [
+      "pub_q_0091",
+      "pub_p_67bab809743ec8c1"
+     ],
+     [
+      "pub_q_0092",
+      "pub_p_6b8d1c57eaf8e62d"
+     ],
+     [
+      "pub_q_0093",
+      "pub_p_6c4dd6095c5de37e"
+     ],
+     [
+      "pub_q_0094",
+      "pub_p_87770c7ae2db0813"
+     ],
+     [
+      "pub_q_0095",
+      "pub_p_939f0b0ce69e17b7"
+     ],
+     [
+      "pub_q_0096",
+      "pub_p_9504a07d92e2e541"
+     ],
+     [
+      "pub_q_0097",
+      "pub_p_98b778820ea46f2b"
+     ],
+     [
+      "pub_q_0098",
+      "pub_p_990eb5cce2b1b7fd"
+     ],
+     [
+      "pub_q_0099",
+      "pub_p_9eb9e9b261e62fbd"
+     ],
+     [
+      "pub_q_0100",
+      "pub_p_b8349b5e497bc247"
+     ],
+     [
+      "pub_q_0101",
+      "pub_p_a0d5d45fb6170981"
+     ],
+     [
+      "pub_q_0102",
+      "pub_p_b244089301e75e83"
+     ],
+     [
+      "pub_q_0103",
+      "pub_p_b258cc3b150e8fc7"
+     ],
+     [
+      "pub_q_0104",
+      "pub_p_b4b4cfd7509ff0e0"
+     ],
+     [
+      "pub_q_0105",
+      "pub_p_bd0358a03f7e2fcb"
+     ],
+     [
+      "pub_q_0106",
+      "pub_p_c823c246ee9606bc"
+     ],
+     [
+      "pub_q_0107",
+      "pub_p_ca62cccb919ba89f"
+     ],
+     [
+      "pub_q_0108",
+      "pub_p_d2be806fd32aae81"
+     ],
+     [
+      "pub_q_0109",
+      "pub_p_d31b42ce810756f5"
+     ],
+     [
+      "pub_q_0110",
+      "pub_p_d3bc87b85bd681d2"
+     ],
+     [
+      "pub_q_0111",
+      "pub_p_5feea93760b44c89"
+     ],
+     [
+      "pub_q_0112",
+      "pub_p_ddc00c20ab0aaa91"
+     ],
+     [
+      "pub_q_0113",
+      "pub_p_ded87a9651f329f9"
+     ],
+     [
+      "pub_q_0114",
+      "pub_p_e22218522c3af597"
+     ],
+     [
+      "pub_q_0115",
+      "pub_p_e3e2ed9ce244237f"
+     ],
+     [
+      "pub_q_0116",
+      "pub_p_e96cff02526d98dd"
+     ],
+     [
+      "pub_q_0117",
+      "pub_p_03b338b4acfd73df"
+     ],
+     [
+      "pub_q_0118",
+      "pub_p_021a4215ce28d8f7"
+     ],
+     [
+      "pub_q_0119",
+      "pub_p_021ceaedb68903da"
+     ],
+     [
+      "pub_q_0120",
+      "pub_p_07c6d20836ea7958"
+     ],
+     [
+      "pub_q_0121",
+      "pub_p_0e31fd49e699200d"
+     ],
+     [
+      "pub_q_0122",
+      "pub_p_0fb1dc933f6887fb"
+     ],
+     [
+      "pub_q_0123",
+      "pub_p_14cbbd436c8fc2c5"
+     ],
+     [
+      "pub_q_0124",
+      "pub_p_15aa19273bd61b32"
+     ],
+     [
+      "pub_q_0125",
+      "pub_p_1f5d7bd5451073ae"
+     ],
+     [
+      "pub_q_0126",
+      "pub_p_22c1a99555347317"
+     ],
+     [
+      "pub_q_0127",
+      "pub_p_260bcad61e04f43d"
+     ],
+     [
+      "pub_q_0128",
+      "pub_p_33013dc1e2472960"
+     ],
+     [
+      "pub_q_0129",
+      "pub_p_3de23a77bf866629"
+     ],
+     [
+      "pub_q_0130",
+      "pub_p_40ec787b0b988862"
+     ],
+     [
+      "pub_q_0131",
+      "pub_p_482ddd0c25388a67"
+     ],
+     [
+      "pub_q_0132",
+      "pub_p_518095a264068391"
+     ],
+     [
+      "pub_q_0133",
+      "pub_p_53fde558ebf6a0a7"
+     ],
+     [
+      "pub_q_0134",
+      "pub_p_58d5f0fe5bc9ddf8"
+     ],
+     [
+      "pub_q_0135",
+      "pub_p_5a7952b7d963c435"
+     ],
+     [
+      "pub_q_0136",
+      "pub_p_6064f24369e89d45"
+     ],
+     [
+      "pub_q_0137",
+      "pub_p_8020d0672d48b999"
+     ],
+     [
+      "pub_q_0138",
+      "pub_p_80249e16e6aa94ec"
+     ],
+     [
+      "pub_q_0139",
+      "pub_p_836f942d59cb584e"
+     ],
+     [
+      "pub_q_0140",
+      "pub_p_8854560738e7bae3"
+     ],
+     [
+      "pub_q_0141",
+      "pub_p_8f187534dfc3cd4c"
+     ],
+     [
+      "pub_q_0142",
+      "pub_p_982f5120cdec33fc"
+     ],
+     [
+      "pub_q_0143",
+      "pub_p_9725826204ae91b9"
+     ],
+     [
+      "pub_q_0144",
+      "pub_p_9c41a2ac3b1db250"
+     ],
+     [
+      "pub_q_0145",
+      "pub_p_b8349b5e497bc247"
+     ],
+     [
+      "pub_q_0146",
+      "pub_p_bb62bd7b267feae8"
+     ],
+     [
+      "pub_q_0147",
+      "pub_p_bce1f07566198dd2"
+     ],
+     [
+      "pub_q_0148",
+      "pub_p_c25365a42725e93f"
+     ],
+     [
+      "pub_q_0149",
+      "pub_p_cacd2bc2ac67b67a"
+     ],
+     [
+      "pub_q_0150",
+      "pub_p_dcea98074275a403"
+     ],
+     [
+      "pub_q_0151",
+      "pub_p_ddaa5282b264890f"
+     ],
+     [
+      "pub_q_0152",
+      "pub_p_e1447e08474bb8a6"
+     ],
+     [
+      "pub_q_0153",
+      "pub_p_eb529f62c728abd8"
+     ],
+     [
+      "pub_q_0154",
+      "pub_p_ef27fc9922f21727"
+     ],
+     [
+      "pub_q_0155",
+      "pub_p_f281443b4ef62bac"
+     ],
+     [
+      "pub_q_0156",
+      "pub_p_f43ebf757c3b748e"
+     ],
+     [
+      "pub_q_0157",
+      "pub_p_fb14810c9d5c8b83"
+     ],
+     [
+      "pub_q_0158",
+      "pub_p_fd5c551d25a3d682"
+     ],
+     [
+      "pub_q_0159",
+      "pub_p_03b338b4acfd73df"
+     ],
+     [
+      "pub_q_0160",
+      "pub_p_08edad3abe990898"
+     ],
+     [
+      "pub_q_0161",
+      "pub_p_203353e1157a09a2"
+     ],
+     [
+      "pub_q_0162",
+      "pub_p_2de3731edf7c46fe"
+     ],
+     [
+      "pub_q_0163",
+      "pub_p_407ca26cb02e07bb"
+     ],
+     [
+      "pub_q_0164",
+      "pub_p_4132d71295455efe"
+     ],
+     [
+      "pub_q_0165",
+      "pub_p_595f5f592ca28d6c"
+     ],
+     [
+      "pub_q_0166",
+      "pub_p_432029b06fe580bf"
+     ],
+     [
+      "pub_q_0167",
+      "pub_p_55ef75b6bef1c5cb"
+     ],
+     [
+      "pub_q_0168",
+      "pub_p_5aa334b5b0adfe8e"
+     ],
+     [
+      "pub_q_0169",
+      "pub_p_5b623b3bae7dd91b"
+     ],
+     [
+      "pub_q_0170",
+      "pub_p_600bae1ede5af327"
+     ],
+     [
+      "pub_q_0171",
+      "pub_p_6104c2fe4f31a8cf"
+     ],
+     [
+      "pub_q_0172",
+      "pub_p_f281443b4ef62bac"
+     ],
+     [
+      "pub_q_0173",
+      "pub_p_713a9b2bd83d53c5"
+     ],
+     [
+      "pub_q_0174",
+      "pub_p_71b33ed04e8f786c"
+     ],
+     [
+      "pub_q_0175",
+      "pub_p_873f1e4e107813b5"
+     ],
+     [
+      "pub_q_0176",
+      "pub_p_8980ab110e81890d"
+     ],
+     [
+      "pub_q_0177",
+      "pub_p_8dc1b628770bc172"
+     ],
+     [
+      "pub_q_0178",
+      "pub_p_96e5e772ca57ce4b"
+     ],
+     [
+      "pub_q_0179",
+      "pub_p_9725826204ae91b9"
+     ],
+     [
+      "pub_q_0180",
+      "pub_p_99c3c43b4dc2e9d6"
+     ],
+     [
+      "pub_q_0181",
+      "pub_p_9a5b6020ba58f39b"
+     ],
+     [
+      "pub_q_0182",
+      "pub_p_a5dee2c49ed42984"
+     ],
+     [
+      "pub_q_0183",
+      "pub_p_b1a3efc76ad121fb"
+     ],
+     [
+      "pub_q_0184",
+      "pub_p_b2e41201eabb99b6"
+     ],
+     [
+      "pub_q_0185",
+      "pub_p_b9d389468c10f6a2"
+     ],
+     [
+      "pub_q_0186",
+      "pub_p_c587f6e1552dfb3b"
+     ],
+     [
+      "pub_q_0187",
+      "pub_p_ce32eb8bd4de0f15"
+     ],
+     [
+      "pub_q_0188",
+      "pub_p_d6a9c6304e1201e1"
+     ],
+     [
+      "pub_q_0189",
+      "pub_p_d769b8922d14049b"
+     ],
+     [
+      "pub_q_0190",
+      "pub_p_e510d6de7ca2f74d"
+     ],
+     [
+      "pub_q_0191",
+      "pub_p_e77742b3e2aa84e3"
+     ],
+     [
+      "pub_q_0192",
+      "pub_p_ee24ba579ad7cbe1"
+     ],
+     [
+      "pub_q_0193",
+      "pub_p_f39061972676e142"
+     ],
+     [
+      "pub_q_0194",
+      "pub_p_f7d82a26adda20b3"
+     ],
+     [
+      "pub_q_0195",
+      "pub_p_032dc0d4dd69d699"
+     ],
+     [
+      "pub_q_0196",
+      "pub_p_0f1e25ecedca3fe5"
+     ],
+     [
+      "pub_q_0197",
+      "pub_p_0fc2363bb6c9b86f"
+     ],
+     [
+      "pub_q_0198",
+      "pub_p_100d09e812b61c14"
+     ],
+     [
+      "pub_q_0199",
+      "pub_p_11cc9179ec654ea0"
+     ],
+     [
+      "pub_q_0200",
+      "pub_p_120862160bb6663b"
+     ],
+     [
+      "pub_q_0201",
+      "pub_p_137f7b47307e10fe"
+     ],
+     [
+      "pub_q_0202",
+      "pub_p_167b8fe0ad5b3853"
+     ],
+     [
+      "pub_q_0203",
+      "pub_p_1bf7c97a1e6855eb"
+     ],
+     [
+      "pub_q_0204",
+      "pub_p_2b0e4a4ce05cfc82"
+     ],
+     [
+      "pub_q_0205",
+      "pub_p_2e6a5b455a3ea6ae"
+     ],
+     [
+      "pub_q_0206",
+      "pub_p_5ffe91a1bd0faf99"
+     ],
+     [
+      "pub_q_0207",
+      "pub_p_448189622ab910a1"
+     ],
+     [
+      "pub_q_0208",
+      "pub_p_5b1efbccb258abd7"
+     ],
+     [
+      "pub_q_0209",
+      "pub_p_5e8c9b1f922ac1fc"
+     ],
+     [
+      "pub_q_0210",
+      "pub_p_68dd0bf456880246"
+     ],
+     [
+      "pub_q_0211",
+      "pub_p_6fe72d00579e3d19"
+     ],
+     [
+      "pub_q_0212",
+      "pub_p_70430e553654a3c6"
+     ],
+     [
+      "pub_q_0213",
+      "pub_p_74a32abbe234dd06"
+     ],
+     [
+      "pub_q_0214",
+      "pub_p_77174d5adc08c967"
+     ],
+     [
+      "pub_q_0215",
+      "pub_p_7ca0be0ddf15ca56"
+     ],
+     [
+      "pub_q_0216",
+      "pub_p_8513997fdebc9fcb"
+     ],
+     [
+      "pub_q_0217",
+      "pub_p_9063aaccabcaebd1"
+     ],
+     [
+      "pub_q_0218",
+      "pub_p_9cfacf7f26d38f5f"
+     ],
+     [
+      "pub_q_0219",
+      "pub_p_9e2f66d99efdea15"
+     ],
+     [
+      "pub_q_0220",
+      "pub_p_a19857ff30a1c926"
+     ],
+     [
+      "pub_q_0221",
+      "pub_p_a319035f8545b4af"
+     ],
+     [
+      "pub_q_0222",
+      "pub_p_a747026ec73d1adc"
+     ],
+     [
+      "pub_q_0223",
+      "pub_p_2e6a5b455a3ea6ae"
+     ],
+     [
+      "pub_q_0224",
+      "pub_p_b33d127c1f9d6489"
+     ],
+     [
+      "pub_q_0225",
+      "pub_p_b85fd975820ef818"
+     ],
+     [
+      "pub_q_0226",
+      "pub_p_c04051e6b2e62c45"
+     ],
+     [
+      "pub_q_0227",
+      "pub_p_cfb6130024c8f1d1"
+     ],
+     [
+      "pub_q_0228",
+      "pub_p_d007619ee9bbf791"
+     ],
+     [
+      "pub_q_0229",
+      "pub_p_d05f53e22fa8bccd"
+     ],
+     [
+      "pub_q_0230",
+      "pub_p_d0a7df6eec8733a7"
+     ],
+     [
+      "pub_q_0231",
+      "pub_p_d4dba2d635cb4e05"
+     ],
+     [
+      "pub_q_0232",
+      "pub_p_d6dd676796b26613"
+     ],
+     [
+      "pub_q_0233",
+      "pub_p_d9c086755cfe4e1f"
+     ],
+     [
+      "pub_q_0234",
+      "pub_p_ebf1bf49c0f29274"
+     ],
+     [
+      "pub_q_0235",
+      "pub_p_f22c15a50ffaaf88"
+     ],
+     [
+      "pub_q_0236",
+      "pub_p_0ef525ec8df2248e"
+     ],
+     [
+      "pub_q_0237",
+      "pub_p_110d6f55bbb268e8"
+     ],
+     [
+      "pub_q_0238",
+      "pub_p_8dd9b4e1caa65c59"
+     ],
+     [
+      "pub_q_0239",
+      "pub_p_13ea41df8f19b1d7"
+     ],
+     [
+      "pub_q_0240",
+      "pub_p_1973ae2cc83d4dbc"
+     ],
+     [
+      "pub_q_0241",
+      "pub_p_28520b35fb1bf16f"
+     ],
+     [
+      "pub_q_0242",
+      "pub_p_122c39c6ecef6589"
+     ],
+     [
+      "pub_q_0243",
+      "pub_p_37cdadd5f2f77e1a"
+     ],
+     [
+      "pub_q_0244",
+      "pub_p_4d9b15623431e861"
+     ],
+     [
+      "pub_q_0245",
+      "pub_p_595f5f592ca28d6c"
+     ],
+     [
+      "pub_q_0246",
+      "pub_p_64caa0dc39ed700c"
+     ],
+     [
+      "pub_q_0247",
+      "pub_p_75c1dfbdbc137745"
+     ],
+     [
+      "pub_q_0248",
+      "pub_p_d3bc87b85bd681d2"
+     ],
+     [
+      "pub_q_0249",
+      "pub_p_838ceaa13ea9a243"
+     ],
+     [
+      "pub_q_0250",
+      "pub_p_845fafb8efa71a13"
+     ],
+     [
+      "pub_q_0251",
+      "pub_p_8a00a70940735b08"
+     ],
+     [
+      "pub_q_0252",
+      "pub_p_8ae01b84939c1b10"
+     ],
+     [
+      "pub_q_0253",
+      "pub_p_93040f5798303487"
+     ],
+     [
+      "pub_q_0254",
+      "pub_p_a620d2bbf6b586ef"
+     ],
+     [
+      "pub_q_0255",
+      "pub_p_ba465cd8fbc4bc76"
+     ],
+     [
+      "pub_q_0256",
+      "pub_p_21baeec1b694a8c7"
+     ],
+     [
+      "pub_q_0257",
+      "pub_p_bf7678265ab406ce"
+     ],
+     [
+      "pub_q_0258",
+      "pub_p_d1a6134b8d37cf8a"
+     ],
+     [
+      "pub_q_0259",
+      "pub_p_dd30a2d16730e30f"
+     ],
+     [
+      "pub_q_0260",
+      "pub_p_e22b5e9d5d65390c"
+     ],
+     [
+      "pub_q_0261",
+      "pub_p_63e8014f5eb57e8e"
+     ],
+     [
+      "pub_q_0262",
+      "pub_p_ea6104a97172f998"
+     ],
+     [
+      "pub_q_0263",
+      "pub_p_f7fc947efcd3e82a"
+     ],
+     [
+      "pub_q_0264",
+      "pub_p_fd7fe7502c82dcfb"
+     ],
+     [
+      "pub_q_0265",
+      "pub_p_007505ec1606b2cd"
+     ],
+     [
+      "pub_q_0266",
+      "pub_p_02bc178be69eb4cb"
+     ],
+     [
+      "pub_q_0267",
+      "pub_p_062e703b1589398d"
+     ],
+     [
+      "pub_q_0268",
+      "pub_p_12febe358a831d50"
+     ],
+     [
+      "pub_q_0269",
+      "pub_p_20d800a72e614466"
+     ],
+     [
+      "pub_q_0270",
+      "pub_p_1ef486d09cf65a3b"
+     ],
+     [
+      "pub_q_0271",
+      "pub_p_20e33e47642b1825"
+     ],
+     [
+      "pub_q_0272",
+      "pub_p_241990056ab6d284"
+     ],
+     [
+      "pub_q_0273",
+      "pub_p_34aa766bf48e54ea"
+     ],
+     [
+      "pub_q_0274",
+      "pub_p_3ae0ef44136e6dea"
+     ],
+     [
+      "pub_q_0275",
+      "pub_p_3c05cc42081694c4"
+     ],
+     [
+      "pub_q_0276",
+      "pub_p_3fa17eebf1fdb7bb"
+     ],
+     [
+      "pub_q_0277",
+      "pub_p_412e5651030c3e6a"
+     ],
+     [
+      "pub_q_0278",
+      "pub_p_45a9143021a5e203"
+     ],
+     [
+      "pub_q_0279",
+      "pub_p_4f90cb5021338d1d"
+     ],
+     [
+      "pub_q_0280",
+      "pub_p_573046dc3d835a9c"
+     ],
+     [
+      "pub_q_0281",
+      "pub_p_5a6da54ec91a172a"
+     ],
+     [
+      "pub_q_0282",
+      "pub_p_5feea93760b44c89"
+     ],
+     [
+      "pub_q_0283",
+      "pub_p_600b12f1237062d1"
+     ],
+     [
+      "pub_q_0284",
+      "pub_p_7048746e5999c136"
+     ],
+     [
+      "pub_q_0285",
+      "pub_p_71fdb2286172edff"
+     ],
+     [
+      "pub_q_0286",
+      "pub_p_722a92177fd40969"
+     ],
+     [
+      "pub_q_0287",
+      "pub_p_774cc62eda417cc1"
+     ],
+     [
+      "pub_q_0288",
+      "pub_p_7d613de7a8c5accc"
+     ],
+     [
+      "pub_q_0289",
+      "pub_p_8244fd6f284aa5bd"
+     ],
+     [
+      "pub_q_0290",
+      "pub_p_8775a6ef7f8c7ab6"
+     ],
+     [
+      "pub_q_0291",
+      "pub_p_8d4877610978a6fe"
+     ],
+     [
+      "pub_q_0292",
+      "pub_p_8dd9b4e1caa65c59"
+     ],
+     [
+      "pub_q_0293",
+      "pub_p_92cec619a7891685"
+     ],
+     [
+      "pub_q_0294",
+      "pub_p_98b970b489cddedc"
+     ],
+     [
+      "pub_q_0295",
+      "pub_p_9f7161b1c8243865"
+     ],
+     [
+      "pub_q_0296",
+      "pub_p_a69fccffefa3ab5e"
+     ],
+     [
+      "pub_q_0297",
+      "pub_p_4132d71295455efe"
+     ],
+     [
+      "pub_q_0298",
+      "pub_p_c988f035cb58be71"
+     ],
+     [
+      "pub_q_0299",
+      "pub_p_ca812d4ffcf75296"
+     ],
+     [
+      "pub_q_0300",
+      "pub_p_cce1ad9fb2bd5d75"
+     ],
+     [
+      "pub_q_0301",
+      "pub_p_d2c8dae9f036bae0"
+     ],
+     [
+      "pub_q_0302",
+      "pub_p_3ae0ef44136e6dea"
+     ],
+     [
+      "pub_q_0303",
+      "pub_p_d8c07ae224e8acde"
+     ],
+     [
+      "pub_q_0304",
+      "pub_p_e329b72e514ef6b9"
+     ],
+     [
+      "pub_q_0305",
+      "pub_p_e922ba5138f512c3"
+     ],
+     [
+      "pub_q_0306",
+      "pub_p_ea0d442bb481eb4b"
+     ],
+     [
+      "pub_q_0307",
+      "pub_p_f41830d09ca874f7"
+     ],
+     [
+      "pub_q_0308",
+      "pub_p_f5c8202b64cf70f2"
+     ],
+     [
+      "pub_q_0309",
+      "pub_p_fd9e96c5139f7547"
+     ],
+     [
+      "pub_q_0310",
+      "pub_p_ff30e9a3ea0c4b73"
+     ],
+     [
+      "pub_q_0311",
+      "pub_p_ff3a4f8ff8674887"
+     ],
+     [
+      "pub_q_0312",
+      "pub_p_01fac2ce584baf40"
+     ],
+     [
+      "pub_q_0313",
+      "pub_p_0aae1cf37d922dc5"
+     ],
+     [
+      "pub_q_0314",
+      "pub_p_10a6d1bc7c4bb1a7"
+     ],
+     [
+      "pub_q_0315",
+      "pub_p_122c39c6ecef6589"
+     ],
+     [
+      "pub_q_0316",
+      "pub_p_12bc53d6cc603658"
+     ],
+     [
+      "pub_q_0317",
+      "pub_p_20a1d88ed309c7cc"
+     ],
+     [
+      "pub_q_0318",
+      "pub_p_264422fca1a13157"
+     ],
+     [
+      "pub_q_0319",
+      "pub_p_264af7c45944979a"
+     ],
+     [
+      "pub_q_0320",
+      "pub_p_271f2e04f5140250"
+     ],
+     [
+      "pub_q_0321",
+      "pub_p_272c6d5d2ab5654a"
+     ],
+     [
+      "pub_q_0322",
+      "pub_p_2d757aef3e007db3"
+     ],
+     [
+      "pub_q_0323",
+      "pub_p_2e3d77cc6c8d1b33"
+     ],
+     [
+      "pub_q_0324",
+      "pub_p_365cf46575a9ae71"
+     ],
+     [
+      "pub_q_0325",
+      "pub_p_3ffc677d47f86075"
+     ],
+     [
+      "pub_q_0326",
+      "pub_p_42563496d523e71c"
+     ],
+     [
+      "pub_q_0327",
+      "pub_p_49c600d201011140"
+     ],
+     [
+      "pub_q_0328",
+      "pub_p_4d88388ba9ae3649"
+     ],
+     [
+      "pub_q_0329",
+      "pub_p_504cc61a481269c5"
+     ],
+     [
+      "pub_q_0330",
+      "pub_p_599759c851c5f80e"
+     ],
+     [
+      "pub_q_0331",
+      "pub_p_260bcad61e04f43d"
+     ],
+     [
+      "pub_q_0332",
+      "pub_p_6736efc06e80c5be"
+     ],
+     [
+      "pub_q_0333",
+      "pub_p_6775703daf8a1856"
+     ],
+     [
+      "pub_q_0334",
+      "pub_p_69d3f73f5dd89417"
+     ],
+     [
+      "pub_q_0335",
+      "pub_p_6c6d14b2636ec7e4"
+     ],
+     [
+      "pub_q_0336",
+      "pub_p_6d22653de8953427"
+     ],
+     [
+      "pub_q_0337",
+      "pub_p_79f1dca76ec7916e"
+     ],
+     [
+      "pub_q_0338",
+      "pub_p_7dd87c903c5e6af0"
+     ],
+     [
+      "pub_q_0339",
+      "pub_p_91ddf6d69f528a95"
+     ],
+     [
+      "pub_q_0340",
+      "pub_p_9b13539d67824a1d"
+     ],
+     [
+      "pub_q_0341",
+      "pub_p_9eefd52febaad8e9"
+     ],
+     [
+      "pub_q_0342",
+      "pub_p_ac46dc6ccb9e8c87"
+     ],
+     [
+      "pub_q_0343",
+      "pub_p_ad8fd4037332e8ca"
+     ],
+     [
+      "pub_q_0344",
+      "pub_p_b6a407cd09c01e96"
+     ],
+     [
+      "pub_q_0345",
+      "pub_p_b79fefa6e843eb27"
+     ],
+     [
+      "pub_q_0346",
+      "pub_p_b90c3ec009856075"
+     ],
+     [
+      "pub_q_0347",
+      "pub_p_bfd1cae3b576459f"
+     ],
+     [
+      "pub_q_0348",
+      "pub_p_c00ed2536d5860a3"
+     ],
+     [
+      "pub_q_0349",
+      "pub_p_c2e1bd7133163308"
+     ],
+     [
+      "pub_q_0350",
+      "pub_p_d441ede13c22d9de"
+     ],
+     [
+      "pub_q_0351",
+      "pub_p_e2ddcd4c5b9b1f12"
+     ],
+     [
+      "pub_q_0352",
+      "pub_p_e5fd3793aaae0ea2"
+     ],
+     [
+      "pub_q_0353",
+      "pub_p_e823779eef7fd173"
+     ],
+     [
+      "pub_q_0354",
+      "pub_p_f0e48526a9d29447"
+     ],
+     [
+      "pub_q_0355",
+      "pub_p_f19afe8764a800fc"
+     ],
+     [
+      "pub_q_0356",
+      "pub_p_033e3c22f2a703e5"
+     ],
+     [
+      "pub_q_0357",
+      "pub_p_0acdac509332d93a"
+     ],
+     [
+      "pub_q_0358",
+      "pub_p_1183221053cfe387"
+     ],
+     [
+      "pub_q_0359",
+      "pub_p_448189622ab910a1"
+     ],
+     [
+      "pub_q_0360",
+      "pub_p_1ce6c40202046ad6"
+     ],
+     [
+      "pub_q_0361",
+      "pub_p_204916b3a2deaf3f"
+     ],
+     [
+      "pub_q_0362",
+      "pub_p_216d724603066d25"
+     ],
+     [
+      "pub_q_0363",
+      "pub_p_25a37c082b4b3e1f"
+     ],
+     [
+      "pub_q_0364",
+      "pub_p_27fd3c4f933f592b"
+     ],
+     [
+      "pub_q_0365",
+      "pub_p_3890ea2a380e8d87"
+     ],
+     [
+      "pub_q_0366",
+      "pub_p_3d4708d5fcf54c0d"
+     ],
+     [
+      "pub_q_0367",
+      "pub_p_41baf3d5089d2fc0"
+     ],
+     [
+      "pub_q_0368",
+      "pub_p_4a6261d63f8a6b9f"
+     ],
+     [
+      "pub_q_0369",
+      "pub_p_5499ff7bb20309b8"
+     ],
+     [
+      "pub_q_0370",
+      "pub_p_5f3cc25bc6d1d934"
+     ],
+     [
+      "pub_q_0371",
+      "pub_p_18eaa282f1e8fe25"
+     ],
+     [
+      "pub_q_0372",
+      "pub_p_644ea90e63a45072"
+     ],
+     [
+      "pub_q_0373",
+      "pub_p_661e19dec4bdd593"
+     ],
+     [
+      "pub_q_0374",
+      "pub_p_6b267a73cb7c63cd"
+     ],
+     [
+      "pub_q_0375",
+      "pub_p_700d67434d29a0f1"
+     ],
+     [
+      "pub_q_0376",
+      "pub_p_7905f1dcf7919ce6"
+     ],
+     [
+      "pub_q_0377",
+      "pub_p_8434896c6a57352d"
+     ],
+     [
+      "pub_q_0378",
+      "pub_p_8bb6e0355784d36c"
+     ],
+     [
+      "pub_q_0379",
+      "pub_p_8df105e148f3302a"
+     ],
+     [
+      "pub_q_0380",
+      "pub_p_901a6567a1a7695e"
+     ],
+     [
+      "pub_q_0381",
+      "pub_p_9088d2d002efda9b"
+     ],
+     [
+      "pub_q_0382",
+      "pub_p_936a3d6861490d4e"
+     ],
+     [
+      "pub_q_0383",
+      "pub_p_9437cbb0c4c4333b"
+     ],
+     [
+      "pub_q_0384",
+      "pub_p_95e84c3238841087"
+     ],
+     [
+      "pub_q_0385",
+      "pub_p_a61c037432c216cd"
+     ],
+     [
+      "pub_q_0386",
+      "pub_p_a7d59e24f732d5ef"
+     ],
+     [
+      "pub_q_0387",
+      "pub_p_a97fd261b9a9bf67"
+     ],
+     [
+      "pub_q_0388",
+      "pub_p_abdb65368b3d5133"
+     ],
+     [
+      "pub_q_0389",
+      "pub_p_982f5120cdec33fc"
+     ],
+     [
+      "pub_q_0390",
+      "pub_p_b7b4b50bad958055"
+     ],
+     [
+      "pub_q_0391",
+      "pub_p_c17182766ddf9c2c"
+     ],
+     [
+      "pub_q_0392",
+      "pub_p_d2ae485d7de7daf2"
+     ],
+     [
+      "pub_q_0393",
+      "pub_p_d444ded1d0b7fdcd"
+     ],
+     [
+      "pub_q_0394",
+      "pub_p_d652ba95dfe1c5b3"
+     ],
+     [
+      "pub_q_0395",
+      "pub_p_df5d94b58dd12f1f"
+     ],
+     [
+      "pub_q_0396",
+      "pub_p_e32bcbae0e7d19cd"
+     ],
+     [
+      "pub_q_0397",
+      "pub_p_eac9fef88e3fe9fd"
+     ],
+     [
+      "pub_q_0398",
+      "pub_p_f63febaa39a64691"
+     ],
+     [
+      "pub_q_0399",
+      "pub_p_e1447e08474bb8a6"
+     ],
+     [
+      "pub_q_0400",
+      "pub_p_f9eb9e143109172a"
+     ]
+    ]
+   },
+   "records": {
+    "candidates": {
+     "properties": {
+      "B": 40000,
+      "SZ": 40000,
+      "W": 40000,
+      "HD": 40000
+     },
+     "game_id_examples": [
+      "pub_g_000001",
+      "pub_g_000002",
+      "pub_g_000003",
+      "pub_g_000004",
+      "pub_g_000005"
+     ],
+     "game_id_all_numeric": false,
+     "game_id_sorted_in_file": true,
+     "game_id_unique": true,
+     "n_game_ids": 40000
+    },
+    "questions": {
+     "properties": {
+      "B": 5000,
+      "SZ": 5000,
+      "W": 5000,
+      "HD": 5000
+     },
+     "game_id_examples": [],
+     "game_id_all_numeric": false,
+     "game_id_sorted_in_file": null,
+     "game_id_unique": true,
+     "n_game_ids": 0
+    }
+   },
+   "seconds": 238.92933654785156
+  },
+  {
+   "prefix": "priv_",
+   "candidates": "../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv",
+   "questions": "../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv",
+   "n_candidates": 400,
+   "n_candidate_games": 40000,
+   "candidates_without_usable_games": [],
+   "n_questions": 400,
+   "num_games": {
+    "5": 100,
+    "10": 100,
+    "15": 100,
+    "20": 100
+   },
+   "legality": {
+    "candidates": {
+     "n": 40000,
+     "n_bad": 0,
+     "errors": [],
+     "handicap_counts": {
+      "1": 7250,
+      "0": 31391,
+      "2": 535,
+      "4": 204,
+      "7": 11,
+      "3": 434,
+      "5": 109,
+      "6": 18,
+      "9": 34,
+      "8": 14
+     }
+    },
+    "questions": {
+     "n": 5000,
+     "n_bad": 0,
+     "errors": [],
+     "handicap_counts": {
+      "1": 906,
+      "0": 3905,
+      "7": 2,
+      "5": 27,
+      "2": 62,
+      "3": 69,
+      "4": 24,
+      "6": 3,
+      "8": 1,
+      "9": 1
+     }
+    }
+   },
+   "lengths": {
+    "candidates": {
+     "n": 40000,
+     "moves": {
+      "p05": 128.0,
+      "p25": 184.0,
+      "p50": 227.0,
+      "p75": 260.0,
+      "p95": 299.0,
+      "mean": 221.58425
+     },
+     "black_moves": {
+      "p05": 64.0,
+      "p25": 92.0,
+      "p50": 114.0,
+      "p75": 130.0,
+      "p95": 150.0,
+      "mean": 111.0389
+     }
+    },
+    "questions": {
+     "n": 5000,
+     "moves": {
+      "p05": 129.0,
+      "p25": 184.0,
+      "p50": 228.0,
+      "p75": 262.0,
+      "p95": 300.0,
+      "mean": 222.205
+     },
+     "black_moves": {
+      "p05": 65.0,
+      "p25": 92.0,
+      "p50": 114.0,
+      "p75": 131.0,
+      "p95": 150.0,
+      "mean": 111.3458
+     }
+    }
+   },
+   "training_overlap": {
+    "candidates": {
+     "n_games_checked": 40000,
+     "n_dup_games": 40000,
+     "n_players_with_dups": 400,
+     "players_single_training_id": 400,
+     "players_multiple_training_ids": 0,
+     "same_id_players": 0,
+     "by_player": {
+      "priv_p_0033d9d4cdcc5a82": {
+       "0033d9d4cdcc5a82": 100
+      },
+      "priv_p_0075bcf325606e95": {
+       "0075bcf325606e95": 100
+      },
+      "priv_p_00e16d41dd139512": {
+       "00e16d41dd139512": 100
+      },
+      "priv_p_0189c2969cead734": {
+       "0189c2969cead734": 100
+      },
+      "priv_p_0216025cebab3e4c": {
+       "0216025cebab3e4c": 100
+      },
+      "priv_p_02d22949d9b04e14": {
+       "02d22949d9b04e14": 100
+      },
+      "priv_p_03281884d7a86bb0": {
+       "03281884d7a86bb0": 100
+      },
+      "priv_p_036372deef728965": {
+       "036372deef728965": 100
+      },
+      "priv_p_037a3f394140681e": {
+       "037a3f394140681e": 100
+      },
+      "priv_p_04cc7095ae6fe51e": {
+       "04cc7095ae6fe51e": 100
+      },
+      "priv_p_05d9a2c9f1940fc2": {
+       "05d9a2c9f1940fc2": 100
+      },
+      "priv_p_0613b61900c66414": {
+       "0613b61900c66414": 100
+      },
+      "priv_p_0656cbbfca5cd2dd": {
+       "0656cbbfca5cd2dd": 100
+      },
+      "priv_p_06c4dc2fcc8c19a3": {
+       "06c4dc2fcc8c19a3": 100
+      },
+      "priv_p_07397cc32840fa48": {
+       "07397cc32840fa48": 100
+      },
+      "priv_p_07936a7ac91e9b78": {
+       "07936a7ac91e9b78": 100
+      },
+      "priv_p_093bc2b8ab259d4e": {
+       "093bc2b8ab259d4e": 100
+      },
+      "priv_p_09e10363fd5ae461": {
+       "09e10363fd5ae461": 100
+      },
+      "priv_p_0a24a8f4213023d3": {
+       "0a24a8f4213023d3": 100
+      },
+      "priv_p_0b41c3956b1ef9dd": {
+       "0b41c3956b1ef9dd": 100
+      },
+      "priv_p_0bab55733e6652cd": {
+       "0bab55733e6652cd": 100
+      },
+      "priv_p_0c7dae8512e8b836": {
+       "0c7dae8512e8b836": 100
+      },
+      "priv_p_0da90e7b12740c3c": {
+       "0da90e7b12740c3c": 100
+      },
+      "priv_p_0e3274b96b1f8681": {
+       "0e3274b96b1f8681": 100
+      },
+      "priv_p_0e7f331b06c525ed": {
+       "0e7f331b06c525ed": 100
+      },
+      "priv_p_0ec9e5941e6326e1": {
+       "0ec9e5941e6326e1": 100
+      },
+      "priv_p_0ecebdc3dfd8fdea": {
+       "0ecebdc3dfd8fdea": 100
+      },
+      "priv_p_0ed62a6009788bcb": {
+       "0ed62a6009788bcb": 100
+      },
+      "priv_p_10c81a8af36be617": {
+       "10c81a8af36be617": 100
+      },
+      "priv_p_11d1fe9eef5b9de5": {
+       "11d1fe9eef5b9de5": 100
+      },
+      "priv_p_13aad3bc2074821f": {
+       "13aad3bc2074821f": 100
+      },
+      "priv_p_1419bfa41a1e4c7f": {
+       "1419bfa41a1e4c7f": 100
+      },
+      "priv_p_149413133df18c47": {
+       "149413133df18c47": 100
+      },
+      "priv_p_1499003ac37ebb62": {
+       "1499003ac37ebb62": 100
+      },
+      "priv_p_14beaa4a4f4daa4a": {
+       "14beaa4a4f4daa4a": 100
+      },
+      "priv_p_151e56d6e111a828": {
+       "151e56d6e111a828": 100
+      },
+      "priv_p_1522390df8067521": {
+       "1522390df8067521": 100
+      },
+      "priv_p_159c776ef43a8abf": {
+       "159c776ef43a8abf": 100
+      },
+      "priv_p_15af412ca4d2c70a": {
+       "15af412ca4d2c70a": 100
+      },
+      "priv_p_1620999744a8f2a1": {
+       "1620999744a8f2a1": 100
+      },
+      "priv_p_1679b0f079d8f98a": {
+       "1679b0f079d8f98a": 100
+      },
+      "priv_p_16bb8d2bd17cc577": {
+       "16bb8d2bd17cc577": 100
+      },
+      "priv_p_1855309ef8e058f0": {
+       "1855309ef8e058f0": 100
+      },
+      "priv_p_18e423e13aeebe49": {
+       "18e423e13aeebe49": 100
+      },
+      "priv_p_1994ba0970ba4585": {
+       "1994ba0970ba4585": 100
+      },
+      "priv_p_1ac75ea7ea3a1b28": {
+       "1ac75ea7ea3a1b28": 100
+      },
+      "priv_p_1b1e337ae39a037b": {
+       "1b1e337ae39a037b": 100
+      },
+      "priv_p_1b2bf55b027076cb": {
+       "1b2bf55b027076cb": 100
+      },
+      "priv_p_1c6721198e68d5d3": {
+       "1c6721198e68d5d3": 100
+      },
+      "priv_p_1c9334823874567c": {
+       "1c9334823874567c": 100
+      }
+     },
+     "players_not_listed": 350
+    },
+    "questions": {
+     "n_games_checked": 5000,
+     "n_dup_games": 5000,
+     "n_players_with_dups": 400,
+     "players_single_training_id": 400,
+     "players_multiple_training_ids": 0,
+     "same_id_players": 0,
+     "by_player": {
+      "priv_q_0001": {
+       "09e10363fd5ae461": 15
+      },
+      "priv_q_0002": {
+       "10c81a8af36be617": 15
+      },
+      "priv_q_0003": {
+       "1c9334823874567c": 5
+      },
+      "priv_q_0004": {
+       "2252220931359de7": 20
+      },
+      "priv_q_0005": {
+       "240185a4ec312a73": 20
+      },
+      "priv_q_0006": {
+       "2a395fd7e9adfdb0": 20
+      },
+      "priv_q_0007": {
+       "32482172077fae38": 20
+      },
+      "priv_q_0008": {
+       "336ff80a02f0e329": 10
+      },
+      "priv_q_0009": {
+       "4609b439fa34a5fe": 15
+      },
+      "priv_q_0010": {
+       "57f573ca92869bf5": 15
+      },
+      "priv_q_0011": {
+       "5d88699011a102c3": 20
+      },
+      "priv_q_0012": {
+       "62399264615acd50": 20
+      },
+      "priv_q_0013": {
+       "6bc92d3d124bf9f0": 10
+      },
+      "priv_q_0014": {
+       "6cbe2c2d1ae11b47": 5
+      },
+      "priv_q_0015": {
+       "706bfd554e0cbdce": 20
+      },
+      "priv_q_0016": {
+       "7128fed8ea1ad8cc": 15
+      },
+      "priv_q_0017": {
+       "73e88d4d1682636f": 20
+      },
+      "priv_q_0018": {
+       "8d34b5ac878e0eb8": 20
+      },
+      "priv_q_0019": {
+       "905ca23079c16302": 5
+      },
+      "priv_q_0020": {
+       "937b38107a624560": 5
+      },
+      "priv_q_0021": {
+       "941ef088c7b17586": 20
+      },
+      "priv_q_0022": {
+       "94d3f888932b75c9": 20
+      },
+      "priv_q_0023": {
+       "9b74a97010b20064": 20
+      },
+      "priv_q_0024": {
+       "a20ea04eb67289fa": 20
+      },
+      "priv_q_0025": {
+       "a66f21df99571dd6": 15
+      },
+      "priv_q_0026": {
+       "a79cc549c009ade1": 15
+      },
+      "priv_q_0027": {
+       "a8115e26da257201": 20
+      },
+      "priv_q_0028": {
+       "a87592b6cab94835": 15
+      },
+      "priv_q_0029": {
+       "b980ae29f5080d60": 15
+      },
+      "priv_q_0030": {
+       "c1bf191bf5bf157f": 15
+      },
+      "priv_q_0031": {
+       "cd558e56b340e016": 15
+      },
+      "priv_q_0032": {
+       "d447dd8583a2e672": 20
+      },
+      "priv_q_0033": {
+       "d4e1e49489ca5259": 20
+      },
+      "priv_q_0034": {
+       "e385a0c74e794e70": 20
+      },
+      "priv_q_0035": {
+       "e64af3d6456c17c4": 10
+      },
+      "priv_q_0036": {
+       "ff5d88f9e84792ce": 20
+      },
+      "priv_q_0037": {
+       "151e56d6e111a828": 15
+      },
+      "priv_q_0038": {
+       "159c776ef43a8abf": 10
+      },
+      "priv_q_0039": {
+       "18e423e13aeebe49": 5
+      },
+      "priv_q_0040": {
+       "1b1e337ae39a037b": 10
+      },
+      "priv_q_0041": {
+       "1d24dd12b9fcaa00": 20
+      },
+      "priv_q_0042": {
+       "230ba1899a956f71": 5
+      },
+      "priv_q_0043": {
+       "23aafffc9bd98b79": 5
+      },
+      "priv_q_0044": {
+       "267b26b0b315d884": 5
+      },
+      "priv_q_0045": {
+       "2724d1a8d9dfb3fa": 10
+      },
+      "priv_q_0046": {
+       "2a63cfa0aa65b56f": 10
+      },
+      "priv_q_0047": {
+       "2f2275ab1070376e": 15
+      },
+      "priv_q_0048": {
+       "3dbe8a8bd29f1d40": 15
+      },
+      "priv_q_0049": {
+       "504c42894bf9bf68": 15
+      },
+      "priv_q_0050": {
+       "5c0b459d318a32db": 5
+      }
+     },
+     "players_not_listed": 350
+    }
+   },
+   "question_vs_candidate_dups": 0,
+   "question_vs_candidate_examples": [],
+   "question_vs_question_dups": 0,
+   "question_vs_question_examples": [],
+   "opening_shift": {
+    "4": {
+     "k": 4,
+     "n_query": 5000,
+     "n_candidate": 40000,
+     "observed": 0.35089625265522867,
+     "null": [
+      0.34945126134399324,
+      0.34577482503205714,
+      0.361289259880893,
+      0.35001363506586225,
+      0.35389702827840774,
+      0.3562096336948448,
+      0.3461329112564536,
+      0.35066671327839577,
+      0.3523468418450891,
+      0.3574091223281193,
+      0.35361006272779527,
+      0.3579670315741131,
+      0.3511127561639302,
+      0.3495498827347752,
+      0.3555885634221708,
+      0.35363548747278406,
+      0.35405699234086335,
+      0.34775859209513743,
+      0.3603234893968042,
+      0.35288599799185816
+     ],
+     "null_mean": 0.35298400439621735,
+     "null_max": 0.361289259880893,
+     "ratio_to_null_max": 0.9712335561010293,
+     "flag": false
+    },
+    "8": {
+     "k": 8,
+     "n_query": 5000,
+     "n_candidate": 40000,
+     "observed": 0.9586387454465299,
+     "null": [
+      0.9585113030634795,
+      0.959624453057845,
+      0.9563564054690017,
+      0.9592912767004814,
+      0.9580048479917523,
+      0.9552641934341892,
+      0.9573900964363246,
+      0.9578572080988126,
+      0.9600891719454451,
+      0.9586143867246784,
+      0.9592523972509562,
+      0.9599774501041722,
+      0.9594470358833124,
+      0.9543763691615497,
+      0.958056532227162,
+      0.9583760320706527,
+      0.958698388428644,
+      0.9549823957555442,
+      0.9567425117346374,
+      0.9551150019508522
+     ],
+     "null_mean": 0.9578013728744746,
+     "null_max": 0.9600891719454451,
+     "ratio_to_null_max": 0.9984892793906048,
+     "flag": false
+    }
+   },
+   "self_identification": {
+    "n_candidates": 400,
+    "n_skipped": 0,
+    "n_questions": 1600,
+    "model_games": 50,
+    "scores": {
+     "opening": {
+      "score": 0.9229987653856624,
+      "top1": 0.90875,
+      "top5": 0.9725,
+      "mrr": 0.9334479166666667,
+      "n": 1600,
+      "by_n": {
+       "5": {
+        "score": 0.8023870488892453,
+        "top1": 0.775,
+        "top5": 0.9075,
+        "mrr": 0.8245,
+        "n": 400
+       },
+       "10": {
+        "score": 0.9442015931263765,
+        "top1": 0.9275,
+        "top5": 0.9875,
+        "mrr": 0.9534166666666667,
+        "n": 400
+       },
+       "15": {
+        "score": 0.9694981874490489,
+        "top1": 0.9625,
+        "top5": 0.9975,
+        "mrr": 0.975375,
+        "n": 400
+       },
+       "20": {
+        "score": 0.9759082320779788,
+        "top1": 0.97,
+        "top5": 0.9975,
+        "mrr": 0.9804999999999999,
+        "n": 400
+       }
+      }
+     },
+     "style": {
+      "score": 0.628048320638366,
+      "top1": 0.57125,
+      "top5": 0.818125,
+      "mrr": 0.66840625,
+      "n": 1600,
+      "by_n": {
+       "5": {
+        "score": 0.42367713030818605,
+        "top1": 0.365,
+        "top5": 0.6525,
+        "mrr": 0.472375,
+        "n": 400
+       },
+       "10": {
+        "score": 0.59062863068275,
+        "top1": 0.5325,
+        "top5": 0.79,
+        "mrr": 0.63275,
+        "n": 400
+       },
+       "15": {
+        "score": 0.7024660309672034,
+        "top1": 0.645,
+        "top5": 0.8825,
+        "mrr": 0.7406666666666666,
+        "n": 400
+       },
+       "20": {
+        "score": 0.7954214905953247,
+        "top1": 0.7425,
+        "top5": 0.9475,
+        "mrr": 0.8278333333333333,
+        "n": 400
+       }
+      }
+     },
+     "fusion": {
+      "score": 0.9358192697701364,
+      "top1": 0.9225,
+      "top5": 0.979375,
+      "mrr": 0.9449687499999999,
+      "n": 1600,
+      "by_n": {
+       "5": {
+        "score": 0.8251479346074023,
+        "top1": 0.795,
+        "top5": 0.93,
+        "mrr": 0.8470416666666667,
+        "n": 400
+       },
+       "10": {
+        "score": 0.9606419170560959,
+        "top1": 0.95,
+        "top5": 0.99,
+        "mrr": 0.9668333333333333,
+        "n": 400
+       },
+       "15": {
+        "score": 0.9770418012180793,
+        "top1": 0.97,
+        "top5": 1.0,
+        "mrr": 0.9819583333333333,
+        "n": 400
+       },
+       "20": {
+        "score": 0.9804454261989676,
+        "top1": 0.975,
+        "top5": 0.9975,
+        "mrr": 0.9840416666666667,
+        "n": 400
+       }
+      }
+     }
+    },
+    "fusion_margin_quantiles": {
+     "p05": 0.5205168876515147,
+     "p25": 2.8778322297805907,
+     "p50": 5.484448550633871,
+     "p75": 8.55680296469503,
+     "p95": 18.60336177322226,
+     "mean": 6.782232329032491
+    },
+    "candidates_misidentified": 101
+   },
+   "main_line": {
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 400,
+     "distinct_top1": 379,
+     "expected_random": 253.03235509572292,
+     "by_n": {
+      "5": 96,
+      "10": 100,
+      "15": 100,
+      "20": 100
+     },
+     "one_to_one_likely": true
+    },
+    "margin_quantiles": {
+     "p05": 0.9311952342754084,
+     "p25": 4.0018798739814425,
+     "p50": 6.373947134417282,
+     "p75": 9.283929369266225,
+     "p95": 18.40427992842927,
+     "mean": 7.440078294197953
+    },
+    "questions_without_usable_games": 0,
+    "top1": [
+     [
+      "priv_q_0001",
+      "priv_p_09e10363fd5ae461"
+     ],
+     [
+      "priv_q_0002",
+      "priv_p_10c81a8af36be617"
+     ],
+     [
+      "priv_q_0003",
+      "priv_p_1c9334823874567c"
+     ],
+     [
+      "priv_q_0004",
+      "priv_p_2252220931359de7"
+     ],
+     [
+      "priv_q_0005",
+      "priv_p_240185a4ec312a73"
+     ],
+     [
+      "priv_q_0006",
+      "priv_p_2a395fd7e9adfdb0"
+     ],
+     [
+      "priv_q_0007",
+      "priv_p_32482172077fae38"
+     ],
+     [
+      "priv_q_0008",
+      "priv_p_d10a22d0222e0759"
+     ],
+     [
+      "priv_q_0009",
+      "priv_p_4609b439fa34a5fe"
+     ],
+     [
+      "priv_q_0010",
+      "priv_p_57f573ca92869bf5"
+     ],
+     [
+      "priv_q_0011",
+      "priv_p_5d88699011a102c3"
+     ],
+     [
+      "priv_q_0012",
+      "priv_p_62399264615acd50"
+     ],
+     [
+      "priv_q_0013",
+      "priv_p_6bc92d3d124bf9f0"
+     ],
+     [
+      "priv_q_0014",
+      "priv_p_dd20c0573a685592"
+     ],
+     [
+      "priv_q_0015",
+      "priv_p_706bfd554e0cbdce"
+     ],
+     [
+      "priv_q_0016",
+      "priv_p_7128fed8ea1ad8cc"
+     ],
+     [
+      "priv_q_0017",
+      "priv_p_73e88d4d1682636f"
+     ],
+     [
+      "priv_q_0018",
+      "priv_p_8d34b5ac878e0eb8"
+     ],
+     [
+      "priv_q_0019",
+      "priv_p_905ca23079c16302"
+     ],
+     [
+      "priv_q_0020",
+      "priv_p_937b38107a624560"
+     ],
+     [
+      "priv_q_0021",
+      "priv_p_941ef088c7b17586"
+     ],
+     [
+      "priv_q_0022",
+      "priv_p_94d3f888932b75c9"
+     ],
+     [
+      "priv_q_0023",
+      "priv_p_9b74a97010b20064"
+     ],
+     [
+      "priv_q_0024",
+      "priv_p_a20ea04eb67289fa"
+     ],
+     [
+      "priv_q_0025",
+      "priv_p_a66f21df99571dd6"
+     ],
+     [
+      "priv_q_0026",
+      "priv_p_a79cc549c009ade1"
+     ],
+     [
+      "priv_q_0027",
+      "priv_p_a8115e26da257201"
+     ],
+     [
+      "priv_q_0028",
+      "priv_p_a87592b6cab94835"
+     ],
+     [
+      "priv_q_0029",
+      "priv_p_b980ae29f5080d60"
+     ],
+     [
+      "priv_q_0030",
+      "priv_p_c1bf191bf5bf157f"
+     ],
+     [
+      "priv_q_0031",
+      "priv_p_cd558e56b340e016"
+     ],
+     [
+      "priv_q_0032",
+      "priv_p_d447dd8583a2e672"
+     ],
+     [
+      "priv_q_0033",
+      "priv_p_d4e1e49489ca5259"
+     ],
+     [
+      "priv_q_0034",
+      "priv_p_e385a0c74e794e70"
+     ],
+     [
+      "priv_q_0035",
+      "priv_p_e64af3d6456c17c4"
+     ],
+     [
+      "priv_q_0036",
+      "priv_p_ff5d88f9e84792ce"
+     ],
+     [
+      "priv_q_0037",
+      "priv_p_151e56d6e111a828"
+     ],
+     [
+      "priv_q_0038",
+      "priv_p_159c776ef43a8abf"
+     ],
+     [
+      "priv_q_0039",
+      "priv_p_c9cf10dcca4a87d3"
+     ],
+     [
+      "priv_q_0040",
+      "priv_p_1b1e337ae39a037b"
+     ],
+     [
+      "priv_q_0041",
+      "priv_p_1d24dd12b9fcaa00"
+     ],
+     [
+      "priv_q_0042",
+      "priv_p_230ba1899a956f71"
+     ],
+     [
+      "priv_q_0043",
+      "priv_p_23aafffc9bd98b79"
+     ],
+     [
+      "priv_q_0044",
+      "priv_p_267b26b0b315d884"
+     ],
+     [
+      "priv_q_0045",
+      "priv_p_2724d1a8d9dfb3fa"
+     ],
+     [
+      "priv_q_0046",
+      "priv_p_2a63cfa0aa65b56f"
+     ],
+     [
+      "priv_q_0047",
+      "priv_p_2f2275ab1070376e"
+     ],
+     [
+      "priv_q_0048",
+      "priv_p_3dbe8a8bd29f1d40"
+     ],
+     [
+      "priv_q_0049",
+      "priv_p_504c42894bf9bf68"
+     ],
+     [
+      "priv_q_0050",
+      "priv_p_5c0b459d318a32db"
+     ],
+     [
+      "priv_q_0051",
+      "priv_p_5deb56a83889c16f"
+     ],
+     [
+      "priv_q_0052",
+      "priv_p_5f00c6c299b169fa"
+     ],
+     [
+      "priv_q_0053",
+      "priv_p_649f04efdf77011e"
+     ],
+     [
+      "priv_q_0054",
+      "priv_p_6d74377c799f9243"
+     ],
+     [
+      "priv_q_0055",
+      "priv_p_7be60892d3ad2fab"
+     ],
+     [
+      "priv_q_0056",
+      "priv_p_8279be3f450a8066"
+     ],
+     [
+      "priv_q_0057",
+      "priv_p_909f60e2d0dfe158"
+     ],
+     [
+      "priv_q_0058",
+      "priv_p_90a9c70b3581713b"
+     ],
+     [
+      "priv_q_0059",
+      "priv_p_987da2903dce7967"
+     ],
+     [
+      "priv_q_0060",
+      "priv_p_a284fda136a9808a"
+     ],
+     [
+      "priv_q_0061",
+      "priv_p_a652c1fe1dc77ee5"
+     ],
+     [
+      "priv_q_0062",
+      "priv_p_afee91ed269ecf85"
+     ],
+     [
+      "priv_q_0063",
+      "priv_p_b07ec64439482ca4"
+     ],
+     [
+      "priv_q_0064",
+      "priv_p_be0657289d15fb2a"
+     ],
+     [
+      "priv_q_0065",
+      "priv_p_be88151c56d2af35"
+     ],
+     [
+      "priv_q_0066",
+      "priv_p_c79babba1c183274"
+     ],
+     [
+      "priv_q_0067",
+      "priv_p_ca4521e1325d41d9"
+     ],
+     [
+      "priv_q_0068",
+      "priv_p_d1d1aa032b74d3be"
+     ],
+     [
+      "priv_q_0069",
+      "priv_p_d445f962b6266a79"
+     ],
+     [
+      "priv_q_0070",
+      "priv_p_d44c69ef71606f41"
+     ],
+     [
+      "priv_q_0071",
+      "priv_p_d58653bb8e0fc5ec"
+     ],
+     [
+      "priv_q_0072",
+      "priv_p_1522390df8067521"
+     ],
+     [
+      "priv_q_0073",
+      "priv_p_ded74d6e2985acc9"
+     ],
+     [
+      "priv_q_0074",
+      "priv_p_df1dacf381f21739"
+     ],
+     [
+      "priv_q_0075",
+      "priv_p_e6c39472c89dd9f8"
+     ],
+     [
+      "priv_q_0076",
+      "priv_p_ec45257a46a3f63a"
+     ],
+     [
+      "priv_q_0077",
+      "priv_p_0a24a8f4213023d3"
+     ],
+     [
+      "priv_q_0078",
+      "priv_p_0ed62a6009788bcb"
+     ],
+     [
+      "priv_q_0079",
+      "priv_p_1c6721198e68d5d3"
+     ],
+     [
+      "priv_q_0080",
+      "priv_p_20fddb0c6780164a"
+     ],
+     [
+      "priv_q_0081",
+      "priv_p_e1e8ea231f13f4d3"
+     ],
+     [
+      "priv_q_0082",
+      "priv_p_367d1a0e79a365a5"
+     ],
+     [
+      "priv_q_0083",
+      "priv_p_3a5d8632082dc266"
+     ],
+     [
+      "priv_q_0084",
+      "priv_p_42158aef1b4b1b2b"
+     ],
+     [
+      "priv_q_0085",
+      "priv_p_42752949ed8b0f26"
+     ],
+     [
+      "priv_q_0086",
+      "priv_p_706bfd554e0cbdce"
+     ],
+     [
+      "priv_q_0087",
+      "priv_p_48a8cf0e44d3b69b"
+     ],
+     [
+      "priv_q_0088",
+      "priv_p_576f4c3dd0571215"
+     ],
+     [
+      "priv_q_0089",
+      "priv_p_591ab3b41ef83b65"
+     ],
+     [
+      "priv_q_0090",
+      "priv_p_6284655be83a0885"
+     ],
+     [
+      "priv_q_0091",
+      "priv_p_687ed61d9032a5f6"
+     ],
+     [
+      "priv_q_0092",
+      "priv_p_6b6d3156a6a63fd3"
+     ],
+     [
+      "priv_q_0093",
+      "priv_p_73457300bed5a52f"
+     ],
+     [
+      "priv_q_0094",
+      "priv_p_7e2cc0352f586426"
+     ],
+     [
+      "priv_q_0095",
+      "priv_p_896dc988299dbb82"
+     ],
+     [
+      "priv_q_0096",
+      "priv_p_8ca0c157dddd21f9"
+     ],
+     [
+      "priv_q_0097",
+      "priv_p_8ff68e9a60382472"
+     ],
+     [
+      "priv_q_0098",
+      "priv_p_92923a8d2cf0e818"
+     ],
+     [
+      "priv_q_0099",
+      "priv_p_92e8cdf9ea290f0c"
+     ],
+     [
+      "priv_q_0100",
+      "priv_p_92ea3d635dfef01f"
+     ],
+     [
+      "priv_q_0101",
+      "priv_p_97ed6da412789b2a"
+     ],
+     [
+      "priv_q_0102",
+      "priv_p_98445d22ecd221b6"
+     ],
+     [
+      "priv_q_0103",
+      "priv_p_aa6c749e4dbc9529"
+     ],
+     [
+      "priv_q_0104",
+      "priv_p_b45a47e88076adc7"
+     ],
+     [
+      "priv_q_0105",
+      "priv_p_b7c7759eec67f0f8"
+     ],
+     [
+      "priv_q_0106",
+      "priv_p_c18054892cb31273"
+     ],
+     [
+      "priv_q_0107",
+      "priv_p_d62970f0a455d432"
+     ],
+     [
+      "priv_q_0108",
+      "priv_p_d8c052137b8dc2c9"
+     ],
+     [
+      "priv_q_0109",
+      "priv_p_dd7961f9ebef29ed"
+     ],
+     [
+      "priv_q_0110",
+      "priv_p_df665b6e431e51d6"
+     ],
+     [
+      "priv_q_0111",
+      "priv_p_e0dfc54c04b8139c"
+     ],
+     [
+      "priv_q_0112",
+      "priv_p_e18a300e81cb65be"
+     ],
+     [
+      "priv_q_0113",
+      "priv_p_f3fb9405a4d02de6"
+     ],
+     [
+      "priv_q_0114",
+      "priv_p_f88c9db369d6b66d"
+     ],
+     [
+      "priv_q_0115",
+      "priv_p_fbe4c018140c7ce0"
+     ],
+     [
+      "priv_q_0116",
+      "priv_p_fc5ff0aa314d3ab5"
+     ],
+     [
+      "priv_q_0117",
+      "priv_p_02d22949d9b04e14"
+     ],
+     [
+      "priv_q_0118",
+      "priv_p_0ecebdc3dfd8fdea"
+     ],
+     [
+      "priv_q_0119",
+      "priv_p_1499003ac37ebb62"
+     ],
+     [
+      "priv_q_0120",
+      "priv_p_e7fdfc1d43b3c05a"
+     ],
+     [
+      "priv_q_0121",
+      "priv_p_1ac75ea7ea3a1b28"
+     ],
+     [
+      "priv_q_0122",
+      "priv_p_27da0b74d3d2f90e"
+     ],
+     [
+      "priv_q_0123",
+      "priv_p_2ab205918e08d0bc"
+     ],
+     [
+      "priv_q_0124",
+      "priv_p_3526fbacdadcb7ed"
+     ],
+     [
+      "priv_q_0125",
+      "priv_p_36c1ebfeff811fde"
+     ],
+     [
+      "priv_q_0126",
+      "priv_p_c938696d65f75cb4"
+     ],
+     [
+      "priv_q_0127",
+      "priv_p_505c7cf6f84b8dd1"
+     ],
+     [
+      "priv_q_0128",
+      "priv_p_55cf4953067cf14c"
+     ],
+     [
+      "priv_q_0129",
+      "priv_p_58038f9fcc172c99"
+     ],
+     [
+      "priv_q_0130",
+      "priv_p_60bdb2179955dd06"
+     ],
+     [
+      "priv_q_0131",
+      "priv_p_6791d6fb440a1f62"
+     ],
+     [
+      "priv_q_0132",
+      "priv_p_68bb446206cd678c"
+     ],
+     [
+      "priv_q_0133",
+      "priv_p_74ec9c64ea629221"
+     ],
+     [
+      "priv_q_0134",
+      "priv_p_7aa047e9802cceb3"
+     ],
+     [
+      "priv_q_0135",
+      "priv_p_805755a033ba5877"
+     ],
+     [
+      "priv_q_0136",
+      "priv_p_81210a9abf080d9b"
+     ],
+     [
+      "priv_q_0137",
+      "priv_p_8f346d5b4deaf81b"
+     ],
+     [
+      "priv_q_0138",
+      "priv_p_8fb31ba4454b6c0d"
+     ],
+     [
+      "priv_q_0139",
+      "priv_p_958ff2120ff020f4"
+     ],
+     [
+      "priv_q_0140",
+      "priv_p_97a847a9c5c65592"
+     ],
+     [
+      "priv_q_0141",
+      "priv_p_98cfe8e25a8814be"
+     ],
+     [
+      "priv_q_0142",
+      "priv_p_99c51042d51ac9a5"
+     ],
+     [
+      "priv_q_0143",
+      "priv_p_a3ba8c8db3acaeb5"
+     ],
+     [
+      "priv_q_0144",
+      "priv_p_a4170dcc5f919a51"
+     ],
+     [
+      "priv_q_0145",
+      "priv_p_18e423e13aeebe49"
+     ],
+     [
+      "priv_q_0146",
+      "priv_p_c1a094e627307e55"
+     ],
+     [
+      "priv_q_0147",
+      "priv_p_cbb86e31841d4831"
+     ],
+     [
+      "priv_q_0148",
+      "priv_p_d2e2a2efcc261279"
+     ],
+     [
+      "priv_q_0149",
+      "priv_p_da4af2baad0390b1"
+     ],
+     [
+      "priv_q_0150",
+      "priv_p_e5ff3224da090916"
+     ],
+     [
+      "priv_q_0151",
+      "priv_p_e70fc5abce8de126"
+     ],
+     [
+      "priv_q_0152",
+      "priv_p_bbbef2a9caeb783e"
+     ],
+     [
+      "priv_q_0153",
+      "priv_p_f44d094a039268ba"
+     ],
+     [
+      "priv_q_0154",
+      "priv_p_f740bfb3d3afbf74"
+     ],
+     [
+      "priv_q_0155",
+      "priv_p_00e16d41dd139512"
+     ],
+     [
+      "priv_q_0156",
+      "priv_p_05d9a2c9f1940fc2"
+     ],
+     [
+      "priv_q_0157",
+      "priv_p_0c7dae8512e8b836"
+     ],
+     [
+      "priv_q_0158",
+      "priv_p_0e7f331b06c525ed"
+     ],
+     [
+      "priv_q_0159",
+      "priv_p_1855309ef8e058f0"
+     ],
+     [
+      "priv_q_0160",
+      "priv_p_1994ba0970ba4585"
+     ],
+     [
+      "priv_q_0161",
+      "priv_p_25dde4b374e4d1ff"
+     ],
+     [
+      "priv_q_0162",
+      "priv_p_28ed07d023d0523a"
+     ],
+     [
+      "priv_q_0163",
+      "priv_p_2a700d8d06d1623f"
+     ],
+     [
+      "priv_q_0164",
+      "priv_p_2e2b48a06981cca9"
+     ],
+     [
+      "priv_q_0165",
+      "priv_p_36e2cf8e34ffde21"
+     ],
+     [
+      "priv_q_0166",
+      "priv_p_37063e7e96d3c9ff"
+     ],
+     [
+      "priv_q_0167",
+      "priv_p_722848e92206226a"
+     ],
+     [
+      "priv_q_0168",
+      "priv_p_735730fb03b077db"
+     ],
+     [
+      "priv_q_0169",
+      "priv_p_74d2fcafa31e4249"
+     ],
+     [
+      "priv_q_0170",
+      "priv_p_77e82f1ce2017b74"
+     ],
+     [
+      "priv_q_0171",
+      "priv_p_82f6fe53c24de6cc"
+     ],
+     [
+      "priv_q_0172",
+      "priv_p_858ed5bf883a4d1e"
+     ],
+     [
+      "priv_q_0173",
+      "priv_p_a19fae895597b17d"
+     ],
+     [
+      "priv_q_0174",
+      "priv_p_a9479ea69b715f42"
+     ],
+     [
+      "priv_q_0175",
+      "priv_p_bcef04f01087c1c2"
+     ],
+     [
+      "priv_q_0176",
+      "priv_p_bfa2b24e8a00140f"
+     ],
+     [
+      "priv_q_0177",
+      "priv_p_c31042a2172d42b4"
+     ],
+     [
+      "priv_q_0178",
+      "priv_p_c348a285ec0e1c7c"
+     ],
+     [
+      "priv_q_0179",
+      "priv_p_c4a6b521ddee36b7"
+     ],
+     [
+      "priv_q_0180",
+      "priv_p_c8834c5c6a25257c"
+     ],
+     [
+      "priv_q_0181",
+      "priv_p_ccf987109ba8afac"
+     ],
+     [
+      "priv_q_0182",
+      "priv_p_d57c100f000ae66c"
+     ],
+     [
+      "priv_q_0183",
+      "priv_p_d71246fa7588766a"
+     ],
+     [
+      "priv_q_0184",
+      "priv_p_ded48638b6ecb352"
+     ],
+     [
+      "priv_q_0185",
+      "priv_p_f5f02366c9dbf97a"
+     ],
+     [
+      "priv_q_0186",
+      "priv_p_fe4dd6f0ce72d29f"
+     ],
+     [
+      "priv_q_0187",
+      "priv_p_ff9d35945a333a02"
+     ],
+     [
+      "priv_q_0188",
+      "priv_p_0216025cebab3e4c"
+     ],
+     [
+      "priv_q_0189",
+      "priv_p_03281884d7a86bb0"
+     ],
+     [
+      "priv_q_0190",
+      "priv_p_11d1fe9eef5b9de5"
+     ],
+     [
+      "priv_q_0191",
+      "priv_p_879a9fb01161e4bc"
+     ],
+     [
+      "priv_q_0192",
+      "priv_p_1679b0f079d8f98a"
+     ],
+     [
+      "priv_q_0193",
+      "priv_p_2c85f7ed1cb54aea"
+     ],
+     [
+      "priv_q_0194",
+      "priv_p_388a7baa93abc7fb"
+     ],
+     [
+      "priv_q_0195",
+      "priv_p_11d1fe9eef5b9de5"
+     ],
+     [
+      "priv_q_0196",
+      "priv_p_418310e17516110f"
+     ],
+     [
+      "priv_q_0197",
+      "priv_p_465ecfef5bfc2960"
+     ],
+     [
+      "priv_q_0198",
+      "priv_p_48ee0d84649e07f1"
+     ],
+     [
+      "priv_q_0199",
+      "priv_p_4c5992718f928910"
+     ],
+     [
+      "priv_q_0200",
+      "priv_p_4f9d40b7d2b3e5c1"
+     ],
+     [
+      "priv_q_0201",
+      "priv_p_54bee00731da2e0d"
+     ],
+     [
+      "priv_q_0202",
+      "priv_p_602decbc3fc7d244"
+     ],
+     [
+      "priv_q_0203",
+      "priv_p_636ccd18ce534278"
+     ],
+     [
+      "priv_q_0204",
+      "priv_p_6607cdb2d70e4a5d"
+     ],
+     [
+      "priv_q_0205",
+      "priv_p_71d351605e2539b3"
+     ],
+     [
+      "priv_q_0206",
+      "priv_p_73921bf2f40efe8a"
+     ],
+     [
+      "priv_q_0207",
+      "priv_p_7c4bec76521d24a2"
+     ],
+     [
+      "priv_q_0208",
+      "priv_p_81ecb41568de0b7a"
+     ],
+     [
+      "priv_q_0209",
+      "priv_p_879634a8fd81ad33"
+     ],
+     [
+      "priv_q_0210",
+      "priv_p_879a9fb01161e4bc"
+     ],
+     [
+      "priv_q_0211",
+      "priv_p_e70fc5abce8de126"
+     ],
+     [
+      "priv_q_0212",
+      "priv_p_954710ce2e60432c"
+     ],
+     [
+      "priv_q_0213",
+      "priv_p_96400689a8f4c23d"
+     ],
+     [
+      "priv_q_0214",
+      "priv_p_9737e36e11591f42"
+     ],
+     [
+      "priv_q_0215",
+      "priv_p_9ff8cc0c321aebe2"
+     ],
+     [
+      "priv_q_0216",
+      "priv_p_a39dd1a188a4da38"
+     ],
+     [
+      "priv_q_0217",
+      "priv_p_a3e54b8cff134810"
+     ],
+     [
+      "priv_q_0218",
+      "priv_p_ae4d81d7fc996ac0"
+     ],
+     [
+      "priv_q_0219",
+      "priv_p_b2ee02fce56d45c3"
+     ],
+     [
+      "priv_q_0220",
+      "priv_p_b862f685d4487ff9"
+     ],
+     [
+      "priv_q_0221",
+      "priv_p_f2ef341fcb27daf8"
+     ],
+     [
+      "priv_q_0222",
+      "priv_p_bed2f874717afcf5"
+     ],
+     [
+      "priv_q_0223",
+      "priv_p_c7f179709c19f116"
+     ],
+     [
+      "priv_q_0224",
+      "priv_p_c938696d65f75cb4"
+     ],
+     [
+      "priv_q_0225",
+      "priv_p_d15fbe72b6b316a9"
+     ],
+     [
+      "priv_q_0226",
+      "priv_p_d763556239e27591"
+     ],
+     [
+      "priv_q_0227",
+      "priv_p_e1e8ea231f13f4d3"
+     ],
+     [
+      "priv_q_0228",
+      "priv_p_4f9d40b7d2b3e5c1"
+     ],
+     [
+      "priv_q_0229",
+      "priv_p_e88bbfc378299870"
+     ],
+     [
+      "priv_q_0230",
+      "priv_p_f4b50a4739f6702d"
+     ],
+     [
+      "priv_q_0231",
+      "priv_p_f4c62b69e9f40704"
+     ],
+     [
+      "priv_q_0232",
+      "priv_p_f66bba58b83e2f45"
+     ],
+     [
+      "priv_q_0233",
+      "priv_p_fd000b8350cca3ca"
+     ],
+     [
+      "priv_q_0234",
+      "priv_p_0075bcf325606e95"
+     ],
+     [
+      "priv_q_0235",
+      "priv_p_ca4521e1325d41d9"
+     ],
+     [
+      "priv_q_0236",
+      "priv_p_036372deef728965"
+     ],
+     [
+      "priv_q_0237",
+      "priv_p_06c4dc2fcc8c19a3"
+     ],
+     [
+      "priv_q_0238",
+      "priv_p_07936a7ac91e9b78"
+     ],
+     [
+      "priv_q_0239",
+      "priv_p_0da90e7b12740c3c"
+     ],
+     [
+      "priv_q_0240",
+      "priv_p_206ded11a2b64318"
+     ],
+     [
+      "priv_q_0241",
+      "priv_p_3afca90fdaa11284"
+     ],
+     [
+      "priv_q_0242",
+      "priv_p_48004ca66d0ffe7d"
+     ],
+     [
+      "priv_q_0243",
+      "priv_p_58529737fe64a18a"
+     ],
+     [
+      "priv_q_0244",
+      "priv_p_60d34c8e61fc1210"
+     ],
+     [
+      "priv_q_0245",
+      "priv_p_614f5b0aef2d299c"
+     ],
+     [
+      "priv_q_0246",
+      "priv_p_6ae6336171f4ae1a"
+     ],
+     [
+      "priv_q_0247",
+      "priv_p_7be897b9e1eb1c01"
+     ],
+     [
+      "priv_q_0248",
+      "priv_p_87e9998e101342d7"
+     ],
+     [
+      "priv_q_0249",
+      "priv_p_88c1bd4190fd970f"
+     ],
+     [
+      "priv_q_0250",
+      "priv_p_a167edae9a6bbff9"
+     ],
+     [
+      "priv_q_0251",
+      "priv_p_a1cd8606cf0b13c0"
+     ],
+     [
+      "priv_q_0252",
+      "priv_p_a3da6283c4c77a7f"
+     ],
+     [
+      "priv_q_0253",
+      "priv_p_b1e3043eb666fb61"
+     ],
+     [
+      "priv_q_0254",
+      "priv_p_b21f47c1f239f9e6"
+     ],
+     [
+      "priv_q_0255",
+      "priv_p_bdbc5559ddc8b82d"
+     ],
+     [
+      "priv_q_0256",
+      "priv_p_6791d6fb440a1f62"
+     ],
+     [
+      "priv_q_0257",
+      "priv_p_dd20c0573a685592"
+     ],
+     [
+      "priv_q_0258",
+      "priv_p_e689c9d72318fe22"
+     ],
+     [
+      "priv_q_0259",
+      "priv_p_e7f707780428b64c"
+     ],
+     [
+      "priv_q_0260",
+      "priv_p_ebd8b0fecbc14842"
+     ],
+     [
+      "priv_q_0261",
+      "priv_p_2a395fd7e9adfdb0"
+     ],
+     [
+      "priv_q_0262",
+      "priv_p_f1e77220b26edc30"
+     ],
+     [
+      "priv_q_0263",
+      "priv_p_64c156cc560f3323"
+     ],
+     [
+      "priv_q_0264",
+      "priv_p_f7b556347505551a"
+     ],
+     [
+      "priv_q_0265",
+      "priv_p_b7c7759eec67f0f8"
+     ],
+     [
+      "priv_q_0266",
+      "priv_p_0b41c3956b1ef9dd"
+     ],
+     [
+      "priv_q_0267",
+      "priv_p_0e3274b96b1f8681"
+     ],
+     [
+      "priv_q_0268",
+      "priv_p_149413133df18c47"
+     ],
+     [
+      "priv_q_0269",
+      "priv_p_81be7e866f5aa5b5"
+     ],
+     [
+      "priv_q_0270",
+      "priv_p_3c0408741f1f0e83"
+     ],
+     [
+      "priv_q_0271",
+      "priv_p_4572ef4401eeef79"
+     ],
+     [
+      "priv_q_0272",
+      "priv_p_5065005ff4c06daa"
+     ],
+     [
+      "priv_q_0273",
+      "priv_p_52c172b075abc232"
+     ],
+     [
+      "priv_q_0274",
+      "priv_p_559ad7cd20da8001"
+     ],
+     [
+      "priv_q_0275",
+      "priv_p_55ac19eebc599f8b"
+     ],
+     [
+      "priv_q_0276",
+      "priv_p_57029d5a0168a0c4"
+     ],
+     [
+      "priv_q_0277",
+      "priv_p_6138fd0593183af1"
+     ],
+     [
+      "priv_q_0278",
+      "priv_p_6b5d54f1ccfb73e3"
+     ],
+     [
+      "priv_q_0279",
+      "priv_p_6f34a16e388e3adc"
+     ],
+     [
+      "priv_q_0280",
+      "priv_p_78ae905e5b8d510c"
+     ],
+     [
+      "priv_q_0281",
+      "priv_p_7b8d2278c47348fd"
+     ],
+     [
+      "priv_q_0282",
+      "priv_p_7c3bca1b6c05d284"
+     ],
+     [
+      "priv_q_0283",
+      "priv_p_7d7a6b5f41750cbc"
+     ],
+     [
+      "priv_q_0284",
+      "priv_p_856ddd2282003a89"
+     ],
+     [
+      "priv_q_0285",
+      "priv_p_87689903ccc81603"
+     ],
+     [
+      "priv_q_0286",
+      "priv_p_be0657289d15fb2a"
+     ],
+     [
+      "priv_q_0287",
+      "priv_p_910af222de219d7c"
+     ],
+     [
+      "priv_q_0288",
+      "priv_p_95427947be1a7c53"
+     ],
+     [
+      "priv_q_0289",
+      "priv_p_95d16d9912d984b1"
+     ],
+     [
+      "priv_q_0290",
+      "priv_p_9783b62028b9f20d"
+     ],
+     [
+      "priv_q_0291",
+      "priv_p_988302cb3ff66847"
+     ],
+     [
+      "priv_q_0292",
+      "priv_p_995e32657a166d0a"
+     ],
+     [
+      "priv_q_0293",
+      "priv_p_9ac859d4ced20e58"
+     ],
+     [
+      "priv_q_0294",
+      "priv_p_9dfb235f0a80ab62"
+     ],
+     [
+      "priv_q_0295",
+      "priv_p_a60982eafc6cc297"
+     ],
+     [
+      "priv_q_0296",
+      "priv_p_a9c0e787c5e9255f"
+     ],
+     [
+      "priv_q_0297",
+      "priv_p_5f00c6c299b169fa"
+     ],
+     [
+      "priv_q_0298",
+      "priv_p_b89f21b24592c029"
+     ],
+     [
+      "priv_q_0299",
+      "priv_p_ba2f7ac228d2a4da"
+     ],
+     [
+      "priv_q_0300",
+      "priv_p_ba9edacdec51fbc9"
+     ],
+     [
+      "priv_q_0301",
+      "priv_p_cddb0cabb640bb5b"
+     ],
+     [
+      "priv_q_0302",
+      "priv_p_d9436a8b1bd0006c"
+     ],
+     [
+      "priv_q_0303",
+      "priv_p_db58f9db3e177d3d"
+     ],
+     [
+      "priv_q_0304",
+      "priv_p_dc02d740ff68b319"
+     ],
+     [
+      "priv_q_0305",
+      "priv_p_e02b2e4b1b825fb1"
+     ],
+     [
+      "priv_q_0306",
+      "priv_p_e22588e743d3e220"
+     ],
+     [
+      "priv_q_0307",
+      "priv_p_e6fd8d1926acd59b"
+     ],
+     [
+      "priv_q_0308",
+      "priv_p_dd7961f9ebef29ed"
+     ],
+     [
+      "priv_q_0309",
+      "priv_p_ee1f92d964ea073b"
+     ],
+     [
+      "priv_q_0310",
+      "priv_p_ee5b0320c3432870"
+     ],
+     [
+      "priv_q_0311",
+      "priv_p_f63f6ec4e67c6b2f"
+     ],
+     [
+      "priv_q_0312",
+      "priv_p_f655b364453af7d5"
+     ],
+     [
+      "priv_q_0313",
+      "priv_p_f82ba5542168e533"
+     ],
+     [
+      "priv_q_0314",
+      "priv_p_fe69bff5591d1f98"
+     ],
+     [
+      "priv_q_0315",
+      "priv_p_04cc7095ae6fe51e"
+     ],
+     [
+      "priv_q_0316",
+      "priv_p_0656cbbfca5cd2dd"
+     ],
+     [
+      "priv_q_0317",
+      "priv_p_07397cc32840fa48"
+     ],
+     [
+      "priv_q_0318",
+      "priv_p_0bab55733e6652cd"
+     ],
+     [
+      "priv_q_0319",
+      "priv_p_0ec9e5941e6326e1"
+     ],
+     [
+      "priv_q_0320",
+      "priv_p_13aad3bc2074821f"
+     ],
+     [
+      "priv_q_0321",
+      "priv_p_1419bfa41a1e4c7f"
+     ],
+     [
+      "priv_q_0322",
+      "priv_p_14beaa4a4f4daa4a"
+     ],
+     [
+      "priv_q_0323",
+      "priv_p_1d427616414702e5"
+     ],
+     [
+      "priv_q_0324",
+      "priv_p_203b7ed8cac60185"
+     ],
+     [
+      "priv_q_0325",
+      "priv_p_20c781da64b46fcd"
+     ],
+     [
+      "priv_q_0326",
+      "priv_p_2d986ec85e1c7e78"
+     ],
+     [
+      "priv_q_0327",
+      "priv_p_2e11a564049793e6"
+     ],
+     [
+      "priv_q_0328",
+      "priv_p_3494e8c5d9424be6"
+     ],
+     [
+      "priv_q_0329",
+      "priv_p_3ac4104b82a1c342"
+     ],
+     [
+      "priv_q_0330",
+      "priv_p_3ec136724dcd12d5"
+     ],
+     [
+      "priv_q_0331",
+      "priv_p_420c6a45b19762cc"
+     ],
+     [
+      "priv_q_0332",
+      "priv_p_439b26177f1c2281"
+     ],
+     [
+      "priv_q_0333",
+      "priv_p_47c021e226cb7cef"
+     ],
+     [
+      "priv_q_0334",
+      "priv_p_47dc105e82982fbe"
+     ],
+     [
+      "priv_q_0335",
+      "priv_p_5ef05eb579a880d3"
+     ],
+     [
+      "priv_q_0336",
+      "priv_p_60c47859016a1991"
+     ],
+     [
+      "priv_q_0337",
+      "priv_p_63595cb5454e3d0a"
+     ],
+     [
+      "priv_q_0338",
+      "priv_p_64c156cc560f3323"
+     ],
+     [
+      "priv_q_0339",
+      "priv_p_6cbe2c2d1ae11b47"
+     ],
+     [
+      "priv_q_0340",
+      "priv_p_757becc60d286eb2"
+     ],
+     [
+      "priv_q_0341",
+      "priv_p_7c4c64d546728362"
+     ],
+     [
+      "priv_q_0342",
+      "priv_p_7f2c4fa08f0b5324"
+     ],
+     [
+      "priv_q_0343",
+      "priv_p_8186cd4dbaeeaf45"
+     ],
+     [
+      "priv_q_0344",
+      "priv_p_8f0bb16d7c7e6094"
+     ],
+     [
+      "priv_q_0345",
+      "priv_p_913ce5f8f4cd698b"
+     ],
+     [
+      "priv_q_0346",
+      "priv_p_944755870a1f2752"
+     ],
+     [
+      "priv_q_0347",
+      "priv_p_a648502b3ddd2907"
+     ],
+     [
+      "priv_q_0348",
+      "priv_p_b2223f4ba87216e9"
+     ],
+     [
+      "priv_q_0349",
+      "priv_p_b6f254e5c0fea34b"
+     ],
+     [
+      "priv_q_0350",
+      "priv_p_bba57bd052d57f7d"
+     ],
+     [
+      "priv_q_0351",
+      "priv_p_ca5ab00f4bd609a1"
+     ],
+     [
+      "priv_q_0352",
+      "priv_p_cf4ce16fe611da1c"
+     ],
+     [
+      "priv_q_0353",
+      "priv_p_db640b706b57510c"
+     ],
+     [
+      "priv_q_0354",
+      "priv_p_e2f12f5532e8e45a"
+     ],
+     [
+      "priv_q_0355",
+      "priv_p_f03fec87b0e70049"
+     ],
+     [
+      "priv_q_0356",
+      "priv_p_e86e196a8d950cd2"
+     ],
+     [
+      "priv_q_0357",
+      "priv_p_e8d3c3b4f920ad1b"
+     ],
+     [
+      "priv_q_0358",
+      "priv_p_f5906ac84a7e2cd9"
+     ],
+     [
+      "priv_q_0359",
+      "priv_p_fd7b354c185bb70e"
+     ],
+     [
+      "priv_q_0360",
+      "priv_p_0033d9d4cdcc5a82"
+     ],
+     [
+      "priv_q_0361",
+      "priv_p_037a3f394140681e"
+     ],
+     [
+      "priv_q_0362",
+      "priv_p_0613b61900c66414"
+     ],
+     [
+      "priv_q_0363",
+      "priv_p_1522390df8067521"
+     ],
+     [
+      "priv_q_0364",
+      "priv_p_16bb8d2bd17cc577"
+     ],
+     [
+      "priv_q_0365",
+      "priv_p_1b2bf55b027076cb"
+     ],
+     [
+      "priv_q_0366",
+      "priv_p_211b1515af46f0e4"
+     ],
+     [
+      "priv_q_0367",
+      "priv_p_2efc2fc29e94b18d"
+     ],
+     [
+      "priv_q_0368",
+      "priv_p_34cac45f677960fe"
+     ],
+     [
+      "priv_q_0369",
+      "priv_p_15af412ca4d2c70a"
+     ],
+     [
+      "priv_q_0370",
+      "priv_p_51c9bb5c2e198b18"
+     ],
+     [
+      "priv_q_0371",
+      "priv_p_5c62b64d93485305"
+     ],
+     [
+      "priv_q_0372",
+      "priv_p_704ecb41d6af3d11"
+     ],
+     [
+      "priv_q_0373",
+      "priv_p_7101544f6235487e"
+     ],
+     [
+      "priv_q_0374",
+      "priv_p_7b3efaf3b0e34c19"
+     ],
+     [
+      "priv_q_0375",
+      "priv_p_7fbf1a9c7b0ab881"
+     ],
+     [
+      "priv_q_0376",
+      "priv_p_81be7e866f5aa5b5"
+     ],
+     [
+      "priv_q_0377",
+      "priv_p_82639c30ddbcc718"
+     ],
+     [
+      "priv_q_0378",
+      "priv_p_884a8af11a1f6466"
+     ],
+     [
+      "priv_q_0379",
+      "priv_p_9689aa5ffb5af9d8"
+     ],
+     [
+      "priv_q_0380",
+      "priv_p_9a0d378b88dbb6cd"
+     ],
+     [
+      "priv_q_0381",
+      "priv_p_a93eb3665b475404"
+     ],
+     [
+      "priv_q_0382",
+      "priv_p_acdbbd10310462b2"
+     ],
+     [
+      "priv_q_0383",
+      "priv_p_ae06f1b2f1c22dfb"
+     ],
+     [
+      "priv_q_0384",
+      "priv_p_b3e48c4815fdd2a2"
+     ],
+     [
+      "priv_q_0385",
+      "priv_p_b544613a1a059edc"
+     ],
+     [
+      "priv_q_0386",
+      "priv_p_c0e85842b47fcd7c"
+     ],
+     [
+      "priv_q_0387",
+      "priv_p_c9cf10dcca4a87d3"
+     ],
+     [
+      "priv_q_0388",
+      "priv_p_cd58e199670df52a"
+     ],
+     [
+      "priv_q_0389",
+      "priv_p_d0d7af6f5a8db018"
+     ],
+     [
+      "priv_q_0390",
+      "priv_p_db501a251b7a2721"
+     ],
+     [
+      "priv_q_0391",
+      "priv_p_de967ef50110c7f0"
+     ],
+     [
+      "priv_q_0392",
+      "priv_p_deeeaef60eb3a289"
+     ],
+     [
+      "priv_q_0393",
+      "priv_p_e6250c3ea81d053d"
+     ],
+     [
+      "priv_q_0394",
+      "priv_p_e7c406f381b2eebc"
+     ],
+     [
+      "priv_q_0395",
+      "priv_p_ecf2fdb9fb886079"
+     ],
+     [
+      "priv_q_0396",
+      "priv_p_ee104d3f6d509c3c"
+     ],
+     [
+      "priv_q_0397",
+      "priv_p_f03fec87b0e70049"
+     ],
+     [
+      "priv_q_0398",
+      "priv_p_f2ef341fcb27daf8"
+     ],
+     [
+      "priv_q_0399",
+      "priv_p_f78218993df2a065"
+     ],
+     [
+      "priv_q_0400",
+      "priv_p_fc9a1d6d80d2a762"
+     ]
+    ]
+   },
+   "records": {
+    "candidates": {
+     "properties": {
+      "B": 40000,
+      "SZ": 40000,
+      "W": 40000,
+      "HD": 40000
+     },
+     "game_id_examples": [
+      "priv_g_000001",
+      "priv_g_000002",
+      "priv_g_000003",
+      "priv_g_000004",
+      "priv_g_000005"
+     ],
+     "game_id_all_numeric": false,
+     "game_id_sorted_in_file": true,
+     "game_id_unique": true,
+     "n_game_ids": 40000
+    },
+    "questions": {
+     "properties": {
+      "B": 5000,
+      "SZ": 5000,
+      "W": 5000,
+      "HD": 5000
+     },
+     "game_id_examples": [],
+     "game_id_all_numeric": false,
+     "game_id_sorted_in_file": null,
+     "game_id_unique": true,
+     "n_game_ids": 0
+    }
+   },
+   "seconds": 240.39328384399414
+  }
+ ],
+ "cross_pool_candidate_dups": 0,
+ "training": {
+  "train_dir": "/home/u2507115/BK_AICUP_2026-1/data/training",
+  "n_games": 1000000,
+  "lengths_black": {
+   "n": 500000,
+   "moves": {
+    "p05": 128.0,
+    "p25": 184.0,
+    "p50": 227.0,
+    "p75": 261.0,
+    "p95": 299.0,
+    "mean": 221.43222
+   },
+   "black_moves": {
+    "p05": 64.0,
+    "p25": 92.0,
+    "p50": 114.0,
+    "p75": 131.0,
+    "p95": 150.0,
+    "mean": 110.969364
+   }
+  },
+  "seconds": 61.16094493865967
+ },
+ "flags": {
+  "A1_training_overlap": true,
+  "A3i_opening_shift": false,
+  "one_to_one_likely": {
+   "pub_": true,
+   "priv_": true
+  }
+ },
+ "fusion": {
+  "components": [
+   "opening",
+   "style"
+  ],
+  "weights": [
+   5.563673503095856,
+   4.224903286718133
+  ],
+  "cfg": {
+   "depth": 12,
+   "alpha": 2.0,
+   "beta": 5.0,
+   "shrink": 0.1
+  },
+  "fitted_on_pools": [
+   [
+    1,
+    2
+   ],
+   [
+    3,
+    4
+   ]
+  ],
+  "questions": 2631,
+  "git_head": "2dd2351",
+  "git_dirty": false,
+  "code_sha256": "8cf8dbbd0a7e9024e4ed529c7a55497b48b8f487944f4fceec2567d9f644a2f7",
+  "code_files": [
+   "src/aicup/gamevec.py",
+   "src/aicup/ladder_data.py",
+   "src/aicup/aggregators.py",
+   "src/aicup/settrain.py",
+   "src/aicup/rankmodel.py",
+   "src/aicup/qfeatures.py",
+   "src/aicup/metric.py"
+  ],
+  "torch_version": "2.14.1+cu126",
+  "device_name": "cpu"
+ },
+ "args": {
+  "candidates": [
+   "../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv",
+   "../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv"
+  ],
+  "questions": [
+   "../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv",
+   "../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv"
+  ],
+  "fusion": "../BK_AICUP_2026-2/results/pid_fusion.json",
+  "out": "../BK_AICUP_2026-2/results/checks/mock_official_checks.json",
+  "train_dir": "/home/u2507115/BK_AICUP_2026-1/data/training",
+  "no_training": false,
+  "max_train_games": null,
+  "workers": 12,
+  "seed": 0,
+  "n_null": 20,
+  "model_games": 50
+ },
+ "seconds": 541.2369363307953,
+ "git_head": "24207b2",
+ "git_dirty": false,
+ "code_sha256": "087f80e747ba6b925fda3dc0ea30d6c3c79966a62a7f90e053ba495b9a7c0cb7",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "0529dad",
+ "pid_git_dirty": true
+}

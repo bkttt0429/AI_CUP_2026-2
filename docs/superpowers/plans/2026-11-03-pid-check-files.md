@@ -337,7 +337,7 @@ Expected: 兩庫各 400 位候選人、每人一題；`mock_info.json` 的 `ques
 
 - [ ] **Step 3: 在 mock 上跑檢查腳本（含訓練索引）**
 
-Run: `sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 24 -t 02:00:00 -J pidchk scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_check_files.py --candidates ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv --questions ../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/checks/mock_official_checks.json --workers 24`
+Run: `sbatch --exclude=25a-hgpn[001,003,004,007,039,062] -c 12 -t 02:00:00 -J pidchk scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_check_files.py --candidates ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_candidates_private.csv --questions ../BK_AICUP_2026-2/data/mock_official/player_identification_test_public.csv ../BK_AICUP_2026-2/data/mock_official/player_identification_test_private.csv --fusion ../BK_AICUP_2026-2/results/pid_fusion.json --out ../BK_AICUP_2026-2/results/checks/mock_official_checks.json --workers 12`
 Expected（正控制）：兩庫候選局與測試局 100% 在訓練集、`A1_training_overlap` True、每位候選人對應恰一個訓練 `player_id`；測試局不在候選局；開局位移旗標 False；自我辨識分數（這是第 7 項的參考值）與 Top-1 碰撞的 `distinct_top1`（一人一題的 mock 應 ≥ 350）。記下秒數。
 
 - [ ] **Step 4: 寫文件、結果進 git、Commit**
@@ -345,3 +345,19 @@ Expected（正控制）：兩庫候選局與測試局 100% 在訓練集、`A1_tr
 `git add docs METHOD_NOTES.md README.md results/checks && git commit -m "docs + results: 11/04 procedure in NANO4, checks 8-10 in ARCHITECTURE, fork plan and the mock rehearsal numbers in METHOD_NOTES 2.4; mock_official_checks.json"`
 
 - [ ] **Step 5: push、開 PR（base `main`）、在 issue #1 貼摘要（`[nano4 Claude]`），並為分岔計畫開一個新 issue 當這條線的頻道**。合併等使用者。
+
+### Task 9（執行中追加）: `scripts/pid_reconcile.py`
+
+**Files:** Create `scripts/pid_reconcile.py`、Test `tests/test_reconcile.py`
+
+**Interfaces:** `reconcile(checks: dict, submission: DataFrame, truth: DataFrame | None) -> dict`（`n_compared`、`n_top1_equal`、`n_top1_differ`、`differences`、`checks_without_top1`、`missing_in_submission`、`missing_in_checks`、`truth_score`）；CLI `--checks --submission [--truth ...] --out`，退出碼 1 = Top-1 有不同或有缺題（11/04 上傳前的門），2 = 讀檔錯誤。
+
+- [x] 測試（同意、不同意、讀檔錯誤三條）→ 紅 → 實作 → 綠（job 684690 之後的全套）
+- [x] 在 mock 上與 `predict_pid.py` 串跑（job 684685）：800/800 相同，對真值 0.9474
+
+## 執行紀錄（2026-11-03）
+
+- Task 1–7 依序完成，每個 task 一個 commit（provenance 的檔案因先 staged 而併入 Task 1 的 commit）。
+- 兩個計畫外的發現：(a) nano4 一張 GPU 的工作上限 `-c 12`，所有 `-c 24` 指令改 12；(b) `predict_pid.py` 以 `game_id` 當候選局 key 的隱患（合成資料的重複 id 暴露），改位置 key並加測試。
+- mock 演練數字在 METHOD_NOTES §2.4；第 7 項參考值 0.936 寫回 spec §3.1。
+
