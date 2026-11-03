@@ -117,3 +117,18 @@ pid_cv 的兩個模擬庫（seed 0）；開局＋風格照舊，加 `aicup_pid.l
 sbatch --exclude=25a-hgpn[001,003,004,006,007,008,009,039,062] -c 12 -t 01:00:00 -J b2cv scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_local_cv.py --pools 1,2 3,4 --workers 12 --out ../BK_AICUP_2026-2/results/local/local_cv.json --fusion-out ../BK_AICUP_2026-2/results/pid_fusion3.json
 ```
 
+### 5.4 穩健性線（使用者 2026-11-03 核定「其他處理的方法」的建議順序）
+
+全部 CPU、`-c 12`、只報告或事先指定如下；佇列滿時用 `until sbatch ...; do sleep 60; done` 等槽。
+
+```bash
+cd ~/BK_AICUP_2026-1
+X="--exclude=25a-hgpn[001,003,004,006,007,008,009,039,062]"
+# 候選局減量曲線（100 → 50 → 20；fusion 與 fusion3）
+for n in 50 20; do sbatch $X -c 12 -t 01:00:00 -J decay$n scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_local_cv.py --pools 1,2 3,4 --cand-games $n --workers 12 --out ../BK_AICUP_2026-2/results/local/local_cv_cand$n.json; done
+# 難負例候選庫：隨機 400 人 vs 同級帶 vs 開局 repertoire 最相近的 400 人；固定的提交權重，不重擬
+sbatch $X -c 12 -t 02:00:00 -J hardpools scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_hard_pools.py --folds 1 2 3 4 --workers 12 --out ../BK_AICUP_2026-2/results/hard/hard_pools.json
+# 轉導式自我訓練（每人一題的庫；事先指定 self3 vs assign3）
+sbatch $X -c 12 -t 02:00:00 -J selftrain scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_selftrain_cv.py --pools 1,2 3,4 --seeds 0 1 2 3 4 --workers 12 --out ../BK_AICUP_2026-2/results/selftrain/selftrain_cv.json
+```
+

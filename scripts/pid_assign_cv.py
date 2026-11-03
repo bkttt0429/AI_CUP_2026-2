@@ -31,7 +31,7 @@ from aicup.ladder import to_json  # noqa: E402
 from aicup.scoring import load_games  # noqa: E402
 from aicup_pid import pools  # noqa: E402
 from aicup_pid.assign import assign_topk, assignment_report  # noqa: E402
-from aicup_pid.components import COMPONENTS, features_all, fit_from_parsed, parse_all, score_questions  # noqa: E402
+from aicup_pid.components import COMPONENTS, features_all, fit_from_parsed, fit_local, parse_all, score_components  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
@@ -65,9 +65,12 @@ def build_group(games, folds_df, folds, a, cfg, log=print):
     for (cands, qs, info), is_control in made:
         by_player = cands.groupby("player_id")["game_key"].apply(list).to_dict()
         opening, style = fit_from_parsed(by_player, moves, feats, cfg)
-        S = score_questions(opening, style, [list(k) for k in qs["game_keys"]], moves, feats)
+        local = fit_local(by_player, moves, cfg)
+        q_keys = [list(k) for k in qs["game_keys"]]
+        S = score_components(("opening", "style", "local"), opening, style, q_keys, moves, feats, local)
         truth = np.array([opening.index[p] for p in qs["player_id"]])
-        runs.append({"info": info, "players": opening.players, "questions": qs, "S": S, "truth": truth, "control": is_control, "folds": list(folds)})
+        runs.append({"info": info, "players": opening.players, "questions": qs, "q_keys": q_keys, "S": S, "truth": truth, "control": is_control,
+                     "folds": list(folds), "by_player": by_player, "moves": moves, "feats": feats, "cfg": cfg})
     log(f"fold set {folds}: components of {len(runs)} pools in {time.time() - t0:.0f} s", flush=True)
     return runs
 
