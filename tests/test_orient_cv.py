@@ -55,3 +55,28 @@ def test_orient_cv_cli(tmp_path, monkeypatch, capsys):
     assert {"diff", "ci95", "per_pool_diff", "diff_n5", "pass"} <= set(cmp["pre_specified"]["fusion3o vs fusion3"])
     assert "[pre_specified] fusion3o vs fusion3" in capsys.readouterr().out
     assert pid_orient_cv.main([*args, "--pools", "0,1"]) == 2
+
+
+def test_orient_cv_compare_raw(tmp_path, monkeypatch, capsys):
+    frame, folds_df = training_frame(folds=(1, 2, 3, 4), players_per_fold=5, games_per_player=40)
+    players = sorted(frame["player_id"].unique())
+    habit = {p: i % 8 for i, p in enumerate(players)}
+    frame["sgf_content"] = [reorient(s, habit[p]) for p, s in zip(frame["player_id"], frame["sgf_content"])]
+    lookup = sgf_lookup(frame)
+    monkeypatch.setattr(pid_orient_cv.pools, "black_games", lambda train_dir=None: black_table(frame))
+    monkeypatch.setattr(pid_orient_cv, "load_games", lambda keys, train_dir=None: {k: lookup[k] for k in keys})
+    folds_csv = tmp_path / "folds.csv"
+    folds_df.to_csv(folds_csv, index=False)
+    out, fus = tmp_path / "orient_cv2.json", tmp_path / "pid_fusion3o2.json"
+    args = ["--pools", "1,2", "3,4", "--n-players", "8", "--cand-games", "10", "--depth", "8", "--start", "0", "--n-boot", "50", "--compare-raw", "2",
+            "--folds-csv", str(folds_csv), "--out", str(out), "--fusion-out", str(fus)]
+    assert pid_orient_cv.main(args) == 0
+    res = json.loads(out.read_text())
+    assert res["compare_raw"] == 2 and res["cfg"]["orient_raw"] == 1
+    for p in res["pools"]:
+        assert {"orient", "orient_b", "fusion3o", "fusion3o_b"} <= set(p["scores"]) and len(p["fusion3o_b_weights"]) == 4
+    cmp = res["comparisons"]
+    assert set(cmp["pre_specified"]) == {"fusion3o_b vs fusion3o"} and "orient_b vs orient" in cmp["report_only"]
+    doc = json.loads(fus.read_text())
+    assert doc["components"] == ["opening", "style", "local", "orient"] and doc["cfg"]["orient_raw"] == 2  # the document carries the compared model
+    assert "[pre_specified] fusion3o_b vs fusion3o" in capsys.readouterr().out

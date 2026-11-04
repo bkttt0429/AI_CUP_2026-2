@@ -58,6 +58,9 @@ def run_pool(games, folds_df, folds, a, cfg, log=print):
     local, hd, orient = fit_local(by_player, moves, cfg), fit_hd(by_player, sgfs, cfg), fit_orient(by_player, moves, cfg)
     q_keys = [list(k) for k in qs["game_keys"]]
     S = score_components(FIVE, opening, style, q_keys, moves, feats, local, hd, sgfs, orient)
+    if a.compare_raw:  # a second orientation model with another number of raw moves, as its own component
+        orient_b = fit_orient(by_player, moves, {**cfg, "orient_raw": a.compare_raw})
+        S["orient_b"] = score_components(("orient",), opening, style, q_keys, moves, feats, orient=orient_b)["orient"]
     truth = np.array([opening.index[p] for p in qs["player_id"]])
     modal = []
     for ks in by_player.values():
@@ -88,6 +91,8 @@ def main(argv=None):
     ap.add_argument("--orient-alpha", type=float, default=2.0, help="shrinkage of a candidate's orientation token frequencies towards the pool's")
     ap.add_argument("--orient-beta", type=float, default=5.0)
     ap.add_argument("--orient-depth", type=int, default=12, help="moves canonical() looks at for the symmetry index")
+    ap.add_argument("--orient-raw", type=int, default=1, help="Black's raw moves used as orientation tokens (1 = first move only)")
+    ap.add_argument("--compare-raw", type=int, default=0, help="also fit an orientation model with this many raw moves; then the pre-specified comparison is fusion3o_b (with it) vs fusion3o")
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--order", choices=list(pools.ORDERS), default="shuffle")
     ap.add_argument("--n-boot", type=int, default=2000)
@@ -99,7 +104,12 @@ def main(argv=None):
     a = ap.parse_args(argv)
     t0 = time.time()
     cfg = {"depth": a.depth, "alpha": a.alpha, "beta": a.beta, "shrink": a.shrink, "local_alpha": a.local_alpha, "local_beta": a.local_beta, "local_start": a.start,
-           "hd_alpha": a.hd_alpha, "hd_beta": a.hd_beta, "orient_alpha": a.orient_alpha, "orient_beta": a.orient_beta, "orient_depth": a.orient_depth}
+           "hd_alpha": a.hd_alpha, "hd_beta": a.hd_beta, "orient_alpha": a.orient_alpha, "orient_beta": a.orient_beta, "orient_depth": a.orient_depth, "orient_raw": a.orient_raw}
+    fusions, pre, report, comps_all = list(FUSIONS), list(PRE), list(REPORT), list(FIVE)
+    if a.compare_raw:
+        comps_all.append("orient_b")
+        fusions.append(("fusion3o_b", (*THREE, "orient_b")))
+        pre, report = [("fusion3o_b", "fusion3o")], [("orient_b", "orient"), *REPORT]
     try:
         specs = parse_pools(a.pools)
         if any(0 in f for f in specs):
@@ -110,12 +120,12 @@ def main(argv=None):
     except (FileNotFoundError, ValueError, KeyError) as e:
         print(e, file=sys.stderr)
         return 2
-    arms = (*FIVE, *[name for name, _ in FUSIONS])
+    arms = (*comps_all, *[name for name, _ in fusions])
     results, per_q_all, pids_all, n_all = [], {c: [] for c in arms}, [], []
     for i, r in enumerate(runs):
         others = [o for j, o in enumerate(runs) if j != i]
         weights, fused = {}, {}
-        for name, comps in FUSIONS:
+        for name, comps in fusions:
             if others:
                 fus = Fusion().fit([np.vstack([o["S"][c] for o in others]) for c in comps], np.concatenate([o["truth"] for o in others]))
                 weights[name] = fus.w.tolist()
@@ -125,21 +135,21 @@ def main(argv=None):
                 weights[name] = None
             fused[name] = fus.scores([r["S"][c] for c in comps])
         scores = {}
-        for c in FIVE:
+        for c in comps_all:
             scores[c], per_q = evaluate(r["S"][c], r["players"], r["questions"], r["truth"])
             per_q_all[c].append(per_q)
-        for name, _ in FUSIONS:
+        for name, _ in fusions:
             scores[name], per_q = evaluate(fused[name], r["players"], r["questions"], r["truth"])
             per_q_all[name].append(per_q)
         pids_all.append(r["questions"]["player_id"].to_numpy(dtype=str))
         n_all.append(r["questions"]["n_games"].to_numpy())
-        results.append({"pool": r["info"], "scores": scores, **{f"{name}_weights": weights[name] for name, _ in FUSIONS}, "orient_vocabulary": r["orient_vocabulary"],
+        results.append({"pool": r["info"], "scores": scores, **{f"{name}_weights": weights[name] for name, _ in fusions}, "orient_vocabulary": r["orient_vocabulary"],
                         "first_move_modal_share": r["first_move_modal_share"], "seconds": r["seconds"]})
         print(f"pool {r['info']['folds']}: " + "  ".join(f"{c} {scores[c]['score']:.4f}" for c in scores)
               + f"  weights3o {np.round(weights['fusion3o'], 3).tolist() if weights['fusion3o'] else '(equal)'}", flush=True)
     pid, n_games = np.concatenate(pids_all), np.concatenate(n_all)
     comps = {}
-    for group, pairs in (("pre_specified", PRE), ("report_only", REPORT)):
+    for group, pairs in (("pre_specified", pre), ("report_only", report)):
         comps[group] = {}
         for x, z in pairs:
             qx, qz = np.concatenate(per_q_all[x]), np.concatenate(per_q_all[z])
@@ -153,14 +163,16 @@ def main(argv=None):
             print(f"[{group}] {x} vs {z}: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  pools " + " ".join(f"{v:+.4f}" for v in per_pool)
                   + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)
     out = {"pools": results, "overall_score": {c: float(np.mean(np.concatenate(per_q_all[c]))) for c in per_q_all}, "comparisons": comps, "cfg": cfg,
-           "order": a.order, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
+           "compare_raw": a.compare_raw, "order": a.order, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out}")
     for path, comps_ in ((a.fusion_out, FOUR), (a.fusion5_out, FIVE)):
         if path:
-            fus = Fusion().fit([np.vstack([r["S"][c] for r in runs]) for c in comps_], np.concatenate([r["truth"] for r in runs]))
-            doc = {"components": list(comps_), "weights": fus.w.tolist(), "cfg": cfg, "fitted_on_pools": [r["info"]["folds"] for r in runs], "questions": int(len(pid)), **pid_environment("cpu")}
+            src = [("orient_b" if (c == "orient" and a.compare_raw) else c) for c in comps_]  # with --compare-raw the documents carry the compared model
+            fus = Fusion().fit([np.vstack([r["S"][c] for r in runs]) for c in src], np.concatenate([r["truth"] for r in runs]))
+            doc_cfg = {**cfg, "orient_raw": a.compare_raw} if a.compare_raw else cfg
+            doc = {"components": list(comps_), "weights": fus.w.tolist(), "cfg": doc_cfg, "fitted_on_pools": [r["info"]["folds"] for r in runs], "questions": int(len(pid)), **pid_environment("cpu")}
             Path(path).parent.mkdir(parents=True, exist_ok=True)
             Path(path).write_text(to_json(doc, indent=1) + "\n")
             print(f"wrote {path}: weights {np.round(fus.w, 4).tolist()}")

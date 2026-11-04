@@ -93,8 +93,8 @@ def score_hd(model, question_keys, sgfs):
 
 
 def fit_orient(cand_keys_by_player, moves, cfg):
-    """OrientModel on the candidates' parsed games (cfg keys orient_alpha, orient_beta, orient_depth)."""
-    model = OrientModel(alpha=cfg.get("orient_alpha", 2.0), beta=cfg.get("orient_beta", 5.0), depth=cfg.get("orient_depth", 12))
+    """OrientModel on the candidates' parsed games (cfg keys orient_alpha, orient_beta, orient_depth, orient_raw)."""
+    model = OrientModel(alpha=cfg.get("orient_alpha", 2.0), beta=cfg.get("orient_beta", 5.0), depth=cfg.get("orient_depth", 12), n_raw=cfg.get("orient_raw", 1))
     return model.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
 
 

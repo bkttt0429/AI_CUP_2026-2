@@ -17,26 +17,34 @@ from aicup_pid.local import LocalModel
 from aicup_pid.opening import PASS, canonical, coords
 
 
-def orient_tokens(moves, depth=12):
-    """[("sym", symmetry index), ("first", (x, y))] of a parsed game; [] when Black never moved."""
-    first = next((c for (col, *_), c in zip(moves, coords(moves)) if col == "B" and c != PASS), None)
-    if first is None:
+def orient_tokens(moves, depth=12, n_raw=1):
+    """Tokens of a parsed game: ("sym", symmetry index), ("first", (x, y)) and, for n_raw >= 2, ("raw", i, (x, y)) for
+    Black's 2nd..n_raw-th non-pass moves plus ("pair", first, second); [] when Black never moved. On the official
+    candidates Black's raw 1st and 2nd moves jointly carry 2.5 bits per game about the player against 1.7 for the 1st
+    alone (METHOD_NOTES 2.16)."""
+    black = [c for (col, *_), c in zip(moves, coords(moves)) if col == "B" and c != PASS]
+    if not black:
         return []
     _, k = canonical(moves, depth)
-    return [("sym", int(k)), ("first", tuple(first))]
+    out = [("sym", int(k)), ("first", tuple(black[0]))]
+    for i in range(1, min(n_raw, len(black))):
+        out.append(("raw", i, tuple(black[i])))
+    if n_raw >= 2 and len(black) >= 2:
+        out.append(("pair", tuple(black[0]), tuple(black[1])))
+    return out
 
 
 class OrientModel(LocalModel):
     """fit({player_id: [move lists]}); log_scores([move lists]) -> [n_players] in self.players' order."""
 
-    def __init__(self, alpha=2.0, beta=5.0, depth=12):
+    def __init__(self, alpha=2.0, beta=5.0, depth=12, n_raw=1):
         super().__init__(alpha=alpha, beta=beta, start=0)
-        if depth < 1:
-            raise ValueError("depth >= 1")
-        self.depth = int(depth)
+        if depth < 1 or n_raw < 1:
+            raise ValueError("depth >= 1, n_raw >= 1")
+        self.depth, self.n_raw = int(depth), int(n_raw)
 
     def tokenize(self, game):
-        return orient_tokens(game, self.depth)
+        return orient_tokens(game, self.depth, self.n_raw)
 
     def state(self):
-        return {"alpha": self.alpha, "beta": self.beta, "depth": self.depth, "players": list(self.players), "vocabulary": self.vocabulary}
+        return {"alpha": self.alpha, "beta": self.beta, "depth": self.depth, "n_raw": self.n_raw, "players": list(self.players), "vocabulary": self.vocabulary}

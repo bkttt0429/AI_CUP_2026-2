@@ -67,3 +67,17 @@ def test_score_components_with_orient():
     assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient")
     with pytest.raises(ValueError):
         score_components(("opening", "style", "orient"), opening, style, [["q:0"]], moves, feats)
+
+
+def test_orient_tokens_with_more_raw_moves():
+    m = parse_moves("(;SZ[19];B[pd];W[dp];B[pq];W[dd];B[fq])")
+    t1, t2, t3 = (orient.orient_tokens(m, depth=12, n_raw=n) for n in (1, 2, 3))
+    assert t1 == [t1[0], ("first", (15, 3))]
+    assert t2 == [*t1, ("raw", 1, (15, 16)), ("pair", (15, 3), (15, 16))]
+    assert t3 == [*t1, ("raw", 1, (15, 16)), ("raw", 2, (5, 16)), ("pair", (15, 3), (15, 16))]
+    assert orient.orient_tokens(parse_moves("(;SZ[19];B[pd];W[dp])"), n_raw=3) == t1  # no second Black move: no raw / pair tokens
+    model = orient.OrientModel(n_raw=2).fit({"a": [m], "b": [parse_moves("(;SZ[19];B[dd];W[pp];B[dp])")]})
+    assert model.n_raw == 2 and model.state()["n_raw"] == 2 and model.vocabulary == 8  # 2 x (sym, first, raw, pair)
+    assert fit_orient({"a": ["k"]}, {"k": m}, {"orient_raw": 3}).n_raw == 3
+    with pytest.raises(ValueError):
+        orient.OrientModel(n_raw=0)
