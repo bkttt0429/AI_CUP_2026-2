@@ -64,7 +64,7 @@ def test_score_components_with_orient():
     assert model.players == opening.players == ["p0", "p1"] and model.depth == 8
     S = score_components(("opening", "style", "orient"), opening, style, [["q:0", "q:1"]], moves, feats, orient=model)
     assert set(S) == {"opening", "style", "orient"} and S["orient"].shape == (1, 2) and S["orient"][0, 1] > S["orient"][0, 0]
-    assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient")
+    assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw")
     with pytest.raises(ValueError):
         score_components(("opening", "style", "orient"), opening, style, [["q:0"]], moves, feats)
 
@@ -81,3 +81,23 @@ def test_orient_tokens_with_more_raw_moves():
     assert fit_orient({"a": ["k"]}, {"k": m}, {"orient_raw": 3}).n_raw == 3
     with pytest.raises(ValueError):
         orient.OrientModel(n_raw=0)
+
+
+def test_score_components_with_opening_raw():
+    from aicup_pid.components import fit_opening_raw
+    rng = np.random.RandomState(2)
+    sgfs, by_player = {}, {}
+    for c in range(2):
+        for j in range(6):
+            sgfs[f"c:{c}:{j}"] = oriented_game(rng, c)
+            by_player.setdefault(f"p{c}", []).append(f"c:{c}:{j}")
+    sgfs["q:0"] = oriented_game(rng, 1)
+    moves, feats = parse_all(sgfs), features_all(sgfs)
+    opening, style = fit_from_parsed(by_player, moves, feats, {"depth": 8})
+    raw = fit_opening_raw(by_player, moves, {"depth": 8})
+    assert raw.players == opening.players and raw.symmetry is False and raw.depth == 8
+    S = score_components(("opening", "opening_raw"), opening, style, [["q:0"]], moves, feats, opening_raw=raw)
+    assert set(S) == {"opening", "opening_raw"} and S["opening_raw"][0, 1] > S["opening_raw"][0, 0]
+    assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw")
+    with pytest.raises(ValueError):
+        score_components(("opening_raw",), opening, style, [["q:0"]], moves, feats)

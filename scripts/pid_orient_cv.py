@@ -27,7 +27,7 @@ import aicup_pid  # noqa: E402  (AI_CUP_2026-1 on sys.path)
 from aicup.ladder import to_json  # noqa: E402
 from aicup.scoring import load_games  # noqa: E402
 from aicup_pid import pools  # noqa: E402
-from aicup_pid.components import COMPONENTS, features_all, fit_from_parsed, fit_hd, fit_local, fit_orient, parse_all, score_components  # noqa: E402
+from aicup_pid.components import COMPONENTS, features_all, fit_from_parsed, fit_hd, fit_local, fit_opening_raw, fit_orient, parse_all, score_components  # noqa: E402
 from aicup_pid.fusion import Fusion  # noqa: E402
 from aicup_pid.orient import orient_tokens  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
@@ -61,6 +61,8 @@ def run_pool(games, folds_df, folds, a, cfg, log=print):
     if a.compare_raw:  # a second orientation model with another number of raw moves, as its own component
         orient_b = fit_orient(by_player, moves, {**cfg, "orient_raw": a.compare_raw})
         S["orient_b"] = score_components(("orient",), opening, style, q_keys, moves, feats, orient=orient_b)["orient"]
+    if a.opening_raw:  # the opening back-off model on raw coordinates
+        S["opening_raw"] = score_components(("opening_raw",), opening, style, q_keys, moves, feats, opening_raw=fit_opening_raw(by_player, moves, cfg))["opening_raw"]
     truth = np.array([opening.index[p] for p in qs["player_id"]])
     modal = []
     for ks in by_player.values():
@@ -93,6 +95,8 @@ def main(argv=None):
     ap.add_argument("--orient-depth", type=int, default=12, help="moves canonical() looks at for the symmetry index")
     ap.add_argument("--orient-raw", type=int, default=1, help="Black's raw moves used as orientation tokens (1 = first move only)")
     ap.add_argument("--compare-raw", type=int, default=0, help="also fit an orientation model with this many raw moves; then the pre-specified comparison is fusion3o_b (with it) vs fusion3o")
+    ap.add_argument("--opening-raw", action="store_true", help="also fit the opening model on raw coordinates: arms opening_raw, fusion3r (fusion3 + it), fusion3or (fusion3o + it); pre-specified fusion3or vs fusion3o")
+    ap.add_argument("--fusion3or-out", default=None, help="with --opening-raw: write the fusion3or weights fitted on all pools")
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--order", choices=list(pools.ORDERS), default="shuffle")
     ap.add_argument("--n-boot", type=int, default=2000)
@@ -110,6 +114,11 @@ def main(argv=None):
         comps_all.append("orient_b")
         fusions.append(("fusion3o_b", (*THREE, "orient_b")))
         pre, report = [("fusion3o_b", "fusion3o")], [("orient_b", "orient"), *REPORT]
+    if a.opening_raw:
+        comps_all.append("opening_raw")
+        fusions += [("fusion3r", (*THREE, "opening_raw")), ("fusion3or", (*FOUR, "opening_raw"))]
+        pre = [("fusion3or", "fusion3o"), *([] if not a.compare_raw else pre)]
+        report = [("opening_raw", "opening"), ("fusion3r", "fusion3"), ("fusion3or", "fusion3r"), *report]
     try:
         specs = parse_pools(a.pools)
         if any(0 in f for f in specs):
@@ -163,11 +172,11 @@ def main(argv=None):
             print(f"[{group}] {x} vs {z}: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  pools " + " ".join(f"{v:+.4f}" for v in per_pool)
                   + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)
     out = {"pools": results, "overall_score": {c: float(np.mean(np.concatenate(per_q_all[c]))) for c in per_q_all}, "comparisons": comps, "cfg": cfg,
-           "compare_raw": a.compare_raw, "order": a.order, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
+           "compare_raw": a.compare_raw, "opening_raw": bool(a.opening_raw), "order": a.order, "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out}")
-    for path, comps_ in ((a.fusion_out, FOUR), (a.fusion5_out, FIVE)):
+    for path, comps_ in ((a.fusion_out, FOUR), (a.fusion5_out, FIVE), (a.fusion3or_out, (*FOUR, "opening_raw"))):
         if path:
             src = [("orient_b" if (c == "orient" and a.compare_raw) else c) for c in comps_]  # with --compare-raw the documents carry the compared model
             fus = Fusion().fit([np.vstack([r["S"][c] for r in runs]) for c in src], np.concatenate([r["truth"] for r in runs]))

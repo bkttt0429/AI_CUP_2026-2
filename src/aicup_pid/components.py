@@ -10,7 +10,7 @@ from aicup_pid.opening import OpeningModel, parse
 from aicup_pid.style import StyleModel, game_features
 
 COMPONENTS = ("opening", "style")  # the production fusion
-OPTIONAL = ("local", "hd", "orient")  # lines B2 (fusion3), B5 (hd), B6 (orient): fitted only when a fusion document names them
+OPTIONAL = ("local", "hd", "orient", "opening_raw")  # lines B2 (fusion3), B5 (hd), B6 (orient, opening_raw): fitted only when a fusion document names them
 ALL_COMPONENTS = (*COMPONENTS, *OPTIONAL)
 
 
@@ -98,10 +98,22 @@ def fit_orient(cand_keys_by_player, moves, cfg):
     return model.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
 
 
-def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None):
-    """{component: [Q, C]} for the named components: the two production ones, plus 'local' / 'orient' (model given) and
-    'hd' (model and the sgf strings given)."""
+def fit_opening_raw(cand_keys_by_player, moves, cfg):
+    """The opening back-off model on raw coordinates (no symmetry normalisation; same depth / alpha / beta / alpha_full)."""
+    model = OpeningModel(depth=cfg.get("depth", 12), alpha=cfg.get("alpha", 2.0), beta=cfg.get("beta", 5.0), alpha_full=cfg.get("alpha_full", 1.0), symmetry=False)
+    return model.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
+
+
+def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None, opening_raw=None):
+    """{component: [Q, C]} for the named components: the two production ones, plus 'local' / 'orient' / 'opening_raw'
+    (model given) and 'hd' (model and the sgf strings given)."""
     S = score_questions(opening, style, question_keys, moves, feats)
+    if "opening_raw" in comps:
+        if opening_raw is None:
+            raise ValueError("the fusion names 'opening_raw' but no raw opening model was fitted")
+        if opening_raw.players != opening.players:
+            raise ValueError("the raw opening model disagrees on the candidate order")
+        S["opening_raw"] = score_local(opening_raw, question_keys, moves)
     if "orient" in comps:
         if orient is None:
             raise ValueError("the fusion names 'orient' but no orientation model was fitted")

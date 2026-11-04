@@ -64,6 +64,18 @@ def tokens(moves, depth):
     return out
 
 
+def tokens_raw(moves, depth):
+    """tokens() without the symmetry normalisation: raw board coordinates, so a player's orientation habit (which corner
+    they actually open in, 3-4 vs 4-3) is part of the pattern (fork plan line B6)."""
+    cs = coords(moves)
+    out, black_prefix = [], []
+    for i, (c, *_rest) in enumerate(moves[:depth]):
+        if c == "B":
+            out.append((tuple(cs[:i]), tuple(black_prefix), cs[i]))
+            black_prefix.append(cs[i])
+    return out
+
+
 def parse(sgf):
     return parse_moves(sgf)
 
@@ -71,10 +83,14 @@ def parse(sgf):
 class OpeningModel:
     """fit({player_id: [move lists]}); log_scores([move lists]) -> [n_players] in self.players' order."""
 
-    def __init__(self, depth=12, alpha=2.0, beta=5.0, alpha_full=1.0):
+    def __init__(self, depth=12, alpha=2.0, beta=5.0, alpha_full=1.0, symmetry=True):
         if depth < 1 or alpha <= 0 or beta <= 0 or alpha_full <= 0:
             raise ValueError("depth >= 1, alpha > 0, beta > 0 and alpha_full > 0")
         self.depth, self.alpha, self.beta, self.alpha_full = int(depth), float(alpha), float(beta), float(alpha_full)
+        self.symmetry = bool(symmetry)  # False: raw coordinates (tokens_raw), the orientation habit stays in the pattern
+
+    def _tokens(self, moves):
+        return tokens(moves, self.depth) if self.symmetry else tokens_raw(moves, self.depth)
 
     def fit(self, games_by_player):
         self.players = sorted(games_by_player)
@@ -84,7 +100,7 @@ class OpeningModel:
         for p in self.players:
             full, black = defaultdict(Counter), defaultdict(Counter)
             for moves in games_by_player[p]:
-                for fctx, bctx, mv in tokens(moves, self.depth):
+                for fctx, bctx, mv in self._tokens(moves):
                     full[fctx][mv] += 1
                     black[bctx][mv] += 1
                     self.bg[bctx][mv] += 1
@@ -103,7 +119,7 @@ class OpeningModel:
         """Sum over the games' Black opening moves of log p_c(move | contexts), per candidate: [n_players]."""
         out = np.zeros(len(self.players))
         for moves in games:
-            for fctx, bctx, mv in tokens(moves, self.depth):
+            for fctx, bctx, mv in self._tokens(moves):
                 pb = self._p_bg(bctx, mv)
                 for i in range(len(self.players)):
                     cb = self.black[i].get(bctx)
@@ -114,4 +130,4 @@ class OpeningModel:
         return out
 
     def state(self):
-        return {"depth": self.depth, "alpha": self.alpha, "beta": self.beta, "alpha_full": self.alpha_full, "players": list(self.players)}
+        return {"depth": self.depth, "alpha": self.alpha, "beta": self.beta, "alpha_full": self.alpha_full, "symmetry": self.symmetry, "players": list(self.players)}

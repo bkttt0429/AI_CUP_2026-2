@@ -28,7 +28,7 @@ if str(ROOT / "src") not in sys.path:
 import aicup_pid  # noqa: E402  (AI_CUP_2026-1 on sys.path)
 from aicup.ladder import to_json  # noqa: E402
 from aicup_pid import checks, pools  # noqa: E402
-from aicup_pid.components import ALL_COMPONENTS, features_all, fit_from_parsed, fit_hd, fit_local, fit_orient, parse_all, score_components  # noqa: E402
+from aicup_pid.components import ALL_COMPONENTS, features_all, fit_from_parsed, fit_hd, fit_local, fit_opening_raw, fit_orient, parse_all, score_components  # noqa: E402
 from aicup_pid.dedup import build_training_index, hash_games  # noqa: E402
 from aicup_pid.fusion import Fusion  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
@@ -87,10 +87,11 @@ def check_pool(cand_path, q_path, fus, cfg, a, index, comps=("opening", "style")
     local = fit_local(by_player, moves, cfg) if "local" in comps else None
     hd = fit_hd(by_player, sgfs, cfg) if "hd" in comps else None
     orient = fit_orient(by_player, moves, cfg) if "orient" in comps else None
+    opening_raw = fit_opening_raw(by_player, moves, cfg) if "opening_raw" in comps else None
     q_usable = [[k for k in keys if k in usable] for keys in q_keys]
     idx = [i for i, keys in enumerate(q_usable) if keys]
     if idx:
-        S = score_components(comps, opening, style, [q_usable[i] for i in idx], moves, feats, local, hd, sgfs, orient)
+        S = score_components(comps, opening, style, [q_usable[i] for i in idx], moves, feats, local, hd, sgfs, orient, opening_raw)
         S_f = fus.scores([S[c] for c in comps])
     else:
         S_f = np.zeros((0, len(opening.players)))

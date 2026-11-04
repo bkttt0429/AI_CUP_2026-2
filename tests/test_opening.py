@@ -43,3 +43,16 @@ def test_opening_model_identifies_players_with_planted_openings():
     s = model.log_scores([weird])
     assert np.all(np.isfinite(s))
     assert opening.OpeningModel(depth=4).fit({"a": [weird]}).log_scores([weird])[0] > model.log_scores([weird]).max()
+
+
+def test_raw_opening_model_keeps_the_orientation():
+    from aicup.sgf import parse_moves
+    from aicup_pid.opening import OpeningModel, tokens, tokens_raw
+    a, b = parse_moves("(;SZ[19];B[pd];W[dp];B[pq])"), parse_moves("(;SZ[19];B[dp];W[pd];B[qp])")  # mirror images (x <-> y)
+    assert tokens(a, 12) == tokens(b, 12) and tokens_raw(a, 12) != tokens_raw(b, 12)
+    assert [t[2] for t in tokens_raw(a, 12)] == [(15, 3), (15, 16)] and tokens_raw(a, 12)[1][0] == ((15, 3), (3, 15))
+    lib = {"p0": [a] * 10, "p1": [b] * 10}
+    sym, raw = OpeningModel(depth=12).fit(lib), OpeningModel(depth=12, symmetry=False).fit(lib)
+    s_sym, s_raw = sym.log_scores([a]), raw.log_scores([a])
+    assert abs(s_sym[0] - s_sym[1]) < 1e-9 and s_raw[0] > s_raw[1]  # the symmetric model cannot tell the two apart, the raw one can
+    assert raw.state()["symmetry"] is False and sym.state()["symmetry"] is True
