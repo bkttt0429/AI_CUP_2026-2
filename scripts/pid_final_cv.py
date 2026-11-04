@@ -138,9 +138,9 @@ def main(argv=None):
                 m = np.concatenate([np.full(len(r["per_q"][x]), tuple(r["folds"]) == fs) for r in runs])
                 per_fs[str(list(fs))] = float(np.mean(cat[x][m] - cat[z][m]))
             n5 = n_games == 5
-            d.update({"per_fold_set_diff": per_fs, "diff_n5": float(np.mean((cat[x] - cat[z])[n5])) if n5.any() else None,
-                      "by_n": {str(k): float(np.mean((cat[x] - cat[z])[n_games == k])) for k in sorted(set(n_games.tolist()))},
-                      "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_fs.values()) and (d["diff"] >= MIN_DIFF or ((d.get("diff_n5") or 0) >= MIN_DIFF_N5)))})
+            d["diff_n5"] = float(np.mean((cat[x] - cat[z])[n5])) if n5.any() else None
+            d.update({"per_fold_set_diff": per_fs,                       "by_n": {str(k): float(np.mean((cat[x] - cat[z])[n_games == k])) for k in sorted(set(n_games.tolist()))},
+                      "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_fs.values()) and (d["diff"] >= MIN_DIFF or ((d["diff_n5"] or 0) >= MIN_DIFF_N5)))})
             comps[group][f"{x} vs {z}"] = d
             print(f"[{group}] {x} vs {z}: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  fold sets " + " ".join(f"{v:+.4f}" for v in per_fs.values())
                   + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)

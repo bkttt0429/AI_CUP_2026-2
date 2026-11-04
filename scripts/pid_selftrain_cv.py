@@ -114,9 +114,10 @@ def main(argv=None):
         d = paired_player_bootstrap(qa, base, pid, n=a.n_boot)
         per_group = [float(np.mean((qa - base)[grp == g])) for g in range(len(groups))]
         n5 = n_games == 5
-        d.update({"per_pool_diff": per_group, "diff_n5": float(np.mean((qa - base)[n5])) if n5.any() else None,
+        d["diff_n5"] = float(np.mean((qa - base)[n5])) if n5.any() else None
+        d.update({"per_pool_diff": per_group,
                   "by_n": {str(n): float(np.mean((qa - base)[n_games == n])) for n in sorted(set(n_games.tolist()))},
-                  "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_group) and (d["diff"] >= MIN_DIFF or ((d.get("diff_n5") or 0) >= MIN_DIFF_N5)))})
+                  "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_group) and (d["diff"] >= MIN_DIFF or ((d["diff_n5"] or 0) >= MIN_DIFF_N5)))})
         comps[group][f"{arm} vs assign3"] = d
         print(f"[{group}] {arm} vs assign3: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  fold sets " + " ".join(f"{v:+.4f}" for v in per_group)
               + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)

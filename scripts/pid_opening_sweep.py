@@ -140,9 +140,10 @@ def main(argv=None):
         d = paired_player_bootstrap(x["fusion"], z["fusion"], pid, n=a.n_boot)
         per_pool = [float(np.mean(px - pz)) for px, pz in zip(x["per_pool"], z["per_pool"])]
         n5 = n_games == 5
-        d.update({"per_pool_diff": per_pool, "diff_n5": float(np.mean((x["fusion"] - z["fusion"])[n5])) if n5.any() else None,
+        d["diff_n5"] = float(np.mean((x["fusion"] - z["fusion"])[n5])) if n5.any() else None
+        d.update({"per_pool_diff": per_pool,
                   "opening_alone_diff": float(np.mean(x["opening"] - z["opening"])),
-                  "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_pool) and (d["diff"] >= MIN_DIFF or ((d.get("diff_n5") or 0) >= MIN_DIFF_N5)))})
+                  "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_pool) and (d["diff"] >= MIN_DIFF or ((d["diff_n5"] or 0) >= MIN_DIFF_N5)))})
         comps[f"{c['name']} vs base"] = d
         print(f"[pre_specified] {c['name']} vs base: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  pools " + " ".join(f"{v:+.4f}" for v in per_pool)
               + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)

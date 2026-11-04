@@ -145,9 +145,10 @@ def main(argv=None):
     qa, qf = np.concatenate(per_q_all["assign"]), np.concatenate(per_q_all["fusion"])
     d = paired_player_bootstrap(qa, qf, pid, n=a.n_boot)
     per_group = [float(np.mean(qa[grp == i] - qf[grp == i])) for i in range(len(groups))]
-    d.update({"per_pool_diff": per_group, "diff_n5": float(np.mean((qa - qf)[n_games == 5])) if (n_games == 5).any() else None,
+    d["diff_n5"] = float(np.mean((qa - qf)[n_games == 5])) if (n_games == 5).any() else None
+    d.update({"per_pool_diff": per_group,
               "by_n": {str(n): float(np.mean((qa - qf)[n_games == n])) for n in sorted(set(n_games.tolist()))},
-              "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_group) and (d["diff"] >= MIN_DIFF or ((d.get("diff_n5") or 0) >= MIN_DIFF_N5)))})
+              "pass": bool(d["ci95"][0] > 0 and all(v > 0 for v in per_group) and (d["diff"] >= MIN_DIFF or ((d["diff_n5"] or 0) >= MIN_DIFF_N5)))})
     print(f"[pre_specified] assign vs fusion: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  fold sets " + " ".join(f"{v:+.4f}" for v in per_group)
           + f"  n=5 {d['diff_n5']:+.4f}  -> {'PASS' if d['pass'] else 'no'}", flush=True)
     out = {"pools": results, "overall_score": {"fusion": float(qf.mean()), "assign": float(qa.mean())},
