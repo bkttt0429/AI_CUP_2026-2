@@ -1,0 +1,31 @@
+{
+ "n_questions_checks": 800,
+ "n_questions_submission": 800,
+ "n_compared": 800,
+ "n_top1_equal": 800,
+ "n_top1_differ": 0,
+ "differences": [],
+ "checks_without_top1": [],
+ "missing_in_submission": [],
+ "missing_in_checks": [],
+ "truth_score": null,
+ "checks": "/home/u2507115/BK_AICUP_2026-2/results/checks/official_checks.json",
+ "submission": "/home/u2507115/BK_AICUP_2026-2/results/submission/submission_player.csv",
+ "truth": [],
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "3781048",
+ "pid_git_dirty": false
+}
