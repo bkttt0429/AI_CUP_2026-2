@@ -58,9 +58,13 @@ class LocalModel:
             raise ValueError("alpha > 0, beta > 0, start >= 0")
         self.alpha, self.beta, self.start = float(alpha), float(beta), int(start)
 
+    def tokenize(self, game):
+        """The tokens of one parsed game (subclasses change the vocabulary, e.g. aicup_pid.orient)."""
+        return tokens(game, self.start)
+
     def fit(self, games_by_player):
         self.players = sorted(games_by_player)
-        counts = [Counter(tok for g in games_by_player[p] for tok in tokens(g, self.start)) for p in self.players]
+        counts = [Counter(tok for g in games_by_player[p] for tok in self.tokenize(g)) for p in self.players]
         bg = Counter()
         for c in counts:
             bg.update(c)
@@ -84,7 +88,7 @@ class LocalModel:
     def _counts(self, games):
         v = np.zeros(self.vocabulary + 1)
         for g in games:
-            for tok in tokens(g, self.start):
+            for tok in self.tokenize(g):
                 v[self.vocab.get(tok, self.vocabulary)] += 1
         return v
 

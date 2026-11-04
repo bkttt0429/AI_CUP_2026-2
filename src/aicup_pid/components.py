@@ -5,11 +5,12 @@ import numpy as np
 
 from aicup_pid.hd import HDModel
 from aicup_pid.local import LocalModel
+from aicup_pid.orient import OrientModel
 from aicup_pid.opening import OpeningModel, parse
 from aicup_pid.style import StyleModel, game_features
 
 COMPONENTS = ("opening", "style")  # the production fusion
-OPTIONAL = ("local", "hd")  # lines B2 (fusion3) and B5 (hd): fitted only when a fusion document names them
+OPTIONAL = ("local", "hd", "orient")  # lines B2 (fusion3), B5 (hd), B6 (orient): fitted only when a fusion document names them
 ALL_COMPONENTS = (*COMPONENTS, *OPTIONAL)
 
 
@@ -91,10 +92,22 @@ def score_hd(model, question_keys, sgfs):
     return np.stack([model.log_scores([sgfs[k] for k in keys]) for keys in question_keys])
 
 
-def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None):
-    """{component: [Q, C]} for the named components: the two production ones, plus 'local' (model given) and 'hd'
-    (model and the sgf strings given)."""
+def fit_orient(cand_keys_by_player, moves, cfg):
+    """OrientModel on the candidates' parsed games (cfg keys orient_alpha, orient_beta, orient_depth)."""
+    model = OrientModel(alpha=cfg.get("orient_alpha", 2.0), beta=cfg.get("orient_beta", 5.0), depth=cfg.get("orient_depth", 12))
+    return model.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
+
+
+def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None):
+    """{component: [Q, C]} for the named components: the two production ones, plus 'local' / 'orient' (model given) and
+    'hd' (model and the sgf strings given)."""
     S = score_questions(opening, style, question_keys, moves, feats)
+    if "orient" in comps:
+        if orient is None:
+            raise ValueError("the fusion names 'orient' but no orientation model was fitted")
+        if orient.players != opening.players:
+            raise ValueError("the orientation model disagrees on the candidate order")
+        S["orient"] = score_local(orient, question_keys, moves)
     if "local" in comps:
         if local is None:
             raise ValueError("the fusion names 'local' but no local model was fitted")

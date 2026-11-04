@@ -30,7 +30,7 @@ from aicup.ladder import to_json  # noqa: E402
 from aicup.submission import check_game  # noqa: E402
 from aicup_pid import checks, pools  # noqa: E402
 from aicup_pid.assign import assign_topk, assignment_report  # noqa: E402
-from aicup_pid.components import ALL_COMPONENTS, COMPONENTS, fit_hd, fit_local, fit_models, score_components  # noqa: E402
+from aicup_pid.components import ALL_COMPONENTS, COMPONENTS, fit_hd, fit_local, fit_models, fit_orient, score_components  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
 
@@ -61,8 +61,9 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign=
     opening, style, moves, feats = fit_models(by_player, sgfs, cfg, workers=workers)
     local = fit_local(by_player, moves, cfg) if "local" in comps else None
     hd = fit_hd(by_player, sgfs, cfg) if "hd" in comps else None
+    orient = fit_orient(by_player, moves, cfg) if "orient" in comps else None
     usable = [k for k in q_keys if k]
-    S = score_components(comps, opening, style, usable, moves, feats, local, hd, sgfs)
+    S = score_components(comps, opening, style, usable, moves, feats, local, hd, sgfs, orient)
     S_f = fus.scores([S[c] for c in comps]) if usable else np.zeros((0, len(opening.players)))
     n_games = np.array([q["declared_games"] for q, keys in zip(questions, q_keys) if keys], dtype=int)
     collisions = checks.top1_collisions(S_f, n_games)

@@ -145,3 +145,13 @@ sbatch $X -c 12 -t 02:00:00 -J hdcv scripts/nano4/run.sbatch python -I ../BK_AIC
 
 通過後 `predict_pid.py --fusion results/pid_fusion4.json`（可加 `--assign auto`）是新的提交候選；`pid_check_files.py` 也認四成分文件。注意：模擬庫的訓練局含 HD ≥ 2（官方庫沒有），CV 的 HD 類別分布在 log 裡。
 
+### 5.6 B6 原始棋盤方向成分（`scripts/pid_orient_cv.py`；2026-11-05，使用者「至少要 1.0」後的缺口探測）
+
+其他成分全部對 8 種棋盤對稱不變，所以「第一手實際下在哪個角、3-4 記成 3-4 還是 4-3」被丟掉了。官方候選檔上這是強烈的個人（或客戶端）習慣：第一手原始座標對 400 人帶 1.8 bit／局（打亂虛無 0.17），canonical 選到的對稱索引 1.1 bit（虛無 0.05），262／400 人九成以上的局從同一點開。`aicup_pid.orient.OrientModel` 是 LocalModel 換 token（對稱索引、第一手原始座標）；事先指定 `fusion3o vs fusion3`，只報告 `orient vs style`、`orient vs opening`、`fusion5（+hd） vs fusion3o`。
+
+```bash
+cd ~/BK_AICUP_2026-1
+X="--exclude=25a-hgpn[001,003,004,005,006,007,008,009,010,039,062,155]"
+sbatch $X -c 12 -t 02:00:00 -J orcv scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_orient_cv.py --pools 1,2 3,4 --workers 12 \
+    --out ../BK_AICUP_2026-2/results/orient/orient_cv.json --fusion-out ../BK_AICUP_2026-2/results/pid_fusion3o.json --fusion5-out ../BK_AICUP_2026-2/results/pid_fusion5.json
+```
