@@ -1,0 +1,140 @@
+{
+ "submission": "/home/u2507115/BK_AICUP_2026-2/results/submission_f3o/submission_player.csv",
+ "rows": 800,
+ "pools": [
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_candidates_public.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_test_public.csv",
+   "n_candidates": 400,
+   "n_candidate_games": 40000,
+   "n_candidate_games_used": 40000,
+   "candidate_game_ids_unique": true,
+   "n_questions": 400,
+   "dropped_games": [],
+   "fallback_questions": [],
+   "median_top1_margin": 7.0927073009705115,
+   "assign": {
+    "mode": "off",
+    "applied": false,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 400,
+     "distinct_top1": 385,
+     "expected_random": 253.03235509572292,
+     "by_n": {
+      "5": 96,
+      "10": 100,
+      "15": 100,
+      "20": 100
+     },
+     "one_to_one_likely": true
+    },
+    "n_top1_changed": 0
+   },
+   "seconds": 51.538147926330566
+  },
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_candidates_private.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_test_private.csv",
+   "n_candidates": 400,
+   "n_candidate_games": 40000,
+   "n_candidate_games_used": 40000,
+   "candidate_game_ids_unique": true,
+   "n_questions": 400,
+   "dropped_games": [],
+   "fallback_questions": [],
+   "median_top1_margin": 6.572903350418444,
+   "assign": {
+    "mode": "off",
+    "applied": false,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 400,
+     "distinct_top1": 388,
+     "expected_random": 253.03235509572292,
+     "by_n": {
+      "5": 97,
+      "10": 99,
+      "15": 100,
+      "20": 100
+     },
+     "one_to_one_likely": true
+    },
+    "n_top1_changed": 0
+   },
+   "seconds": 50.94639873504639
+  }
+ ],
+ "fusion": {
+  "components": [
+   "opening",
+   "style",
+   "local",
+   "orient"
+  ],
+  "weights": [
+   5.093006922479102,
+   2.6482471833421757,
+   1.1067553123901464,
+   2.1661766430126677
+  ],
+  "cfg": {
+   "depth": 12,
+   "alpha": 2.0,
+   "beta": 5.0,
+   "shrink": 0.1,
+   "local_alpha": 2.0,
+   "local_beta": 5.0,
+   "local_start": 12,
+   "hd_alpha": 2.0,
+   "hd_beta": 5.0,
+   "orient_alpha": 2.0,
+   "orient_beta": 5.0,
+   "orient_depth": 12
+  },
+  "fitted_on_pools": [
+   [
+    1,
+    2
+   ],
+   [
+    3,
+    4
+   ]
+  ],
+  "questions": 2631,
+  "git_head": "24207b2",
+  "git_dirty": true,
+  "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+  "code_files": [
+   "src/aicup/gamevec.py",
+   "src/aicup/ladder_data.py",
+   "src/aicup/aggregators.py",
+   "src/aicup/settrain.py",
+   "src/aicup/rankmodel.py",
+   "src/aicup/qfeatures.py",
+   "src/aicup/metric.py"
+  ],
+  "torch_version": "2.14.1+cu126",
+  "device_name": "cpu",
+  "pid_git_head": "4a3653e",
+  "pid_git_dirty": false
+ },
+ "problems": [],
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "ca8d1e3",
+ "pid_git_dirty": false
+}
