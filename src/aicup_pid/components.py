@@ -3,12 +3,13 @@ import multiprocessing as mp
 
 import numpy as np
 
+from aicup_pid.hd import HDModel
 from aicup_pid.local import LocalModel
 from aicup_pid.opening import OpeningModel, parse
 from aicup_pid.style import StyleModel, game_features
 
 COMPONENTS = ("opening", "style")  # the production fusion
-OPTIONAL = ("local",)  # line B2 (fusion3): fitted only when a fusion document names it
+OPTIONAL = ("local", "hd")  # lines B2 (fusion3) and B5 (hd): fitted only when a fusion document names them
 ALL_COMPONENTS = (*COMPONENTS, *OPTIONAL)
 
 
@@ -77,8 +78,22 @@ def score_local(model, question_keys, moves):
     return np.stack([model.log_scores([moves[k] for k in keys]) for keys in question_keys])
 
 
-def score_components(comps, opening, style, question_keys, moves, feats, local=None):
-    """{component: [Q, C]} for the named components (the two production ones plus 'local' when a model is given)."""
+def fit_hd(cand_keys_by_player, sgfs, cfg):
+    """HDModel on the candidates' records (cfg keys hd_alpha, hd_beta); sgfs covers every candidate key."""
+    model = HDModel(alpha=cfg.get("hd_alpha", 2.0), beta=cfg.get("hd_beta", 5.0))
+    return model.fit({p: [sgfs[k] for k in keys] for p, keys in cand_keys_by_player.items()})
+
+
+def score_hd(model, question_keys, sgfs):
+    """[Q, C] handicap-habit log scores for questions given as lists of game keys."""
+    if not question_keys:
+        return np.zeros((0, len(model.players)))
+    return np.stack([model.log_scores([sgfs[k] for k in keys]) for keys in question_keys])
+
+
+def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None):
+    """{component: [Q, C]} for the named components: the two production ones, plus 'local' (model given) and 'hd'
+    (model and the sgf strings given)."""
     S = score_questions(opening, style, question_keys, moves, feats)
     if "local" in comps:
         if local is None:
@@ -86,5 +101,11 @@ def score_components(comps, opening, style, question_keys, moves, feats, local=N
         if local.players != opening.players:
             raise ValueError("the local model disagrees on the candidate order")
         S["local"] = score_local(local, question_keys, moves)
+    if "hd" in comps:
+        if hd is None or sgfs is None:
+            raise ValueError("the fusion names 'hd' but no hd model (or no sgf strings) was given")
+        if hd.players != opening.players:
+            raise ValueError("the hd model disagrees on the candidate order")
+        S["hd"] = score_hd(hd, question_keys, sgfs)
     return {c: S[c] for c in comps}
 

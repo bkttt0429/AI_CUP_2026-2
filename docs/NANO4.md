@@ -132,3 +132,16 @@ sbatch $X -c 12 -t 02:00:00 -J hardpools scripts/nano4/run.sbatch python -I ../B
 sbatch $X -c 12 -t 02:00:00 -J selftrain scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_selftrain_cv.py --pools 1,2 3,4 --seeds 0 1 2 3 4 --workers 12 --out ../BK_AICUP_2026-2/results/selftrain/selftrain_cv.json
 ```
 
+### 5.5 B5 讓子旗標成分（`scripts/pid_hd_cv.py`；2026-11-04 使用者「開始」）
+
+官方 SGF 只留 `SZ`、`HD`、落子；HD 只有 0／1，且每位候選 100 局的 HD1 比例跨人標準差 0.22（二項虛無 0.037；METHOD_NOTES §2.12）。`aicup_pid.hd.HDModel` 是每人對 HD 類別（0／1／≥2）的 Dirichlet 多項式，當第四個融合成分；事先指定 `fusion4 vs fusion3`，只報告 `hd vs style`、`fusion4 vs fusion`。
+
+```bash
+cd ~/BK_AICUP_2026-1
+X="--exclude=25a-hgpn[001,003,004,005,006,007,008,009,010,039,062,155]"
+sbatch $X -c 12 -t 02:00:00 -J hdcv scripts/nano4/run.sbatch python -I ../BK_AICUP_2026-2/scripts/pid_hd_cv.py --pools 1,2 3,4 --workers 12 \
+    --out ../BK_AICUP_2026-2/results/hd/hd_cv.json --fusion-out ../BK_AICUP_2026-2/results/pid_fusion4.json
+```
+
+通過後 `predict_pid.py --fusion results/pid_fusion4.json`（可加 `--assign auto`）是新的提交候選；`pid_check_files.py` 也認四成分文件。注意：模擬庫的訓練局含 HD ≥ 2（官方庫沒有），CV 的 HD 類別分布在 log 裡。
+

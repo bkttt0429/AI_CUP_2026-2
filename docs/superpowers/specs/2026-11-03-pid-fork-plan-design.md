@@ -62,6 +62,7 @@ Public LB 的第一次上傳是 A2／A3 的最終裁判：fusion 的 Public 分�
 | B1 開局模型超參 | depth（8／12／16）、α／β／α_full、對稱平手處理 | CPU 分鐘 | 每個設定 vs 現行 fusion；一次只改一項。**2026-11-03：10 個設定沒有一個通過（depth 16／20 +0.0014／+0.0019，CI 跨 0），維持現行（METHOD_NOTES §2.6）** |
 | B2 整局局部樣式 n-gram | 每手相對於上一手／對手上一手的局部形狀 token（純落子），每人頻率表，Dirichlet 平滑，當第三個成分融合 | CPU 十分鐘級 | `fusion3 vs fusion`。**2026-11-03：+0.0098 [+0.0055, +0.0144]，兩庫同向，n=5 +0.021 → 通過；`results/pid_fusion3.json` 為提交候選（METHOD_NOTES §2.7）** |
 | B4 模型訊號的風格統計 | 每手 Human SL 18 profile 與 L1b 10 head 的 log p 分布（分位數、直方圖）取代或加在 32 維手工特徵上 | GPU：候選庫 40,000 局約 4.6×10⁶ 個黑棋局面，L1b 約 1.5 卡時、Human SL 18 倍 | `fusion+B4 vs fusion`；排在 AI_CUP_2026-1 issue #51／#52／#53 之後 |
+| B5 讓子旗標 | 官方 SGF 只留 SZ／HD／落子，HD ∈ {0, 1}，每位候選的 HD1 比例跨人 sd 0.22（二項虛無 0.037）；每人 Dirichlet 多項式（類別 0／1／≥2）當第四個成分（`aicup_pid.hd`、`scripts/pid_hd_cv.py`） | CPU 分鐘 | `fusion4 vs fusion3`；只報告 `hd vs style`、`fusion4 vs fusion`。**2026-11-04 使用者「開始」後加入（METHOD_NOTES §2.12 的發現）** |
 
 採用門檻（事先指定）：玩家 bootstrap 95% CI 下界 > 0；兩庫同向；整體差 ≥ 0.003 或 n=5 題差 ≥ 0.005。只報告的比較不作決策。B3 另加一個不用標籤的檢查：官方檔上指派前後 Top-1 改變的題數與第 8 項一致。
 
