@@ -229,6 +229,7 @@
   - `orient` 單獨 0.212／0.239（hd 0.037、local 0.100；400 人隨機 0.0025）：單一訊號裡第三強，但大部分和開局模型重疊（高段多半從右上 4-4 開），所以融合增益是 +0.004 而不是 bit 數暗示的量級。
   - 只報告：`fusion5 vs fusion3o` +0.0045 [+0.0015, +0.0076]，兩庫 +0.0049／+0.0040，n=5 +0.0071：HD 疊在 orient 之上達到門檻（§2.13 單獨對 fusion3 差 0.0002 沒過）。這不是事先指定的比較，依協定只報告；要採用 fusion5 得先聲明再用重抽的 seed 做第二次檢定，或由使用者直接以 Public 當確認。
 - **採用**：`results/pid_fusion3o.json`（權重 [5.093, 2.648, 1.107, 2.166]）進提交候選，`results/pid_fusion5.json`（[4.947, 2.411, 1.032, 1.945, 1.853]）留作使用者可選的只報告版本。官方檔的 fusion3o／fusion5 × 配對四個版本見下一節。
+- **官方檔上四版的差異**（`scripts/nano4/pid_compare_new.py`，job pidcmp2；Top-1 相異題數 pub／priv）：fusion3→fusion3o 5／7（n=5 佔 4／2）；fusion3→fusion5 10／9；fusion3o→fusion5 6／5；fusion3o→+assign 17／13；fusion3+assign→fusion3o+assign **3／0**；fusion3o+assign→fusion5+assign **0／0**。配對之後方向與 HD 幾乎不再改答案：配對已把這兩個成分能修的衝突題修掉，fusion5+assign 與 fusion3o+assign 在官方檔上完全相同。預期 Public：fusion3o 比 fusion3 多 1–2 分（5 題改動），配對版之間差 ≤ 3 題。
 - **對「至少要 1.0」的回答**：真訊號（B2 +0.010、B3 +0.031→Public +0.009、B6 +0.004、B5 +0.003）把模擬從 0.948 推到約 0.968，Public 預期 0.97–0.98；Public 1.0 只能靠探排行榜（§2.12），Private 1.0 沒有正當途徑。
 ## 3. 參考：2023 AI CUP 秋季賽「圍棋棋力模仿與棋風辨識」（2026-10-29 查）
 - 題目與 2026 不同：(a) Dan／Kyu 兩組「下一手預測」（361 類 softmax）；(b) PlayStyle 三類棋風分類，每局一個標籤。第 6 名隊伍（GitHub `yiyunrin/AI-CUP-Team_3839`，TensorFlow）：棋風模型只用**每局最後一個局面**，28 層平面（雙方棋子、雙方氣數 1／2／3／≥4、空點、最近 8 手、最後一手周圍 7×7／5×5／3×3 的三態窗），8 重對稱增強，約 33 個 bottleneck 殘差塊（1024 通道、3,660 萬參數）→ 全局平均池化 → 3 類，Nadam 1e-4；下一手模型 19 層平面、29 個殘差塊、361 類。沒有多局聚合，也沒有預訓練權重。第 1 名 GoDeep（成大）的報告在 aicup.tw 教材頁，雲端網路白名單擋住，未讀。
