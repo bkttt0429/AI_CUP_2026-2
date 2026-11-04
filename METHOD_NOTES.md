@@ -256,6 +256,7 @@
   - 配對把不配對時 0.004–0.009 的差距壓到 0.001–0.003：配對先修掉的正是方向類訊號能修的那批題。所有新版本都比 fusion3o+assign 好、CI 都不跨 0，但只有 fusion5_raw4 達到 n=5 ≥ 0.005 的門檻。
   - **採用 `results/pid_fusion5_raw4.json`**（opening, style, local, orient N=4, hd；權重 [4.03, 1.79, 0.96, 3.23, 1.77]）加配對為新提交候選。注意：它是 N 掃描的贏家與 HD 的合併，最終 CV 裡同時比了十個版本，有多重比較的樂觀；Public 是確認。預估 Public 0.9873 + 0.003 ≈ 0.990。
 - **pass 規則的 bug**：各 CV 腳本在同一個 `d.update({...})` 裡既寫 `diff_n5` 又用 `d.get("diff_n5")` 判 pass，取值時鍵還不存在，n=5 ≥ 0.005 的子句從來沒生效。已修正七支腳本並重算所有結果檔的 `pass`：只有 4 個判定改變（`orient_cv_raw2` 的 fusion3o_b vs fusion3o、`final_cv_d` 的 fusion5_raw4+assign vs fusion3o+assign 兩個事先指定比較由「不通過」變「通過」，另兩個是只報告的），B1–B6 與穩健性線的結論不變。
+- **官方檔上的差異**（`scripts/nano4/pid_compare_f5r4.py`）：fusion5_raw4+assign 對已上傳的 fusion3o+assign 只改 **pub 4 題（n=5 三題）、priv 0 題**；不配對時 fusion3o→fusion5_raw4 改 10／12 題；fusion5_raw4→+assign 改 13／14 題；fusion5_raw4+assign 與 fusion3or4+assign 差 4／2 題。所以新版本在 Private 上與現行提交**完全相同**，Public 最多動 4 題（預期 +0.003，上限 +0.01）。配對把各版本收斂到同一組答案，剩下的差異集中在 n=5。
 - **對「訊號可以到 1.0」的現況**：模擬裡配對後 0.9946（4,000 題錯 25 題）；Public 比模擬低約 0.005。剩下的錯題是題目局與庫不相像的棋手，計數模型的訊號已用盡（對手、終局、更深的原始座標都試過）。再往上只剩 B4 的強模型每手訊號，或接受天花板。
 ## 3. 參考：2023 AI CUP 秋季賽「圍棋棋力模仿與棋風辨識」（2026-10-29 查）
 - 題目與 2026 不同：(a) Dan／Kyu 兩組「下一手預測」（361 類 softmax）；(b) PlayStyle 三類棋風分類，每局一個標籤。第 6 名隊伍（GitHub `yiyunrin/AI-CUP-Team_3839`，TensorFlow）：棋風模型只用**每局最後一個局面**，28 層平面（雙方棋子、雙方氣數 1／2／3／≥4、空點、最近 8 手、最後一手周圍 7×7／5×5／3×3 的三態窗），8 重對稱增強，約 33 個 bottleneck 殘差塊（1024 通道、3,660 萬參數）→ 全局平均池化 → 3 類，Nadam 1e-4；下一手模型 19 層平面、29 個殘差塊、361 類。沒有多局聚合，也沒有預訓練權重。第 1 名 GoDeep（成大）的報告在 aicup.tw 教材頁，雲端網路白名單擋住，未讀。
