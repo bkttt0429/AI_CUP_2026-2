@@ -214,6 +214,16 @@ def cmd_decode(a):
     state = load_state()
     plan = json.load(open(STATE.parent / f"plan_{a.k}.json"))
     members = plan["members"]
+    if a.reference is not None:  # the base file was measured directly: re-anchor the state and this plan
+        shift = a.reference - state["base_score"]
+        state["base_score"] = a.reference
+        state["bounds"] = list(probe.bounds_from_score(a.reference))
+        for pl in state["uploads"]:
+            pl["reference_score"] = pl["reference_score"] + shift
+        plan["reference_score"] = plan["reference_score"] + shift
+        plan["bounds"] = state["bounds"]
+        (STATE.parent / f"plan_{a.k}.json").write_text(to_json(plan, indent=1) + "\n")
+        print(f"re-anchored: base score {a.reference:.7f}, loss decompositions {probe.deficit_decompositions(a.reference)}, bounds {state['bounds']}")
     delta = (a.score - plan["reference_score"]) * probe.N_PUBLIC
     matches = probe.decode_histogram(delta, len(members), tol=plan["tol"], bounds=tuple(plan["bounds"]))
     print(f"upload {a.k}: observed {a.score:.7f}, reference {plan['reference_score']:.7f}, delta {delta:+.5f} points -> {len(matches)} matching histogram(s)")
@@ -257,6 +267,7 @@ def main(argv=None):
     c = sub.add_parser("decode")
     c.add_argument("--k", type=int, required=True)
     c.add_argument("--score", type=float, required=True)
+    c.add_argument("--reference", type=float, default=None, help="measured Public score of the base file, when the assumed one was wrong")
     a = ap.parse_args(argv)
     return {"state": cmd_state, "design": cmd_design, "decode": cmd_decode}[a.cmd](a)
 
