@@ -1,0 +1,132 @@
+{
+ "n_questions_checks": 800,
+ "n_questions_submission": 800,
+ "n_compared": 800,
+ "n_top1_equal": 755,
+ "n_top1_differ": 45,
+ "differences": [
+  {
+   "question_id": "pub_q_0018",
+   "checks": "pub_p_0231",
+   "submission": "pub_p_0277"
+  },
+  {
+   "question_id": "pub_q_0022",
+   "checks": "pub_p_0261",
+   "submission": "pub_p_0302"
+  },
+  {
+   "question_id": "pub_q_0023",
+   "checks": "pub_p_0026",
+   "submission": "pub_p_0292"
+  },
+  {
+   "question_id": "pub_q_0047",
+   "checks": "pub_p_0042",
+   "submission": "pub_p_0044"
+  },
+  {
+   "question_id": "pub_q_0048",
+   "checks": "pub_p_0176",
+   "submission": "pub_p_0091"
+  },
+  {
+   "question_id": "pub_q_0089",
+   "checks": "pub_p_0202",
+   "submission": "pub_p_0171"
+  },
+  {
+   "question_id": "pub_q_0092",
+   "checks": "pub_p_0133",
+   "submission": "pub_p_0253"
+  },
+  {
+   "question_id": "pub_q_0099",
+   "checks": "pub_p_0103",
+   "submission": "pub_p_0097"
+  },
+  {
+   "question_id": "pub_q_0104",
+   "checks": "pub_p_0255",
+   "submission": "pub_p_0291"
+  },
+  {
+   "question_id": "pub_q_0117",
+   "checks": "pub_p_0048",
+   "submission": "pub_p_0037"
+  },
+  {
+   "question_id": "pub_q_0123",
+   "checks": "pub_p_0044",
+   "submission": "pub_p_0134"
+  },
+  {
+   "question_id": "pub_q_0132",
+   "checks": "pub_p_0398",
+   "submission": "pub_p_0230"
+  },
+  {
+   "question_id": "pub_q_0145",
+   "checks": "pub_p_0044",
+   "submission": "pub_p_0332"
+  },
+  {
+   "question_id": "pub_q_0158",
+   "checks": "pub_p_0108",
+   "submission": "pub_p_0081"
+  },
+  {
+   "question_id": "pub_q_0175",
+   "checks": "pub_p_0043",
+   "submission": "pub_p_0151"
+  },
+  {
+   "question_id": "pub_q_0211",
+   "checks": "pub_p_0126",
+   "submission": "pub_p_0392"
+  },
+  {
+   "question_id": "pub_q_0228",
+   "checks": "pub_p_0267",
+   "submission": "pub_p_0329"
+  },
+  {
+   "question_id": "pub_q_0233",
+   "checks": "pub_p_0211",
+   "submission": "pub_p_0164"
+  },
+  {
+   "question_id": "pub_q_0237",
+   "checks": "pub_p_0381",
+   "submission": "pub_p_0167"
+  },
+  {
+   "question_id": "pub_q_0239",
+   "checks": "pub_p_0245",
+   "submission": "pub_p_0369"
+  }
+ ],
+ "checks_without_top1": [],
+ "missing_in_submission": [],
+ "missing_in_checks": [],
+ "truth_score": null,
+ "checks": "/home/u2507115/BK_AICUP_2026-2/results/checks/official_checks.json",
+ "submission": "/home/u2507115/BK_AICUP_2026-2/results/submission_f3oref_assign/submission_player.csv",
+ "truth": [],
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "1c1345a",
+ "pid_git_dirty": true
+}

@@ -31,7 +31,8 @@ from aicup.ladder import to_json  # noqa: E402
 from aicup.scoring import load_games  # noqa: E402
 from aicup_pid import pools  # noqa: E402
 from aicup_pid.assign import assign_topk  # noqa: E402
-from aicup_pid.components import features_all, fit_from_parsed, fit_hd, fit_local, fit_opening_raw, fit_orient, parse_all, score_components  # noqa: E402
+from aicup_pid.components import features_all, fit_from_parsed, fit_hd, fit_local, fit_opening_raw, fit_orient, fit_ref, parse_all, score_components, score_ref  # noqa: E402
+from aicup_pid.ref import reference_players  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
@@ -50,15 +51,22 @@ def question_scores(idx, truth):
     return out
 
 
-def run_pool(games, folds_df, folds, seed, docs, a, log=print):
+def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
     t0 = time.time()
     cands, qs, info = pools.make_pool_one_per_player(games, folds_df, folds, n_players=a.n_players, cand_games=a.cand_games, per_size=a.per_size, seed=seed, pool_id=f"p{''.join(map(str, folds))}s{seed}", order=a.order)
-    keys = sorted(set(cands["game_key"]) | {k for ks in qs["game_keys"] for k in ks})
-    sgfs = {k: v[0] for k, v in load_games(keys, aicup_pid.TRAIN_DIR).items()}
-    moves, feats = parse_all(sgfs, a.workers), features_all(sgfs, a.workers)
+    keys = set(cands["game_key"]) | {k for ks in qs["game_keys"] for k in ks}
+    cfg = next(iter(docs.values()))["cfg"]
+    need_ref = any("ref" in d["components"] for d in docs.values())
+    refs = {}
+    if need_ref:
+        rcfg = next(d["cfg"] for d in docs.values() if "ref" in d["components"])
+        refs = reference_players(games, folds_df, ref_folds, min_black=rcfg.get("ref_min_black", 30), cap=rcfg.get("ref_cap", 40), seed=rcfg.get("ref_seed", 0), exclude=set(cands["player_id"]))
+        keys |= {k for ks in refs.values() for k in ks}
+    pool_keys = set(cands["game_key"]) | {k for ks in qs["game_keys"] for k in ks}
+    sgfs = {k: v[0] for k, v in load_games(sorted(keys), aicup_pid.TRAIN_DIR).items()}
+    moves, feats = parse_all(sgfs, a.workers), features_all({k: sgfs[k] for k in pool_keys}, a.workers)
     by_player = cands.groupby("player_id")["game_key"].apply(list).to_dict()
     q_keys = [list(k) for k in qs["game_keys"]]
-    cfg = next(iter(docs.values()))["cfg"]
     opening, style = fit_from_parsed(by_player, moves, feats, cfg)
     needed = {c for d in docs.values() for c in d["components"]}
     S = score_components(("opening", "style"), opening, style, q_keys, moves, feats)
@@ -68,6 +76,9 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print):
         S["hd"] = score_components(("hd",), opening, style, q_keys, moves, feats, hd=fit_hd(by_player, sgfs, cfg), sgfs=sgfs)["hd"]
     if "opening_raw" in needed:
         S["opening_raw"] = score_components(("opening_raw",), opening, style, q_keys, moves, feats, opening_raw=fit_opening_raw(by_player, moves, cfg))["opening_raw"]
+    if "ref" in needed:
+        rcfg = next(d["cfg"] for d in docs.values() if "ref" in d["components"])
+        S["ref"] = score_ref(fit_ref(refs, moves, rcfg), by_player, q_keys, moves)
     orient_S = {}
     for d in docs.values():
         if "orient" in d["components"]:
@@ -85,7 +96,7 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print):
         for arm, idx in ((name, topk(S_f, 5)), (name + "+assign", assign_topk(S_f, 5))):
             per_q[arm] = question_scores(idx, truth)
             summary[arm] = {"score": float(per_q[arm].mean()), "top1": float((idx[:, 0] == truth).mean()), "wrong": int((idx[:, 0] != truth).sum())}
-    log(f"pool {folds} seed {seed}: {len(truth)} questions, {time.time() - t0:.0f} s; " + "  ".join(f"{k} {v['score']:.4f}" for k, v in summary.items()), flush=True)
+    log(f"pool {folds} seed {seed}: {len(truth)} questions, {time.time() - t0:.0f} s" + (f", {len(refs)} references" if refs else "") + "; " + "  ".join(f"{k} {v['score']:.4f}" for k, v in summary.items()), flush=True)
     return {"info": info, "per_q": per_q, "pid": qs["player_id"].to_numpy(dtype=str), "n": n, "summary": summary, "folds": folds, "seed": seed}
 
 
@@ -117,7 +128,7 @@ def main(argv=None):
             raise ValueError("fold 0 is kept for the final check; it is not a CV pool")
         folds_df = pd.read_csv(a.folds_csv, dtype={"player_id": str})
         games = pools.black_games(aicup_pid.TRAIN_DIR)
-        runs = [run_pool(games, folds_df, f, s, docs, a) for f in specs for s in a.seeds]
+        runs = [run_pool(games, folds_df, f, s, docs, a, ref_folds=[x for g in specs if g != f for x in g]) for f in specs for s in a.seeds]
     except (FileNotFoundError, ValueError, KeyError) as e:
         print(e, file=sys.stderr)
         return 2
