@@ -1,0 +1,68 @@
+{
+ "components": [
+  "opening",
+  "style",
+  "local",
+  "orient",
+  "ref"
+ ],
+ "weights": [
+  4.689191971448713,
+  1.5466136771617192,
+  0.7001002495897136,
+  1.3846022061946597,
+  3.0556390746148945
+ ],
+ "cfg": {
+  "depth": 12,
+  "alpha": 2.0,
+  "beta": 5.0,
+  "shrink": 0.1,
+  "local_alpha": 2.0,
+  "local_beta": 5.0,
+  "local_start": 12,
+  "orient_alpha": 2.0,
+  "orient_beta": 5.0,
+  "orient_depth": 12,
+  "orient_raw": 1,
+  "ref_alpha": 2.0,
+  "ref_beta": 5.0,
+  "ref_min_black": 30,
+  "ref_cap": 40,
+  "ref_orient_raw": 2,
+  "ref_seed": 0
+ },
+ "fitted_on_pools": [
+  [
+   1,
+   2
+  ],
+  [
+   3,
+   4
+  ]
+ ],
+ "questions": 2631,
+ "ref_folds_official": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "6056e4f",
+ "pid_git_dirty": false
+}
