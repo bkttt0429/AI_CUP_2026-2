@@ -1,0 +1,1258 @@
+{
+ "pools": [
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 0,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 45,
+     "C": 44,
+     "B": 47,
+     "A": 29,
+     "1D": 38,
+     "2D": 39,
+     "3D": 40,
+     "4D": 41,
+     "5D": 36,
+     "6D": 41
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 0,
+   "summary": {
+    "fusion3": {
+     "score": 0.9635880854874589,
+     "top1": 0.9525,
+     "wrong": 19
+    },
+    "fusion3+assign": {
+     "score": 0.9951244676709198,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion3o": {
+     "score": 0.9720418012180793,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "fusion3o+assign": {
+     "score": 0.9950457890972219,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion5_raw4": {
+     "score": 0.9912144230419898,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9952489353418393,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "raw4": {
+     "score": 0.9847687497827846,
+     "top1": 0.98,
+     "wrong": 8
+    },
+    "raw4+assign": {
+     "score": 0.9951702567681414,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion5": {
+     "score": 0.9831592967361393,
+     "top1": 0.9775,
+     "wrong": 9
+    },
+    "fusion5+assign": {
+     "score": 0.9953841273053133,
+     "top1": 0.995,
+     "wrong": 2
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 1,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 42,
+     "C": 46,
+     "B": 47,
+     "A": 24,
+     "1D": 38,
+     "2D": 48,
+     "3D": 41,
+     "4D": 40,
+     "5D": 42,
+     "6D": 32
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 1,
+   "summary": {
+    "fusion3": {
+     "score": 0.9612422686335601,
+     "top1": 0.9525,
+     "wrong": 19
+    },
+    "fusion3+assign": {
+     "score": 0.9950457890972219,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion3o": {
+     "score": 0.9655530780154515,
+     "top1": 0.9575,
+     "wrong": 17
+    },
+    "fusion3o+assign": {
+     "score": 0.9950457890972219,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion5_raw4": {
+     "score": 0.9828603249852256,
+     "top1": 0.98,
+     "wrong": 8
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9954628058790113,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "raw4": {
+     "score": 0.9749556439985742,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "raw4+assign": {
+     "score": 0.9951702567681414,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion5": {
+     "score": 0.9690551930189804,
+     "top1": 0.96,
+     "wrong": 16
+    },
+    "fusion5+assign": {
+     "score": 0.9954628058790113,
+     "top1": 0.995,
+     "wrong": 2
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 2,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 30,
+     "C": 44,
+     "B": 47,
+     "A": 28,
+     "1D": 36,
+     "2D": 44,
+     "3D": 50,
+     "4D": 43,
+     "5D": 45,
+     "6D": 33
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 2,
+   "summary": {
+    "fusion3": {
+     "score": 0.9516424695609138,
+     "top1": 0.94,
+     "wrong": 24
+    },
+    "fusion3+assign": {
+     "score": 0.9812703726061581,
+     "top1": 0.9775,
+     "wrong": 9
+    },
+    "fusion3o": {
+     "score": 0.9606446562098953,
+     "top1": 0.9525,
+     "wrong": 19
+    },
+    "fusion3o+assign": {
+     "score": 0.986930975400301,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion5_raw4": {
+     "score": 0.9770418012180793,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9954628058790113,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "raw4": {
+     "score": 0.9724550801729663,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "raw4+assign": {
+     "score": 0.9863388907129095,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion5": {
+     "score": 0.9679674129761017,
+     "top1": 0.96,
+     "wrong": 16
+    },
+    "fusion5+assign": {
+     "score": 0.9912144230419898,
+     "top1": 0.99,
+     "wrong": 4
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 3,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 40,
+     "C": 31,
+     "B": 48,
+     "A": 28,
+     "1D": 37,
+     "2D": 44,
+     "3D": 44,
+     "4D": 45,
+     "5D": 41,
+     "6D": 42
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 3,
+   "summary": {
+    "fusion3": {
+     "score": 0.9538499204500441,
+     "top1": 0.9425,
+     "wrong": 23
+    },
+    "fusion3+assign": {
+     "score": 0.9831890122113209,
+     "top1": 0.98,
+     "wrong": 8
+    },
+    "fusion3o": {
+     "score": 0.9583288112718855,
+     "top1": 0.9475,
+     "wrong": 21
+    },
+    "fusion3o+assign": {
+     "score": 0.984893781279312,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "fusion5_raw4": {
+     "score": 0.9741635870678597,
+     "top1": 0.9675,
+     "wrong": 13
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9952489353418393,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "raw4": {
+     "score": 0.9709641816421472,
+     "top1": 0.9625,
+     "wrong": 15
+    },
+    "raw4+assign": {
+     "score": 0.9900457890972219,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion5": {
+     "score": 0.9647382920752076,
+     "top1": 0.9525,
+     "wrong": 19
+    },
+    "fusion5+assign": {
+     "score": 0.9913496150054638,
+     "top1": 0.99,
+     "wrong": 4
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 4,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 43,
+     "C": 40,
+     "B": 44,
+     "A": 25,
+     "1D": 32,
+     "2D": 44,
+     "3D": 43,
+     "4D": 45,
+     "5D": 44,
+     "6D": 40
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 4,
+   "summary": {
+    "fusion3": {
+     "score": 0.9575950576403183,
+     "top1": 0.945,
+     "wrong": 22
+    },
+    "fusion3+assign": {
+     "score": 0.9954628058790113,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion3o": {
+     "score": 0.9655525141898437,
+     "top1": 0.955,
+     "wrong": 18
+    },
+    "fusion3o+assign": {
+     "score": 0.9954628058790113,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion5_raw4": {
+     "score": 0.979873662445469,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9968393972058572,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "raw4": {
+     "score": 0.9767821415836855,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "raw4+assign": {
+     "score": 0.9962580368110201,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion5": {
+     "score": 0.973756166927409,
+     "top1": 0.9625,
+     "wrong": 15
+    },
+    "fusion5+assign": {
+     "score": 0.995676676416183,
+     "top1": 0.995,
+     "wrong": 2
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 0,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 41,
+     "C": 45,
+     "B": 50,
+     "A": 31,
+     "1D": 36,
+     "2D": 40,
+     "3D": 40,
+     "4D": 38,
+     "5D": 33,
+     "6D": 46
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 0,
+   "summary": {
+    "fusion3": {
+     "score": 0.961624220610682,
+     "top1": 0.9525,
+     "wrong": 19
+    },
+    "fusion3+assign": {
+     "score": 0.9826702567681415,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "fusion3o": {
+     "score": 0.9656587329105315,
+     "top1": 0.9575,
+     "wrong": 17
+    },
+    "fusion3o+assign": {
+     "score": 0.9926244676709197,
+     "top1": 0.9925,
+     "wrong": 3
+    },
+    "fusion5_raw4": {
+     "score": 0.9748474283564823,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9919638648767769,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "raw4": {
+     "score": 0.9748145388800062,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "raw4+assign": {
+     "score": 0.9925915781944437,
+     "top1": 0.9925,
+     "wrong": 3
+    },
+    "fusion5": {
+     "score": 0.9684475441944989,
+     "top1": 0.96,
+     "wrong": 16
+    },
+    "fusion5+assign": {
+     "score": 0.9926244676709197,
+     "top1": 0.9925,
+     "wrong": 3
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 1,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 40,
+     "C": 43,
+     "B": 52,
+     "A": 26,
+     "1D": 37,
+     "2D": 46,
+     "3D": 42,
+     "4D": 38,
+     "5D": 41,
+     "6D": 35
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 1,
+   "summary": {
+    "fusion3": {
+     "score": 0.9594917104683472,
+     "top1": 0.95,
+     "wrong": 20
+    },
+    "fusion3+assign": {
+     "score": 0.9843393972058573,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "fusion3o": {
+     "score": 0.9687406571309765,
+     "top1": 0.9625,
+     "wrong": 15
+    },
+    "fusion3o+assign": {
+     "score": 0.9909196986029286,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion5_raw4": {
+     "score": 0.9709044942510764,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "fusion5_raw4+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "raw4": {
+     "score": 0.9738948402770776,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "raw4+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "fusion5": {
+     "score": 0.9687864462281983,
+     "top1": 0.9625,
+     "wrong": 15
+    },
+    "fusion5+assign": {
+     "score": 0.9909196986029286,
+     "top1": 0.99,
+     "wrong": 4
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 2,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 30,
+     "C": 43,
+     "B": 47,
+     "A": 32,
+     "1D": 36,
+     "2D": 44,
+     "3D": 45,
+     "4D": 45,
+     "5D": 40,
+     "6D": 38
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 2,
+   "summary": {
+    "fusion3": {
+     "score": 0.9595083479159954,
+     "top1": 0.95,
+     "wrong": 20
+    },
+    "fusion3+assign": {
+     "score": 0.9795096539739987,
+     "top1": 0.9775,
+     "wrong": 9
+    },
+    "fusion3o": {
+     "score": 0.9645412373924713,
+     "top1": 0.955,
+     "wrong": 18
+    },
+    "fusion3o+assign": {
+     "score": 0.9865069721528594,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion5_raw4": {
+     "score": 0.97015231326249,
+     "top1": 0.9625,
+     "wrong": 15
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9879293525769274,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "raw4": {
+     "score": 0.9715752575121658,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "raw4+assign": {
+     "score": 0.9878506740032295,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion5": {
+     "score": 0.9672842595792168,
+     "top1": 0.9575,
+     "wrong": 17
+    },
+    "fusion5+assign": {
+     "score": 0.9833463693587167,
+     "top1": 0.98,
+     "wrong": 8
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 3,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 35,
+     "C": 34,
+     "B": 47,
+     "A": 29,
+     "1D": 35,
+     "2D": 45,
+     "3D": 44,
+     "4D": 44,
+     "5D": 39,
+     "6D": 48
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 3,
+   "summary": {
+    "fusion3": {
+     "score": 0.9560589338378853,
+     "top1": 0.945,
+     "wrong": 22
+    },
+    "fusion3+assign": {
+     "score": 0.9859654877001505,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion3o": {
+     "score": 0.9631710687056696,
+     "top1": 0.9525,
+     "wrong": 19
+    },
+    "fusion3o+assign": {
+     "score": 0.98608995537107,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion5_raw4": {
+     "score": 0.9704448623733596,
+     "top1": 0.9625,
+     "wrong": 15
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9878835634797053,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "raw4": {
+     "score": 0.97032039470244,
+     "top1": 0.9625,
+     "wrong": 15
+    },
+    "raw4+assign": {
+     "score": 0.9877590958087857,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion5": {
+     "score": 0.964919451542691,
+     "top1": 0.955,
+     "wrong": 18
+    },
+    "fusion5+assign": {
+     "score": 0.9831432231140991,
+     "top1": 0.98,
+     "wrong": 8
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 4,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 38,
+     "C": 42,
+     "B": 47,
+     "A": 29,
+     "1D": 31,
+     "2D": 45,
+     "3D": 39,
+     "4D": 46,
+     "5D": 39,
+     "6D": 44
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "file"
+   },
+   "seed": 4,
+   "summary": {
+    "fusion3": {
+     "score": 0.9613806345983287,
+     "top1": 0.95,
+     "wrong": 20
+    },
+    "fusion3+assign": {
+     "score": 0.9884196986029287,
+     "top1": 0.9875,
+     "wrong": 5
+    },
+    "fusion3o": {
+     "score": 0.9657141186490921,
+     "top1": 0.9525,
+     "wrong": 19
+    },
+    "fusion3o+assign": {
+     "score": 0.9903383382080915,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion5_raw4": {
+     "score": 0.9758915946303306,
+     "top1": 0.97,
+     "wrong": 12
+    },
+    "fusion5_raw4+assign": {
+     "score": 0.9968393972058572,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "raw4": {
+     "score": 0.9772358603063086,
+     "top1": 0.9725,
+     "wrong": 11
+    },
+    "raw4+assign": {
+     "score": 0.9968393972058572,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion5": {
+     "score": 0.9688747214432348,
+     "top1": 0.9575,
+     "wrong": 17
+    },
+    "fusion5+assign": {
+     "score": 0.9871777354139488,
+     "top1": 0.985,
+     "wrong": 6
+    }
+   }
+  }
+ ],
+ "overall": {
+  "fusion3": {
+   "score": 0.9585981649203534,
+   "wrong_top1": 208
+  },
+  "fusion3+assign": {
+   "score": 0.9870996941715708,
+   "wrong_top1": 57
+  },
+  "fusion3o": {
+   "score": 0.9649946675693896,
+   "wrong_top1": 177
+  },
+  "fusion3o+assign": {
+   "score": 0.9903858572758937,
+   "wrong_top1": 42
+  },
+  "fusion5_raw4": {
+   "score": 0.9767394491632363,
+   "wrong_top1": 117
+  },
+  "fusion5_raw4+assign": {
+   "score": 0.9942879057786824,
+   "wrong_top1": 28
+  },
+  "raw4": {
+   "score": 0.9747766688858155,
+   "wrong_top1": 125
+  },
+  "raw4+assign": {
+   "score": 0.9928023975369751,
+   "wrong_top1": 33
+  },
+  "fusion5": {
+   "score": 0.9696988784721677,
+   "wrong_top1": 158
+  },
+  "fusion5+assign": {
+   "score": 0.9906299141808574,
+   "wrong_top1": 43
+  }
+ },
+ "comparisons": {
+  "pre_specified": {
+   "fusion3+assign vs fusion3o+assign": {
+    "diff": -0.0032861631043228914,
+    "ci95": [
+     -0.006532022147601317,
+     -0.0006545920850812287
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": -0.009848714339912166,
+    "per_fold_set_diff": {
+     "[1, 2]": -0.0014573386576872036,
+     "[3, 4]": -0.00511498755095858
+    },
+    "by_n": {
+     "5": -0.009848714339912166,
+     "10": -0.002896361676485673,
+     "15": -0.0006321205588285577,
+     "20": 0.00023254415793482963
+    },
+    "pass": false
+   },
+   "fusion5_raw4+assign vs fusion3o+assign": {
+    "diff": 0.003902048502788793,
+    "ci95": [
+     0.0002744895899715371,
+     0.007924813733898738
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.006375649853220342,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.004176747778898083,
+     "[3, 4]": 0.0036273492266795035
+    },
+    "by_n": {
+     "5": 0.006375649853220342,
+     "10": 0.009632120558828557,
+     "15": -0.001896361676485673,
+     "20": 0.001496785275591945
+    },
+    "pass": true
+   },
+   "raw4+assign vs fusion3o+assign": {
+    "diff": 0.0024165402610813397,
+    "ci95": [
+     -0.0009549906567347829,
+     0.006088611626939848
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.0007831806886732378,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.001120817880873313,
+     "[3, 4]": 0.0037122626412893663
+    },
+    "by_n": {
+     "5": 0.0007831806886732378,
+     "10": 0.009282556756545848,
+     "15": -0.001896361676485673,
+     "20": 0.001496785275591945
+    },
+    "pass": false
+   },
+   "fusion5+assign vs fusion3o+assign": {
+    "diff": 0.00024405690496368803,
+    "ci95": [
+     -0.0014985510949754254,
+     0.0017380321060286481
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.0028725892963404253,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.0023417013789786747,
+     "[3, 4]": -0.0018535875690512986
+    },
+    "by_n": {
+     "5": 0.0028725892963404253,
+     "10": 0.0,
+     "15": -0.001896361676485673,
+     "20": 0.0
+    },
+    "pass": false
+   }
+  },
+  "report_only": {
+   "fusion3 vs fusion3o": {
+    "diff": -0.006396502649036265,
+    "ci95": [
+     -0.009578193622853774,
+     -0.0036983996315761622
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": -0.02010708989895554,
+    "per_fold_set_diff": {
+     "[1, 2]": -0.006840611826572007,
+     "[3, 4]": -0.005952393471500523
+    },
+    "by_n": {
+     "5": -0.02010708989895554,
+     "10": -0.002318317903046734,
+     "15": -0.003160602794142788,
+     "20": 0.0
+    },
+    "pass": false
+   },
+   "fusion5_raw4 vs fusion3o": {
+    "diff": 0.011744781593846636,
+    "ci95": [
+     0.005821577933832192,
+     0.018086788541372033
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.032489947050150465,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.016606587570693648,
+     "[3, 4]": 0.006882975616999623
+    },
+    "by_n": {
+     "5": 0.032489947050150465,
+     "10": 0.013224938207578963,
+     "15": 0.0,
+     "20": 0.0012642411176571153
+    },
+    "pass": true
+   },
+   "raw4 vs fusion3o": {
+    "diff": 0.009782001316425993,
+    "ci95": [
+     0.004391518678895959,
+     0.015577585985219569
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.02818046396637252,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.011560987255000502,
+     "[3, 4]": 0.008003015377851485
+    },
+    "by_n": {
+     "5": 0.02818046396637252,
+     "10": 0.009683300181674338,
+     "15": 0.0,
+     "20": 0.0012642411176571153
+    },
+    "pass": true
+   },
+   "fusion5 vs fusion3o": {
+    "diff": 0.004704210902778164,
+    "ci95": [
+     0.0011662096386398778,
+     0.008577622717382808
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.012080562305568442,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.007311100165736534,
+     "[3, 4]": 0.002097321639819795
+    },
+    "by_n": {
+     "5": 0.012080562305568442,
+     "10": 0.006736281305544216,
+     "15": 0.0,
+     "20": 0.0
+    },
+    "pass": true
+   }
+  }
+ },
+ "baseline": "fusion3o",
+ "documents": {
+  "fusion3": {
+   "components": [
+    "opening",
+    "style",
+    "local"
+   ],
+   "weights": [
+    5.390611871580786,
+    3.331784669857485,
+    1.1546856848982225
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12
+   }
+  },
+  "fusion3o": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient"
+   ],
+   "weights": [
+    5.093006922479102,
+    2.6482471833421757,
+    1.1067553123901464,
+    2.1661766430126677
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "hd_alpha": 2.0,
+    "hd_beta": 5.0,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12
+   }
+  },
+  "fusion5_raw4": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient",
+    "hd"
+   ],
+   "weights": [
+    4.034561349519776,
+    1.7891476151235113,
+    0.9616244147742663,
+    3.231455097963837,
+    1.7729162480404195
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "hd_alpha": 2.0,
+    "hd_beta": 5.0,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12,
+    "orient_raw": 4
+   }
+  },
+  "raw4": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient"
+   ],
+   "weights": [
+    4.146474691407012,
+    2.0463304425908992,
+    1.032334457509851,
+    3.4206582988205647
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "hd_alpha": 2.0,
+    "hd_beta": 5.0,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12,
+    "orient_raw": 4
+   }
+  },
+  "fusion5": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient",
+    "hd"
+   ],
+   "weights": [
+    4.946508515585249,
+    2.410998878448715,
+    1.0320996432384324,
+    1.9451229537480414,
+    1.8527876151122091
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "hd_alpha": 2.0,
+    "hd_beta": 5.0,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12
+   }
+  }
+ },
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "order": "file",
+ "questions": 4000,
+ "seconds": 1104.5509715080261,
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "d636a5c",
+ "pid_git_dirty": false
+}
