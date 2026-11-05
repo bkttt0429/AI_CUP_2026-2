@@ -1,0 +1,743 @@
+{
+ "pools": [
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 0,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 45,
+     "C": 44,
+     "B": 47,
+     "A": 29,
+     "1D": 38,
+     "2D": 39,
+     "3D": 40,
+     "4D": 41,
+     "5D": 36,
+     "6D": 41
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 0,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9714109138991179,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "fusion3o_ref+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9915963750191117,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 1,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 42,
+     "C": 46,
+     "B": 47,
+     "A": 24,
+     "1D": 38,
+     "2D": 48,
+     "3D": 41,
+     "4D": 40,
+     "5D": 42,
+     "6D": 32
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 1,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9730800543368338,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "fusion3o_ref+assign": {
+     "score": 0.9934196986029287,
+     "top1": 0.9925,
+     "wrong": 3
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9873479921820902,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 2,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 30,
+     "C": 44,
+     "B": 47,
+     "A": 28,
+     "1D": 36,
+     "2D": 44,
+     "3D": 50,
+     "4D": 43,
+     "5D": 45,
+     "6D": 33
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 2,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.97106241522408,
+     "top1": 0.9675,
+     "wrong": 13
+    },
+    "fusion3o_ref+assign": {
+     "score": 0.9910441662738484,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9932224655134049,
+     "top1": 0.9925,
+     "wrong": 3
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 3,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 40,
+     "C": 31,
+     "B": 48,
+     "A": 28,
+     "1D": 37,
+     "2D": 44,
+     "3D": 44,
+     "4D": 45,
+     "5D": 41,
+     "6D": 42
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 3,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9753364683244803,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "fusion3o_ref+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9930974340168774,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 4,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 43,
+     "C": 40,
+     "B": 44,
+     "A": 25,
+     "1D": 32,
+     "2D": 44,
+     "3D": 43,
+     "4D": 45,
+     "5D": 44,
+     "6D": 40
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 4,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9784809974965829,
+     "top1": 0.9725,
+     "wrong": 11
+    },
+    "fusion3o_ref+assign": {
+     "score": 0.9918393972058572,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9929628058790112,
+     "top1": 0.9925,
+     "wrong": 3
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 0,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 41,
+     "C": 45,
+     "B": 50,
+     "A": 31,
+     "1D": 36,
+     "2D": 40,
+     "3D": 40,
+     "4D": 38,
+     "5D": 33,
+     "6D": 46
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 0,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9682045220077533,
+     "top1": 0.96,
+     "wrong": 16
+    },
+    "fusion3o_ref+assign": {
+     "score": 0.9959196986029286,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9890629217170277,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 1,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 40,
+     "C": 43,
+     "B": 52,
+     "A": 26,
+     "1D": 37,
+     "2D": 46,
+     "3D": 42,
+     "4D": 38,
+     "5D": 41,
+     "6D": 35
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 1,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9815193079479974,
+     "top1": 0.9775,
+     "wrong": 9
+    },
+    "fusion3o_ref+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9960441662738484,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 2,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 30,
+     "C": 43,
+     "B": 47,
+     "A": 32,
+     "1D": 36,
+     "2D": 44,
+     "3D": 45,
+     "4D": 45,
+     "5D": 40,
+     "6D": 38
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 2,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9717034630099878,
+     "top1": 0.965,
+     "wrong": 14
+    },
+    "fusion3o_ref+assign": {
+     "score": 0.9903841273053133,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9802417161287421,
+     "top1": 0.9725,
+     "wrong": 11
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 3,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 35,
+     "C": 34,
+     "B": 47,
+     "A": 29,
+     "1D": 35,
+     "2D": 45,
+     "3D": 44,
+     "4D": 44,
+     "5D": 39,
+     "6D": 48
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 3,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9686316992564892,
+     "top1": 0.9575,
+     "wrong": 17
+    },
+    "fusion3o_ref+assign": {
+     "score": 0.986517132619806,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9883463693587166,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 0.9968393972058572,
+     "top1": 0.995,
+     "wrong": 2
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 4,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 38,
+     "C": 42,
+     "B": 47,
+     "A": 29,
+     "1D": 31,
+     "2D": 45,
+     "3D": 39,
+     "4D": 46,
+     "5D": 39,
+     "6D": 44
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 4,
+   "summary": {
+    "fusion3o_ref": {
+     "score": 0.9784815613221906,
+     "top1": 0.975,
+     "wrong": 10
+    },
+    "fusion3o_ref+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "fusion3o_ref_trunk": {
+     "score": 0.9864282935791617,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "fusion3o_ref_trunk+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  }
+ ],
+ "overall": {
+  "fusion3o_ref": {
+   "score": 0.9737911402825513,
+   "wrong_top1": 132
+  },
+  "fusion3o_ref+assign": {
+   "score": 0.9949124220610682,
+   "wrong_top1": 24
+  },
+  "fusion3o_ref_trunk": {
+   "score": 0.9898350539667993,
+   "wrong_top1": 51
+  },
+  "fusion3o_ref_trunk+assign": {
+   "score": 0.9996839397205858,
+   "wrong_top1": 2
+  }
+ },
+ "comparisons": {
+  "pre_specified": {
+   "fusion3o_ref_trunk+assign vs fusion3o_ref+assign": {
+    "diff": 0.004771517659517519,
+    "ci95": [
+     0.0026014747603486502,
+     0.007154615718257217
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.011846574608117808,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.0047393475834731835,
+     "[3, 4]": 0.004803687735561856
+    },
+    "by_n": {
+     "5": 0.011846574608117808,
+     "10": 0.0059752549122951545,
+     "15": 0.0006321205588285577,
+     "20": 0.0006321205588285577
+    },
+    "pass": true
+   }
+  },
+  "report_only": {
+   "fusion3o_ref_trunk vs fusion3o_ref": {
+    "diff": 0.01604391368424785,
+    "ci95": [
+     0.012220919922331212,
+     0.020135829530184838
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.04322674048473111,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.017771244665880086,
+     "[3, 4]": 0.01431658270261561
+    },
+    "by_n": {
+     "5": 0.04322674048473111,
+     "10": 0.016291526182525547,
+     "15": 0.0025284822353142306,
+     "20": 0.0021289058344205027
+    },
+    "pass": true
+   }
+  }
+ },
+ "baseline": "fusion3o_ref",
+ "documents": {
+  "fusion3o_ref": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient",
+    "ref"
+   ],
+   "weights": [
+    4.689191971448713,
+    1.5466136771617192,
+    0.7001002495897136,
+    1.3846022061946597,
+    3.0556390746148945
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12,
+    "orient_raw": 1,
+    "ref_alpha": 2.0,
+    "ref_beta": 5.0,
+    "ref_min_black": 30,
+    "ref_cap": 40,
+    "ref_orient_raw": 2,
+    "ref_seed": 0
+   }
+  },
+  "fusion3o_ref_trunk": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient",
+    "ref",
+    "trunk"
+   ],
+   "weights": [
+    3.4477874563259756,
+    0.6804770332873076,
+    0.4181473476577743,
+    0.9473658407432878,
+    1.5634440039675304,
+    5.24016174525388
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12,
+    "orient_raw": 1,
+    "ref_alpha": 2.0,
+    "ref_beta": 5.0,
+    "ref_min_black": 30,
+    "ref_cap": 40,
+    "ref_orient_raw": 2,
+    "ref_seed": 0,
+    "trunk_feats": "all",
+    "trunk_shrink": 0.1
+   }
+  }
+ },
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "order": "shuffle",
+ "questions": 4000,
+ "seconds": 1288.9016432762146,
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "16af032",
+ "pid_git_dirty": false
+}
