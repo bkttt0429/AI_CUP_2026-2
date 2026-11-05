@@ -35,11 +35,12 @@ from aicup_pid.fusion import Fusion, standardise, topk  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
 from aicup_pid.ref import reference_players  # noqa: E402
+from aicup_pid.trunkstyle import fit_trunk, load_store, score_trunk  # noqa: E402
 
 T = ROOT / "data" / "tests"
-COMPS = ("opening", "style", "local", "hd", "orient1", "orient4", "opening_raw", "ref")
+COMPS = ("opening", "style", "local", "hd", "orient1", "orient4", "opening_raw", "ref", "trunk")
 DOCS = {"fusion3": "pid_fusion3.json", "fusion3o": "pid_fusion3o.json", "fusion3or4": "pid_fusion3or4.json",
-        "fusion5_raw4": "pid_fusion5_raw4.json", "fusion3o_ref": "pid_fusion3o_ref.json"}
+        "fusion5_raw4": "pid_fusion5_raw4.json", "fusion3o_ref": "pid_fusion3o_ref.json", "fusion3o_ref_trunk": "pid_fusion3o_ref_trunk.json"}
 MAIN = "fusion3o_ref"  # the submitted assignment (submission_f3oref_assign / upload_fix)
 DECAY = np.exp(-np.arange(5))
 
@@ -61,7 +62,7 @@ def trunc7(x):
     return math.floor(x * 1e7) / 1e7
 
 
-def pool_matrices(cand_path, q_path, cfg, ref_model, workers, log=print):
+def pool_matrices(cand_path, q_path, cfg, ref_model, workers, log=print, trunk_rows=None):
     t0 = time.time()
     cands = pools.read_candidates(cand_path)
     questions = pools.read_questions(q_path)
@@ -85,6 +86,7 @@ def pool_matrices(cand_path, q_path, cfg, ref_model, workers, log=print):
     S["orient4"] = score_local(fit_orient(by_player, moves, {**cfg, "orient_raw": 4}), q_keys, moves)
     S["opening_raw"] = score_local(fit_opening_raw(by_player, moves, cfg), q_keys, moves)
     S["ref"] = score_ref(ref_model, by_player, q_keys, moves)
+    S["trunk"] = score_trunk(fit_trunk(by_player, trunk_rows, cfg), q_keys, trunk_rows)
     qids = [q["question_id"] for q in questions]
     n = np.array([q["declared_games"] for q in questions], dtype=int)
     log(f"{Path(q_path).name}: {len(qids)} questions, all components in {time.time() - t0:.0f} s", flush=True)
@@ -117,20 +119,22 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--truth", default=str(ROOT / "results" / "probe" / "upload_fix.csv"), help="file whose Public Top-1 are the answers (Public 1.0)")
+    ap.add_argument("--main", default=MAIN, help="document whose assignment is the submitted one (feature tables and refit compare against it)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     t0 = time.time()
     docs = {k: json.load(open(ROOT / "results" / v)) for k, v in DOCS.items()}
-    cfg = docs[MAIN]["cfg"]
+    cfg = docs[a.main]["cfg"]
     folds_df = pd.read_csv(FOLDS_CSV, dtype={"player_id": str})
-    refs = reference_players(pools.black_games(aicup_pid.TRAIN_DIR), folds_df, docs[MAIN].get("ref_folds_official", [1, 2, 3, 4]),
+    refs = reference_players(pools.black_games(aicup_pid.TRAIN_DIR), folds_df, docs[a.main].get("ref_folds_official", [1, 2, 3, 4]),
                              min_black=cfg.get("ref_min_black", 30), cap=cfg.get("ref_cap", 40), seed=cfg.get("ref_seed", 0))
     ref_sgfs = {k: v[0] for k, v in load_games(sorted({k for ks in refs.values() for k in ks}), aicup_pid.TRAIN_DIR).items()}
     ref_model = fit_ref(refs, parse_all(ref_sgfs, a.workers), cfg)
     print(f"reference basis: {len(refs)} training players, {len(ref_sgfs)} games ({time.time() - t0:.0f} s)", flush=True)
-    P = {"pub": pool_matrices(T / "player_identification_candidates_public.csv", T / "player_identification_test_public.csv", cfg, ref_model, a.workers),
-         "priv": pool_matrices(T / "player_identification_candidates_private.csv", T / "player_identification_test_private.csv", cfg, ref_model, a.workers)}
-    np.savez_compressed(ROOT / "results" / "probe" / "official_scores.npz", **{f"{p}_{c}": P[p]["S"][c] for p in P for c in COMPS})
+    trunk_rows = load_store(ROOT / "data" / "trunk" / "official")
+    P = {"pub": pool_matrices(T / "player_identification_candidates_public.csv", T / "player_identification_test_public.csv", cfg, ref_model, a.workers, trunk_rows=trunk_rows),
+         "priv": pool_matrices(T / "player_identification_candidates_private.csv", T / "player_identification_test_private.csv", cfg, ref_model, a.workers, trunk_rows=trunk_rows)}
+    np.savez_compressed(ROOT / "results" / "probe" / "official_scores_trunk.npz", **{f"{p}_{c}": P[p]["S"][c] for p in P for c in COMPS})
     fix = pd.read_csv(a.truth, dtype=str).set_index("question_id")
     pub = P["pub"]
     index = {p: i for i, p in enumerate(pub["players"])}
@@ -157,15 +161,22 @@ def main(argv=None):
         out["documents"][name] = {"plain": trunc7(sp.mean()), "assigned": trunc7(sa.mean()), "wrong_plain": int((topk(S_f, 1)[:, 0] != truth).sum()),
                                   "wrong_assigned": int((assign_topk(S_f, 5)[:, 0] != truth).sum())}
         d = out["documents"][name]
-        print(f"  {name:13s} plain {d['plain']:.7f} ({d['wrong_plain']:2d} wrong)   assigned {d['assigned']:.7f} ({d['wrong_assigned']} wrong)")
+        print(f"  {name:18s} plain {d['plain']:.7f} ({d['wrong_plain']:2d} wrong)   assigned {d['assigned']:.7f} ({d['wrong_assigned']} wrong)")
+    print("\n== Top-1 of each assigned document vs the submitted one (pub / priv questions that differ)")
+    base_top = {p: assign_topk(fused[(a.main, p)], 5)[:, 0] for p in P}
+    out["top1_diff_vs_main"] = {}
+    for name in docs:
+        diff = {p: [P[p]["qids"][q] for q in np.where(assign_topk(fused[(name, p)], 5)[:, 0] != base_top[p])[0]] for p in P}
+        out["top1_diff_vs_main"][name] = diff
+        print(f"  {name:18s} pub {len(diff['pub']):3d}  priv {len(diff['priv']):3d}" + (f"   priv: {diff['priv'][:12]}" if 0 < len(diff['priv']) <= 12 else ""))
 
-    S_f = fused[(MAIN, "pub")]
+    S_f = fused[(a.main, "pub")]
     idx_p, idx_a = topk(S_f, 5), assign_topk(S_f, 5)
-    F = {p: features(P[p], fused[(MAIN, p)], assign_topk(fused[(MAIN, p)], 5)) for p in P}
+    F = {p: features(P[p], fused[(a.main, p)], assign_topk(fused[(a.main, p)], 5)) for p in P}
     fp = F["pub"]
     Z = standardise(S_f)
     wrong_plain, wrong_assigned = idx_p[:, 0] != truth, idx_a[:, 0] != truth
-    print(f"\n== Public: wrong answers of {MAIN} (plain {int(wrong_plain.sum())}, after assignment {int(wrong_assigned.sum())}; "
+    print(f"\n== Public: wrong answers of {a.main} (plain {int(wrong_plain.sum())}, after assignment {int(wrong_assigned.sum())}; "
           f"assignment fixed {int((wrong_plain & ~wrong_assigned).sum())}, broke {int((~wrong_plain & wrong_assigned).sum())})")
     print("  question    n  plain/assigned  truth rank  margin(assigned)  agree  component ranks of the truth (" + "/".join(COMPS) + ")")
     errs = []
@@ -203,7 +214,7 @@ def main(argv=None):
         print(f"  {key:42s} pub {cmp[key]['pub']}   priv {cmp[key]['priv']}")
     print("  per component: share of questions whose argmax equals the submitted Top-1 (pub | priv)")
     for c in COMPS:
-        cmp[f"agree_{c}"] = {p: float((F[p]["argmaxes"][c] == assign_topk(fused[(MAIN, p)], 5)[:, 0]).mean()) for p in P}
+        cmp[f"agree_{c}"] = {p: float((F[p]["argmaxes"][c] == assign_topk(fused[(a.main, p)], 5)[:, 0]).mean()) for p in P}
         print(f"    {c:12s} {cmp[f'agree_{c}']['pub']:.3f} | {cmp[f'agree_{c}']['priv']:.3f}   (pub accuracy {out['components'][c]['top1']:.3f})")
     out["pub_vs_priv"] = cmp
 
@@ -241,10 +252,10 @@ def main(argv=None):
     in_sample = question_scores(assign_topk(S_pub, 5), truth).mean()
     S_priv = fus_pub.scores([P["priv"]["S"][c] for c in comps])
     new_top = assign_topk(S_priv, 5)[:, 0]
-    old_top = assign_topk(fused[(MAIN, "priv")], 5)[:, 0]
+    old_top = assign_topk(fused[(a.main, "priv")], 5)[:, 0]
     changed_priv = [P["priv"]["qids"][q] for q in np.where(new_top != old_top)[0]]
     print(f"\n== Fusion refit on the Public answers (8 components): weights {np.round(fus_pub.w, 2).tolist()}")
-    print(f"  Public assigned: in-sample {in_sample:.5f}; 5-fold within Public {cv_scores.mean():.5f} (submitted {MAIN}+assign {out['documents'][MAIN]['assigned']:.5f})")
+    print(f"  Public assigned: in-sample {in_sample:.5f}; 5-fold within Public {cv_scores.mean():.5f} (submitted {a.main}+assign {out['documents'][a.main]['assigned']:.5f})")
     print(f"  applied to Private: {len(changed_priv)} Private Top-1 would change: {changed_priv}")
     out["public_refit"] = {"weights": dict(zip(comps, fus_pub.w.tolist())), "public_in_sample": float(in_sample), "public_5fold": float(cv_scores.mean()),
                            "private_top1_changes": changed_priv}

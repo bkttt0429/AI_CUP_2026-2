@@ -11,7 +11,7 @@ from aicup_pid.opening import OpeningModel, parse
 from aicup_pid.style import StyleModel, game_features
 
 COMPONENTS = ("opening", "style")  # the production fusion
-OPTIONAL = ("local", "hd", "orient", "opening_raw", "ref")  # lines B2 (fusion3), B5 (hd), B6 (orient, opening_raw), B7 (ref): fitted only when a fusion document names them
+OPTIONAL = ("local", "hd", "orient", "opening_raw", "ref", "trunk")  # lines B2 (fusion3), B5 (hd), B6 (orient, opening_raw), B7 (ref), B4 (trunk): fitted only when a fusion document names them
 ALL_COMPONENTS = (*COMPONENTS, *OPTIONAL)
 
 
@@ -123,15 +123,19 @@ def score_ref(model, cand_keys_by_player, question_keys, moves):
     return cosine_scores(Q, C)
 
 
-def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None, opening_raw=None, ref=None):
+def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None, opening_raw=None, ref=None, trunk=None):
     """{component: [Q, C]} for the named components: the two production ones, plus 'local' / 'orient' / 'opening_raw'
-    (model given), 'hd' (model and the sgf strings given) and 'ref' (the [Q, C] matrix of score_ref, computed by the
-    caller because it needs the candidates' libraries)."""
+    (model given), 'hd' (model and the sgf strings given), 'ref' (the [Q, C] matrix of score_ref) and 'trunk' (the
+    [Q, C] matrix of aicup_pid.trunkstyle.score_trunk); the last two are computed by the caller."""
     S = score_questions(opening, style, question_keys, moves, feats)
     if "ref" in comps:
         if ref is None:
             raise ValueError("the fusion names 'ref' but no reference-affinity matrix was given (score_ref)")
         S["ref"] = ref
+    if "trunk" in comps:
+        if trunk is None:
+            raise ValueError("the fusion names 'trunk' but no trunk-style matrix was given (aicup_pid.trunkstyle.score_trunk)")
+        S["trunk"] = trunk
     if "opening_raw" in comps:
         if opening_raw is None:
             raise ValueError("the fusion names 'opening_raw' but no raw opening model was fitted")

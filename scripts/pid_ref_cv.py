@@ -64,7 +64,8 @@ def run_pool(games, folds_df, folds, ref_folds, a, cfg, log=print):
     S = score_components(FIVE, opening, style, q_keys, moves, feats, local=local, orient=orient, ref=S_ref)
     truth = np.array([opening.index[p] for p in qs["player_id"]])
     log(f"pool {folds}: components in {time.time() - t0:.0f} s", flush=True)
-    return {"info": info, "players": opening.players, "questions": qs, "S": S, "truth": truth, "n_refs": len(ref_model.players), "ref_tokens": int(ref_model.logp.shape[1]), "seconds": time.time() - t0}
+    return {"info": info, "players": opening.players, "questions": qs, "S": S, "truth": truth, "n_refs": len(ref_model.players), "ref_tokens": int(ref_model.logp.shape[1]),
+            "by_player": by_player, "q_keys": q_keys, "seconds": time.time() - t0}
 
 
 def main(argv=None):

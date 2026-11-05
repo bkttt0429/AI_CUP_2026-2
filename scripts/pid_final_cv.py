@@ -33,6 +33,7 @@ from aicup_pid import pools  # noqa: E402
 from aicup_pid.assign import assign_topk  # noqa: E402
 from aicup_pid.components import features_all, fit_from_parsed, fit_hd, fit_local, fit_opening_raw, fit_orient, fit_ref, parse_all, score_components, score_ref  # noqa: E402
 from aicup_pid.ref import reference_players  # noqa: E402
+from aicup_pid.trunkstyle import fit_trunk, load_store, score_trunk  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
@@ -79,6 +80,9 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
     if "ref" in needed:
         rcfg = next(d["cfg"] for d in docs.values() if "ref" in d["components"])
         S["ref"] = score_ref(fit_ref(refs, moves, rcfg), by_player, q_keys, moves)
+    if "trunk" in needed:
+        tcfg = next(d["cfg"] for d in docs.values() if "trunk" in d["components"])
+        S["trunk"] = score_trunk(fit_trunk(by_player, a.trunk_rows, tcfg), q_keys, a.trunk_rows)
     orient_S = {}
     for d in docs.values():
         if "orient" in d["components"]:
@@ -113,6 +117,7 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--folds-csv", default=str(FOLDS_CSV))
+    ap.add_argument("--trunk-store", nargs="+", default=[str(ROOT / "data" / "trunk" / "train")], help="trunk rows of the training games (scripts/pid_trunk_extract.py --keys)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     t0 = time.time()
@@ -128,6 +133,7 @@ def main(argv=None):
             raise ValueError("fold 0 is kept for the final check; it is not a CV pool")
         folds_df = pd.read_csv(a.folds_csv, dtype={"player_id": str})
         games = pools.black_games(aicup_pid.TRAIN_DIR)
+        a.trunk_rows = load_store(*a.trunk_store) if any("trunk" in d["components"] for d in docs.values()) else {}
         runs = [run_pool(games, folds_df, f, s, docs, a, ref_folds=[x for g in specs if g != f for x in g]) for f in specs for s in a.seeds]
     except (FileNotFoundError, ValueError, KeyError) as e:
         print(e, file=sys.stderr)

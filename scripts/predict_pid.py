@@ -33,12 +33,13 @@ from aicup_pid import checks, pools  # noqa: E402
 from aicup_pid.assign import assign_topk, assignment_report  # noqa: E402
 from aicup_pid.components import ALL_COMPONENTS, COMPONENTS, fit_hd, fit_local, fit_models, fit_opening_raw, fit_orient, fit_ref, parse_all, score_components, score_ref
 from aicup_pid.paths import FOLDS_CSV
-from aicup_pid.ref import reference_players  # noqa: E402
+from aicup_pid.ref import reference_players
+from aicup_pid.trunkstyle import fit_trunk, load_store, score_trunk  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
 
 
-def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign="off", log=print, ref_folds=(1, 2, 3, 4)):
+def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign="off", log=print, ref_folds=(1, 2, 3, 4), trunk_dirs=()):
     """[(question_id, top5 ids)], report dict for one pool."""
     t0 = time.time()
     cands = pools.read_candidates(cand_path)
@@ -78,7 +79,13 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign=
         ref_model = fit_ref(refs, ref_moves, cfg)
         S_ref = score_ref(ref_model, by_player, usable, moves)
         log(f"reference basis: {len(refs)} training players from folds {ref_folds}, {len(ref_sgfs)} games, {ref_model.logp.shape[1]} tokens in {time.time() - t1:.0f} s", flush=True)
-    S = score_components(comps, opening, style, usable, moves, feats, local, hd, sgfs, orient, opening_raw, S_ref)
+    S_trunk = None
+    if "trunk" in comps:  # per-game trunk rows of the official games (scripts/pid_trunk_extract.py --official), keyed like sgfs here
+        t1 = time.time()
+        store = load_store(*trunk_dirs)
+        S_trunk = score_trunk(fit_trunk(by_player, store, cfg), usable, store)
+        log(f"trunk-style component from {len(store)} stored game rows in {time.time() - t1:.0f} s", flush=True)
+    S = score_components(comps, opening, style, usable, moves, feats, local, hd, sgfs, orient, opening_raw, S_ref, S_trunk)
     S_f = fus.scores([S[c] for c in comps]) if usable else np.zeros((0, len(opening.players)))
     n_games = np.array([q["declared_games"] for q, keys in zip(questions, q_keys) if keys], dtype=int)
     collisions = checks.top1_collisions(S_f, n_games)
@@ -126,7 +133,8 @@ def main(argv=None):
         fus.w = np.asarray(doc["weights"], dtype=float)
         rows, reports, pool_players = [], [], {}
         for cand_path, q_path in zip(a.candidates, a.questions):
-            r, rep, players = predict_pool(cand_path, q_path, fus, doc.get("cfg", {}), a.workers, comps=comps, assign=a.assign, ref_folds=tuple(doc.get("ref_folds_official", (1, 2, 3, 4))))
+            r, rep, players = predict_pool(cand_path, q_path, fus, doc.get("cfg", {}), a.workers, comps=comps, assign=a.assign, ref_folds=tuple(doc.get("ref_folds_official", (1, 2, 3, 4))),
+                                           trunk_dirs=(str(ROOT / doc.get("trunk_store_official", "data/trunk/official")),))
             prefix = next((p for p in pools.PREFIXES if r and r[0][0].startswith(p)), None)
             if prefix is not None:
                 pool_players[prefix] = players
