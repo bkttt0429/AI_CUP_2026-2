@@ -1,0 +1,20 @@
+{
+ "k": 2,
+ "reference_score": 0.993758,
+ "members": [
+  "pub_q_0303"
+ ],
+ "why": "given",
+ "tol": 0.0002,
+ "bounds": [
+  1,
+  1,
+  0,
+  0,
+  1
+ ],
+ "file": "/home/u2507115/BK_AICUP_2026-2/results/probe/upload_2.csv",
+ "margins": [
+  4.734072362886013
+ ]
+}

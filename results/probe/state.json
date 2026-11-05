@@ -10,7 +10,7 @@
   3.331784669857485,
   1.1546856848982225
  ],
- "base_score": 0.9873479,
+ "base_score": 0.993758,
  "pools": [
   {
    "prefix": "pub_",
@@ -16831,8 +16831,14 @@
   {
    "k": 1,
    "file": "/home/u2507115/BK_AICUP_2026-2/results/probe/upload_1.csv",
-   "reference_score": 0.9873479,
+   "reference_score": 0.993758,
    "n_tested": 20
+  },
+  {
+   "k": 2,
+   "file": "/home/u2507115/BK_AICUP_2026-2/results/probe/upload_2.csv",
+   "reference_score": 0.993758,
+   "n_tested": 1
   }
  ],
  "git_head": "24207b2",
@@ -16877,13 +16883,20 @@
     "pub_q_0354"
    ],
    "hist": null
+  },
+  {
+   "k": 2,
+   "members": [
+    "pub_q_0303"
+   ],
+   "hist": null
   }
  ],
  "bounds": [
-  5,
   1,
-  2,
   1,
+  0,
+  0,
   1
  ]
 }

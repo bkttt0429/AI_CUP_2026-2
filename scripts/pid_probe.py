@@ -223,6 +223,7 @@ def cmd_decode(a):
         plan["reference_score"] = plan["reference_score"] + shift
         plan["bounds"] = state["bounds"]
         (STATE.parent / f"plan_{a.k}.json").write_text(to_json(plan, indent=1) + "\n")
+        save_state(state)  # keep the anchor even when this upload does not decode
         print(f"re-anchored: base score {a.reference:.7f}, loss decompositions {probe.deficit_decompositions(a.reference)}, bounds {state['bounds']}")
     delta = (a.score - plan["reference_score"]) * probe.N_PUBLIC
     matches = probe.decode_histogram(delta, len(members), tol=plan["tol"], bounds=tuple(plan["bounds"]))
