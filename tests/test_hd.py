@@ -54,7 +54,7 @@ def test_score_components_with_hd():
     assert model.players == opening.players == ["a", "b"] and model.alpha == 2.0
     S = score_components(("opening", "style", "hd"), opening, style, [["q:0", "q:1"]], moves, feats, hd=model, sgfs=sgfs)
     assert set(S) == {"opening", "style", "hd"} and S["hd"].shape == (1, 2) and S["hd"][0, 1] > S["hd"][0, 0]
-    assert "hd" in components.OPTIONAL and components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw")
+    assert "hd" in components.OPTIONAL and components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw", "ref")
     with pytest.raises(ValueError):
         score_components(("opening", "style", "hd"), opening, style, [["q:0"]], moves, feats)
     assert score_components(("hd",), opening, style, [], moves, feats, hd=model, sgfs=sgfs)["hd"].shape == (0, 2)

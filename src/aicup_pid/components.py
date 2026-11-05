@@ -6,11 +6,12 @@ import numpy as np
 from aicup_pid.hd import HDModel
 from aicup_pid.local import LocalModel
 from aicup_pid.orient import OrientModel
+from aicup_pid.ref import RefModel, cosine_scores
 from aicup_pid.opening import OpeningModel, parse
 from aicup_pid.style import StyleModel, game_features
 
 COMPONENTS = ("opening", "style")  # the production fusion
-OPTIONAL = ("local", "hd", "orient", "opening_raw")  # lines B2 (fusion3), B5 (hd), B6 (orient, opening_raw): fitted only when a fusion document names them
+OPTIONAL = ("local", "hd", "orient", "opening_raw", "ref")  # lines B2 (fusion3), B5 (hd), B6 (orient, opening_raw), B7 (ref): fitted only when a fusion document names them
 ALL_COMPONENTS = (*COMPONENTS, *OPTIONAL)
 
 
@@ -104,10 +105,33 @@ def fit_opening_raw(cand_keys_by_player, moves, cfg):
     return model.fit({p: [moves[k] for k in keys] for p, keys in cand_keys_by_player.items()})
 
 
-def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None, opening_raw=None):
+def fit_ref(ref_keys_by_player, moves, cfg):
+    """RefModel on the reference players' parsed games (cfg keys ref_alpha, ref_beta, local_start, orient_depth, ref_orient_raw)."""
+    model = RefModel(alpha=cfg.get("ref_alpha", 2.0), beta=cfg.get("ref_beta", 5.0), local_start=cfg.get("local_start", 12),
+                     orient_depth=cfg.get("orient_depth", 12), orient_raw=cfg.get("ref_orient_raw", 2))
+    return model.fit({p: [moves[k] for k in keys] for p, keys in ref_keys_by_player.items()})
+
+
+def score_ref(model, cand_keys_by_player, question_keys, moves):
+    """[Q, C] cosine between the questions' and the candidates' reference-affinity profiles (candidates in sorted id order,
+    as the other models)."""
+    players = sorted(cand_keys_by_player)
+    C = np.stack([model.profile([moves[k] for k in cand_keys_by_player[p]]) for p in players])
+    if not question_keys:
+        return np.zeros((0, len(players)))
+    Q = np.stack([model.profile([moves[k] for k in keys]) for keys in question_keys])
+    return cosine_scores(Q, C)
+
+
+def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None, opening_raw=None, ref=None):
     """{component: [Q, C]} for the named components: the two production ones, plus 'local' / 'orient' / 'opening_raw'
-    (model given) and 'hd' (model and the sgf strings given)."""
+    (model given), 'hd' (model and the sgf strings given) and 'ref' (the [Q, C] matrix of score_ref, computed by the
+    caller because it needs the candidates' libraries)."""
     S = score_questions(opening, style, question_keys, moves, feats)
+    if "ref" in comps:
+        if ref is None:
+            raise ValueError("the fusion names 'ref' but no reference-affinity matrix was given (score_ref)")
+        S["ref"] = ref
     if "opening_raw" in comps:
         if opening_raw is None:
             raise ValueError("the fusion names 'opening_raw' but no raw opening model was fitted")
