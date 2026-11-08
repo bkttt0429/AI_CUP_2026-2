@@ -3,9 +3,10 @@
 # usage: bash scripts/nano4/pid_new_release.sh data/tests_<date>   (folder holding the four official CSVs + sample)
 #   1. compare with the 10-30 release (data/tests) and run the official checks on the new files
 #   2. trunk rows of every new official game: 2 jobs x 8 GPUs into data/trunk/<folder name>
-#   3. predict fusion3o_ref_trunk (main), its weights refitted on rotated pools (symfit, METHOD_NOTES 2.22) and fusion3o_ref
-#      (no-trunk fallback), each with --assign off and auto. Rule (2.22): one-to-one holds -> f3oreft+assign; one-to-one
-#      broken and the first-move habit gone -> symfit (no assignment); otherwise f3oreft
+#   3. predict fusion3o_ref_trunk_emb (main since 11-08, METHOD_NOTES 2.23: + learnt player embedding results/embed/embx_final.pt),
+#      fusion3o_ref_trunk (previous main) and fusion3o_ref (no-trunk fallback), each with --assign off and auto.
+#      Rule: emb with --assign auto (assignment applies only when the pool's Top-1 picks are >= 87.5% distinct); emb was
+#      never worse than f3oreft in the plain or the rotated simulation, with or without assignment (2.22 symfit retired)
 #   4. reconcile against the checks + format check against the new sample submission
 # Nothing here uploads anything; which file to upload stays the user's call.
 set -euo pipefail
@@ -30,7 +31,7 @@ wait_ids "$cmp"; tail -n 60 logs/nano4/p_relcmp-$cmp.out
 wait_ids "${tx[@]}"
 n_parts=$(ls "$STORE"/*.npz 2>/dev/null | grep -vc tmp.npz || true); echo "trunk parts: $n_parts"
 ids=(); outs=()
-for spec in "f3oreft:$R2/results/pid_fusion3o_ref_trunk.json:--trunk-store $STORE" "symfit:$R2/results/pid_fusion3o_ref_trunk_symfit.json:--trunk-store $STORE" "f3oref:$R2/results/pid_fusion3o_ref.json:"; do
+for spec in "emb:$R2/results/pid_fusion3o_ref_trunk_emb.json:--trunk-store $STORE" "f3oreft:$R2/results/pid_fusion3o_ref_trunk.json:--trunk-store $STORE" "f3oref:$R2/results/pid_fusion3o_ref.json:"; do
   IFS=: read -r name fus extra <<<"$spec"
   for mode in off auto; do
     out=submission_${TAG}_$name; [ $mode = auto ] && out=${out}_assign
