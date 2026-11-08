@@ -103,7 +103,7 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
                 orient_S[n_raw] = score_components(("orient",), opening, style, q_keys, moves, feats, orient=fit_orient(by_player, moves, {**cfg, "orient_raw": n_raw}))["orient"]
     truth = np.array([opening.index[p] for p in qs["player_id"]])
     n = qs["n_games"].to_numpy()
-    per_q, summary = {}, {}
+    per_q, summary, picks = {}, {}, {}
     for name, d in docs.items():
         fus = Fusion()
         fus.w = np.array(d["weights"])
@@ -111,9 +111,10 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
         S_f = fus.scores(parts)
         for arm, idx in ((name, topk(S_f, 5)), (name + "+assign", assign_topk(S_f, 5))):
             per_q[arm] = question_scores(idx, truth)
+            picks[arm] = np.asarray(opening.players)[idx[:, 0]]
             summary[arm] = {"score": float(per_q[arm].mean()), "top1": float((idx[:, 0] == truth).mean()), "wrong": int((idx[:, 0] != truth).sum())}
     log(f"pool {folds} seed {seed}: {len(truth)} questions, {time.time() - t0:.0f} s" + (f", {len(refs)} references" if refs else "") + "; " + "  ".join(f"{k} {v['score']:.4f}" for k, v in summary.items()), flush=True)
-    return {"info": info, "per_q": per_q, "pid": qs["player_id"].to_numpy(dtype=str), "n": n, "summary": summary, "folds": folds, "seed": seed}
+    return {"info": info, "per_q": per_q, "pid": qs["player_id"].to_numpy(dtype=str), "n": n, "summary": summary, "folds": folds, "seed": seed, "picks": picks}
 
 
 def main(argv=None):

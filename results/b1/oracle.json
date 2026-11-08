@@ -1,0 +1,393 @@
+{
+ "fusion": "/home/u2507115/BK_AICUP_2026-2/results/pid_fusion3o_ref_trunk_emb.json",
+ "arms": {
+  "main": {
+   "wrong": 24,
+   "gap_counts": {
+    "0": 9,
+    "1": 7,
+    "2": 6,
+    "3": 1,
+    "8": 1
+   },
+   "gap0": 9,
+   "gap1": 7,
+   "gap_ge2": 8
+  },
+  "main+assign": {
+   "wrong": 2,
+   "gap_counts": {
+    "0": 2
+   },
+   "gap0": 2,
+   "gap1": 0,
+   "gap_ge2": 0
+  }
+ },
+ "examples": [
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 0,
+   "n": 5,
+   "truth": "2d3184509937fd3a",
+   "pick": "3438313a68c4ee4f",
+   "truth_rank": "3D",
+   "pick_rank": "4D",
+   "gap": 1
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 0,
+   "n": 10,
+   "truth": "3438313a68c4ee4f",
+   "pick": "982f5120cdec33fc",
+   "truth_rank": "4D",
+   "pick_rank": "4D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 0,
+   "n": 5,
+   "truth": "2bfee7bd8749299d",
+   "pick": "122c39c6ecef6589",
+   "truth_rank": "A",
+   "pick_rank": "C",
+   "gap": 2
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 1,
+   "n": 5,
+   "truth": "0fcfae0003e5e799",
+   "pick": "87770c7ae2db0813",
+   "truth_rank": "2D",
+   "pick_rank": "3D",
+   "gap": 1
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 1,
+   "n": 5,
+   "truth": "879aaba9db7e7230",
+   "pick": "6ea45d6012988748",
+   "truth_rank": "5D",
+   "pick_rank": "2D",
+   "gap": 3
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 1,
+   "n": 5,
+   "truth": "587f268f3dd7af2e",
+   "pick": "432029b06fe580bf",
+   "truth_rank": "6D",
+   "pick_rank": "5D",
+   "gap": 1
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 2,
+   "n": 5,
+   "truth": "2ab19c8e44f33577",
+   "pick": "bf0d32b0a1bce4e4",
+   "truth_rank": "A",
+   "pick_rank": "2D",
+   "gap": 2
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 3,
+   "n": 5,
+   "truth": "66b13753034b70cd",
+   "pick": "120862160bb6663b",
+   "truth_rank": "C",
+   "pick_rank": "6D",
+   "gap": 8
+  },
+  {
+   "arm": "main",
+   "folds": [
+    1,
+    2
+   ],
+   "seed": 4,
+   "n": 5,
+   "truth": "9eb9e9b261e62fbd",
+   "pick": "71b33ed04e8f786c",
+   "truth_rank": "3D",
+   "pick_rank": "5D",
+   "gap": 2
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 0,
+   "n": 5,
+   "truth": "ed34e92963c2a9a8",
+   "pick": "2a395fd7e9adfdb0",
+   "truth_rank": "A",
+   "pick_rank": "1D",
+   "gap": 1
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 1,
+   "n": 5,
+   "truth": "18e423e13aeebe49",
+   "pick": "b0b36ed87f9d2ed0",
+   "truth_rank": "2D",
+   "pick_rank": "2D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 1,
+   "n": 5,
+   "truth": "896dc988299dbb82",
+   "pick": "3b9ed08b4058f1b0",
+   "truth_rank": "3D",
+   "pick_rank": "1D",
+   "gap": 2
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 2,
+   "n": 5,
+   "truth": "896dc988299dbb82",
+   "pick": "b8dc8bb96102a3e5",
+   "truth_rank": "3D",
+   "pick_rank": "2D",
+   "gap": 1
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 2,
+   "n": 10,
+   "truth": "d9b301372be1ca21",
+   "pick": "48ee0d84649e07f1",
+   "truth_rank": "5D",
+   "pick_rank": "6D",
+   "gap": 1
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 2,
+   "n": 5,
+   "truth": "15af412ca4d2c70a",
+   "pick": "879634a8fd81ad33",
+   "truth_rank": "6D",
+   "pick_rank": "6D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 2,
+   "n": 5,
+   "truth": "85224d649a9fcd69",
+   "pick": "a4a3c8ed3e94243e",
+   "truth_rank": "B",
+   "pick_rank": "B",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 3,
+   "n": 15,
+   "truth": "8c7f5f1cefd1dd19",
+   "pick": "b35377cb2874a5fa",
+   "truth_rank": "1D",
+   "pick_rank": "1D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 3,
+   "n": 5,
+   "truth": "b35377cb2874a5fa",
+   "pick": "8c7f5f1cefd1dd19",
+   "truth_rank": "1D",
+   "pick_rank": "1D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 3,
+   "n": 5,
+   "truth": "6791d6fb440a1f62",
+   "pick": "2ab205918e08d0bc",
+   "truth_rank": "4D",
+   "pick_rank": "4D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 3,
+   "n": 5,
+   "truth": "0e7f331b06c525ed",
+   "pick": "82fc084b8f106e98",
+   "truth_rank": "5D",
+   "pick_rank": "5D",
+   "gap": 0
+  },
+  {
+   "arm": "main+assign",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 3,
+   "n": 15,
+   "truth": "8c7f5f1cefd1dd19",
+   "pick": "b35377cb2874a5fa",
+   "truth_rank": "1D",
+   "pick_rank": "1D",
+   "gap": 0
+  },
+  {
+   "arm": "main+assign",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 3,
+   "n": 5,
+   "truth": "b35377cb2874a5fa",
+   "pick": "8c7f5f1cefd1dd19",
+   "truth_rank": "1D",
+   "pick_rank": "1D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 4,
+   "n": 5,
+   "truth": "896dc988299dbb82",
+   "pick": "a1848fe165b9e95d",
+   "truth_rank": "3D",
+   "pick_rank": "2D",
+   "gap": 1
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 4,
+   "n": 5,
+   "truth": "cfe713362a4f24ed",
+   "pick": "896dc988299dbb82",
+   "truth_rank": "5D",
+   "pick_rank": "3D",
+   "gap": 2
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 4,
+   "n": 10,
+   "truth": "0232ce7f765de7d1",
+   "pick": "15af412ca4d2c70a",
+   "truth_rank": "6D",
+   "pick_rank": "6D",
+   "gap": 0
+  },
+  {
+   "arm": "main",
+   "folds": [
+    3,
+    4
+   ],
+   "seed": 4,
+   "n": 5,
+   "truth": "9ac859d4ced20e58",
+   "pick": "a8115e26da257201",
+   "truth_rank": "B",
+   "pick_rank": "1D",
+   "gap": 2
+  }
+ ]
+}
