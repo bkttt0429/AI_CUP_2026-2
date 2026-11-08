@@ -41,15 +41,15 @@ DIM = 4 * te.PROJ_DIM
 T = ROOT / "data" / "tests"
 
 
-def official_tasks():
-    """{key: (sgf, colour)} of every usable game of both official pools."""
+def official_tasks(tests_dir=T):
+    """{key: (sgf, colour)} of every usable game of both official pools in tests_dir (default data/tests)."""
     out = {}
     for c_name, q_name in (("player_identification_candidates_public.csv", "player_identification_test_public.csv"),
                            ("player_identification_candidates_private.csv", "player_identification_test_private.csv")):
-        cands = pools.read_candidates(T / c_name)
+        cands = pools.read_candidates(Path(tests_dir) / c_name)
         for i, r in enumerate(cands.itertuples()):
             out[f"c:{i}:{r.game_id}"] = (r.sgf, "B")
-        for q in pools.read_questions(T / q_name):
+        for q in pools.read_questions(Path(tests_dir) / q_name):
             for i, (sgf, colour) in enumerate(q["games"]):
                 if check_game(sgf, colour or "B")[0]:
                     out[f"q:{q['question_id']}:{i}"] = (sgf, colour or "B")
@@ -82,6 +82,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--official", action="store_true")
+    ap.add_argument("--tests-dir", default=str(T), help="folder of the official CSVs for --official (a re-released set goes in its own folder)")
     src.add_argument("--keys", help="training game keys (text file or CSV with game_key)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--tag", default="part")
@@ -99,7 +100,7 @@ def main(argv=None):
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     if a.official:
-        tasks_all = official_tasks()
+        tasks_all = official_tasks(a.tests_dir)
         keys = sorted(tasks_all)
     else:
         tasks_all, keys = None, sorted(set(read_keys(a.keys)))

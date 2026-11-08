@@ -117,6 +117,7 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--expect-rows", type=int, default=None)
     ap.add_argument("--workers", type=int, default=1)
+    ap.add_argument("--trunk-store", nargs="*", default=None, help="trunk rows of these official files (default: the fusion document's trunk_store_official); a re-released set has its own store")
     ap.add_argument("--assign", choices=["off", "auto", "on"], default="off",
                     help="line B3: one-to-one assignment of the Top-1 (auto = only when the pool's Top-1 picks name >= 87.5%% distinct candidates)")
     a = ap.parse_args(argv)
@@ -134,7 +135,7 @@ def main(argv=None):
         rows, reports, pool_players = [], [], {}
         for cand_path, q_path in zip(a.candidates, a.questions):
             r, rep, players = predict_pool(cand_path, q_path, fus, doc.get("cfg", {}), a.workers, comps=comps, assign=a.assign, ref_folds=tuple(doc.get("ref_folds_official", (1, 2, 3, 4))),
-                                           trunk_dirs=(str(ROOT / doc.get("trunk_store_official", "data/trunk/official")),))
+                                           trunk_dirs=tuple(a.trunk_store) if a.trunk_store else (str(ROOT / doc.get("trunk_store_official", "data/trunk/official")),))
             prefix = next((p for p in pools.PREFIXES if r and r[0][0].startswith(p)), None)
             if prefix is not None:
                 pool_players[prefix] = players
