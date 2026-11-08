@@ -32,4 +32,4 @@ def test_trunk_model_matches_question_to_its_player(tmp_path):
 
 
 def test_trunk_is_an_optional_component():
-    assert "trunk" in components.OPTIONAL and components.ALL_COMPONENTS[-1] == "trunk"
+    assert "trunk" in components.OPTIONAL and components.ALL_COMPONENTS[-2:] == ("trunk", "emb")

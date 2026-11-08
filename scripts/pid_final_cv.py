@@ -35,6 +35,7 @@ from aicup_pid.components import features_all, fit_from_parsed, fit_hd, fit_loca
 from aicup_pid.ref import reference_players  # noqa: E402
 from aicup_pid.symmetry import transform_games  # noqa: E402
 from aicup_pid.trunkstyle import fit_trunk, load_store, score_trunk  # noqa: E402
+from aicup_pid.embed import PlayerEmbedding, score_embed  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
@@ -89,6 +90,11 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
     if "trunk" in needed:
         tcfg = next(d["cfg"] for d in docs.values() if "trunk" in d["components"])
         S["trunk"] = score_trunk(fit_trunk(by_player, a.trunk_rows, tcfg), q_keys, a.trunk_rows)
+    if "emb" in needed:  # line B8: the embedding trained without this pool's fold pair (pid_embed_cv.py --model-dir)
+        key = ",".join(map(str, folds))
+        if key not in a.emb_models:
+            raise ValueError(f"no --embed-models entry for pool folds {key}")
+        S["emb"] = score_embed(a.emb_models[key], by_player, q_keys, a.trunk_rows)
     orient_S = {}
     for d in docs.values():
         if "orient" in d["components"]:
@@ -124,6 +130,7 @@ def main(argv=None):
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--folds-csv", default=str(FOLDS_CSV))
     ap.add_argument("--trunk-store", nargs="+", default=[str(ROOT / "data" / "trunk" / "train")], help="trunk rows of the training games (scripts/pid_trunk_extract.py --keys)")
+    ap.add_argument("--embed-models", nargs="*", default=[], help="folds=path of the embedding used for that pool, e.g. 1,2=results/embed/embx_p12.pt")
     ap.add_argument("--sym-seed", type=int, default=None, help="rotate / mirror every pool game by aicup_pid.symmetry.game_sym (give --trunk-store rows extracted with the same --sym-seed)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -140,7 +147,9 @@ def main(argv=None):
             raise ValueError("fold 0 is kept for the final check; it is not a CV pool")
         folds_df = pd.read_csv(a.folds_csv, dtype={"player_id": str})
         games = pools.black_games(aicup_pid.TRAIN_DIR)
-        a.trunk_rows = load_store(*a.trunk_store) if any("trunk" in d["components"] for d in docs.values()) else {}
+        a.trunk_rows = load_store(*a.trunk_store) if any(c in d["components"] for d in docs.values() for c in ("trunk", "emb")) else {}
+        import torch
+        a.emb_models = {k: PlayerEmbedding.from_state(torch.load(v, map_location="cpu", weights_only=False)) for k, v in (e.split("=", 1) for e in a.embed_models)}
         runs = [run_pool(games, folds_df, f, s, docs, a, ref_folds=[x for g in specs if g != f for x in g]) for f in specs for s in a.seeds]
     except (FileNotFoundError, ValueError, KeyError) as e:
         print(e, file=sys.stderr)

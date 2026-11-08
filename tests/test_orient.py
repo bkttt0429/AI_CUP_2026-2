@@ -64,7 +64,7 @@ def test_score_components_with_orient():
     assert model.players == opening.players == ["p0", "p1"] and model.depth == 8
     S = score_components(("opening", "style", "orient"), opening, style, [["q:0", "q:1"]], moves, feats, orient=model)
     assert set(S) == {"opening", "style", "orient"} and S["orient"].shape == (1, 2) and S["orient"][0, 1] > S["orient"][0, 0]
-    assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw", "ref", "trunk")
+    assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw", "ref", "trunk", "emb")
     with pytest.raises(ValueError):
         score_components(("opening", "style", "orient"), opening, style, [["q:0"]], moves, feats)
 
@@ -98,6 +98,6 @@ def test_score_components_with_opening_raw():
     assert raw.players == opening.players and raw.symmetry is False and raw.depth == 8
     S = score_components(("opening", "opening_raw"), opening, style, [["q:0"]], moves, feats, opening_raw=raw)
     assert set(S) == {"opening", "opening_raw"} and S["opening_raw"][0, 1] > S["opening_raw"][0, 0]
-    assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw", "ref", "trunk")
+    assert components.ALL_COMPONENTS == ("opening", "style", "local", "hd", "orient", "opening_raw", "ref", "trunk", "emb")
     with pytest.raises(ValueError):
         score_components(("opening_raw",), opening, style, [["q:0"]], moves, feats)

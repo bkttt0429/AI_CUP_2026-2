@@ -11,7 +11,7 @@ from aicup_pid.opening import OpeningModel, parse
 from aicup_pid.style import StyleModel, game_features
 
 COMPONENTS = ("opening", "style")  # the production fusion
-OPTIONAL = ("local", "hd", "orient", "opening_raw", "ref", "trunk")  # lines B2 (fusion3), B5 (hd), B6 (orient, opening_raw), B7 (ref), B4 (trunk): fitted only when a fusion document names them
+OPTIONAL = ("local", "hd", "orient", "opening_raw", "ref", "trunk", "emb")  # lines B2 (fusion3), B5 (hd), B6 (orient, opening_raw), B7 (ref), B4 (trunk), B8 (emb): fitted only when a fusion document names them
 ALL_COMPONENTS = (*COMPONENTS, *OPTIONAL)
 
 
@@ -123,10 +123,11 @@ def score_ref(model, cand_keys_by_player, question_keys, moves):
     return cosine_scores(Q, C)
 
 
-def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None, opening_raw=None, ref=None, trunk=None):
+def score_components(comps, opening, style, question_keys, moves, feats, local=None, hd=None, sgfs=None, orient=None, opening_raw=None, ref=None, trunk=None, emb=None):
     """{component: [Q, C]} for the named components: the two production ones, plus 'local' / 'orient' / 'opening_raw'
     (model given), 'hd' (model and the sgf strings given), 'ref' (the [Q, C] matrix of score_ref) and 'trunk' (the
-    [Q, C] matrix of aicup_pid.trunkstyle.score_trunk); the last two are computed by the caller."""
+    [Q, C] matrix of aicup_pid.trunkstyle.score_trunk) and 'emb' (aicup_pid.embed.score_embed); the last three are
+    computed by the caller."""
     S = score_questions(opening, style, question_keys, moves, feats)
     if "ref" in comps:
         if ref is None:
@@ -136,6 +137,10 @@ def score_components(comps, opening, style, question_keys, moves, feats, local=N
         if trunk is None:
             raise ValueError("the fusion names 'trunk' but no trunk-style matrix was given (aicup_pid.trunkstyle.score_trunk)")
         S["trunk"] = trunk
+    if "emb" in comps:
+        if emb is None:
+            raise ValueError("the fusion names 'emb' but no embedding matrix was given (aicup_pid.embed.score_embed)")
+        S["emb"] = emb
     if "opening_raw" in comps:
         if opening_raw is None:
             raise ValueError("the fusion names 'opening_raw' but no raw opening model was fitted")
