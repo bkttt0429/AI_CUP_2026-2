@@ -30,6 +30,7 @@ if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 import aicup_pid  # noqa: E402  (puts AI_CUP_2026-1/src on sys.path)
 from aicup_pid import pools  # noqa: E402
+from aicup_pid.symmetry import game_sym, transform_sgf  # noqa: E402
 from aicup_pid.paths import AICUP1  # noqa: E402,F401  (its scripts directory is on sys.path)
 import trunk_extract as te  # noqa: E402  (AI_CUP_2026-1's replay, projections and vectors)
 from aicup.humansl import load_humansl  # noqa: E402
@@ -94,6 +95,7 @@ def main(argv=None):
     ap.add_argument("--part-size", type=int, default=200)
     ap.add_argument("--batch", type=int, default=512)
     ap.add_argument("--max-games", type=int, default=0, help="smoke tests only")
+    ap.add_argument("--sym-seed", type=int, default=None, help="rotate / mirror every game by aicup_pid.symmetry.game_sym(key, sgf, seed) before the replay (simulated re-release; HD >= 2 games stay as they are)")
     a = ap.parse_args(argv)
     t0 = time.time()
     shard, nshards = a.node * a.nshards + a.shard, a.nodes * a.nshards
@@ -122,6 +124,8 @@ def main(argv=None):
         games_done = plies_done = 0
         for k, part in todo:
             sgf = {q: tasks_all[q] for q in part} if tasks_all is not None else load_games(part, aicup_pid.TRAIN_DIR)
+            if a.sym_seed is not None:
+                sgf = {q: (transform_sgf(v[0], game_sym(q, v[0], a.sym_seed)), *v[1:]) for q, v in sgf.items()}
             done = list(pool.imap(te.replay, [(q, *sgf[q]) for q in part], chunksize=1))
             sel = [d[5] for d in done]  # target plies of each game
             bins = np.concatenate([d[1][m] for d, m in zip(done, sel)])

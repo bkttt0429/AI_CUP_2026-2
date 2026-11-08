@@ -33,6 +33,7 @@ from aicup_pid import pools  # noqa: E402
 from aicup_pid.assign import assign_topk  # noqa: E402
 from aicup_pid.components import features_all, fit_from_parsed, fit_hd, fit_local, fit_opening_raw, fit_orient, fit_ref, parse_all, score_components, score_ref  # noqa: E402
 from aicup_pid.ref import reference_players  # noqa: E402
+from aicup_pid.symmetry import transform_games  # noqa: E402
 from aicup_pid.trunkstyle import fit_trunk, load_store, score_trunk  # noqa: E402
 from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.paths import FOLDS_CSV  # noqa: E402
@@ -65,6 +66,8 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
         keys |= {k for ks in refs.values() for k in ks}
     pool_keys = set(cands["game_key"]) | {k for ks in qs["game_keys"] for k in ks}
     sgfs = {k: v[0] for k, v in load_games(sorted(keys), aicup_pid.TRAIN_DIR).items()}
+    if a.sym_seed is not None:  # simulated re-release: candidate and question games rotated / mirrored, references as released
+        sgfs = transform_games(sgfs, pool_keys, a.sym_seed)
     moves, feats = parse_all(sgfs, a.workers), features_all({k: sgfs[k] for k in pool_keys}, a.workers)
     by_player = cands.groupby("player_id")["game_key"].apply(list).to_dict()
     q_keys = [list(k) for k in qs["game_keys"]]
@@ -77,9 +80,12 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
         S["hd"] = score_components(("hd",), opening, style, q_keys, moves, feats, hd=fit_hd(by_player, sgfs, cfg), sgfs=sgfs)["hd"]
     if "opening_raw" in needed:
         S["opening_raw"] = score_components(("opening_raw",), opening, style, q_keys, moves, feats, opening_raw=fit_opening_raw(by_player, moves, cfg))["opening_raw"]
-    if "ref" in needed:
-        rcfg = next(d["cfg"] for d in docs.values() if "ref" in d["components"])
-        S["ref"] = score_ref(fit_ref(refs, moves, rcfg), by_player, q_keys, moves)
+    ref_S = {}
+    for d in docs.values():  # one reference model per distinct ref_orient_raw (0 = no orientation block)
+        if "ref" in d["components"]:
+            raw = d["cfg"].get("ref_orient_raw", 2)
+            if raw not in ref_S:
+                ref_S[raw] = score_ref(fit_ref(refs, moves, {**d["cfg"], "ref_orient_raw": raw}), by_player, q_keys, moves)
     if "trunk" in needed:
         tcfg = next(d["cfg"] for d in docs.values() if "trunk" in d["components"])
         S["trunk"] = score_trunk(fit_trunk(by_player, a.trunk_rows, tcfg), q_keys, a.trunk_rows)
@@ -95,7 +101,7 @@ def run_pool(games, folds_df, folds, seed, docs, a, log=print, ref_folds=None):
     for name, d in docs.items():
         fus = Fusion()
         fus.w = np.array(d["weights"])
-        parts = [orient_S[d["cfg"].get("orient_raw", 1)] if c == "orient" else S[c] for c in d["components"]]
+        parts = [orient_S[d["cfg"].get("orient_raw", 1)] if c == "orient" else ref_S[d["cfg"].get("ref_orient_raw", 2)] if c == "ref" else S[c] for c in d["components"]]
         S_f = fus.scores(parts)
         for arm, idx in ((name, topk(S_f, 5)), (name + "+assign", assign_topk(S_f, 5))):
             per_q[arm] = question_scores(idx, truth)
@@ -118,6 +124,7 @@ def main(argv=None):
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--folds-csv", default=str(FOLDS_CSV))
     ap.add_argument("--trunk-store", nargs="+", default=[str(ROOT / "data" / "trunk" / "train")], help="trunk rows of the training games (scripts/pid_trunk_extract.py --keys)")
+    ap.add_argument("--sym-seed", type=int, default=None, help="rotate / mirror every pool game by aicup_pid.symmetry.game_sym (give --trunk-store rows extracted with the same --sym-seed)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     t0 = time.time()
@@ -164,7 +171,7 @@ def main(argv=None):
     overall = {arm: {"score": float(v.mean()), "wrong_top1": int(sum(r["summary"][arm]["wrong"] for r in runs))} for arm, v in cat.items()}
     print("overall: " + "  ".join(f"{k} {v['score']:.4f} ({v['wrong_top1']} wrong)" for k, v in overall.items()))
     out = {"pools": [{"pool": r["info"], "seed": r["seed"], "summary": r["summary"]} for r in runs], "overall": overall, "comparisons": comps, "baseline": a.baseline,
-           "documents": {k: {"components": v["components"], "weights": v["weights"], "cfg": v["cfg"]} for k, v in docs.items()}, "seeds": a.seeds, "order": a.order,
+           "documents": {k: {"components": v["components"], "weights": v["weights"], "cfg": v["cfg"]} for k, v in docs.items()}, "seeds": a.seeds, "sym_seed": a.sym_seed, "order": a.order,
            "questions": int(len(pid)), "seconds": time.time() - t0, **pid_environment("cpu")}
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")

@@ -35,25 +35,30 @@ def reference_players(games, folds_df, folds, min_black=30, cap=40, seed=0, excl
 
 
 class RefModel:
-    """fit({reference player: [move lists]}); vectors([move lists]) -> [G, R] z-scored log-likelihoods; profile(...)."""
+    """fit({reference player: [move lists]}); vectors([move lists]) -> [G, R] z-scored log-likelihoods; profile(...).
+    orient_raw=0 drops the orientation block (local-shape tokens only): every token is then invariant under the 8 board
+    symmetries, for files whose games may be rotated / mirrored."""
 
     def __init__(self, alpha=2.0, beta=5.0, local_start=12, orient_depth=12, orient_raw=2):
+        if orient_raw < 0:
+            raise ValueError("orient_raw must be >= 0")
         self.local = LocalModel(alpha=alpha, beta=beta, start=local_start)
-        self.orient = OrientModel(alpha=alpha, beta=beta, depth=orient_depth, n_raw=orient_raw)
+        self.orient = OrientModel(alpha=alpha, beta=beta, depth=orient_depth, n_raw=orient_raw) if orient_raw else None
+        self.blocks = (self.local,) + ((self.orient,) if self.orient else ())
 
     def fit(self, games_by_player):
-        self.local.fit(games_by_player)
-        self.orient.fit(games_by_player)
+        for model in self.blocks:
+            model.fit(games_by_player)
         self.players = self.local.players
-        self.logp = np.hstack([self.local.logp, self.orient.logp]).astype(np.float32)  # [R, V_local + V_orient]
+        self.logp = np.hstack([m.logp for m in self.blocks]).astype(np.float32)  # [R, V_local (+ V_orient)]
         return self
 
     def _counts(self, games):
         """Sparse [G, V_local + V_orient] token counts."""
         rows, cols, vals = [], [], []
-        off = self.local.vocabulary + 1
+        shifts = [0, self.local.vocabulary + 1][:len(self.blocks)]
         for g, moves in enumerate(games):
-            for model, shift in ((self.local, 0), (self.orient, off)):
+            for model, shift in zip(self.blocks, shifts):
                 for tok in model.tokenize(moves):
                     rows.append(g)
                     cols.append(shift + model.vocab.get(tok, model.vocabulary))
@@ -75,7 +80,7 @@ class RefModel:
         return self.vectors(games).mean(axis=0)
 
     def state(self):
-        return {"references": len(self.players), "local": self.local.state(), "orient": self.orient.state()}
+        return {"references": len(self.players), "local": self.local.state(), "orient": self.orient.state() if self.orient else None}
 
 
 def cosine_scores(question_profiles, candidate_profiles):

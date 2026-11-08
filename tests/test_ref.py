@@ -54,3 +54,20 @@ def test_fit_and_score_ref_helpers():
     S = score_ref(model, by_player, [["q:0", "q:1"]], moves)
     assert S.shape == (1, 3) and int(np.argmax(S[0])) == 2 and np.all(np.abs(S) <= 1 + 1e-9)
     assert score_ref(model, by_player, [], moves).shape == (0, 3)
+
+
+def test_ref_model_without_orientation_is_symmetry_invariant():
+    import pytest
+    from aicup_pid.symmetry import transform_sgf
+    from tests.synth import habit_of, random_game
+    rng = np.random.RandomState(3)
+    raw = {f"r{i}": [random_game(rng, habit_of(i % 3), 60) for _ in range(10)] for i in range(6)}
+    refs = {p: [parse_moves(s) for s in gs] for p, gs in raw.items()}
+    m0, m2 = ref.RefModel(orient_raw=0).fit(refs), ref.RefModel(orient_raw=2).fit(refs)
+    assert m0.orient is None and m0.state()["orient"] is None and m0.logp.shape[1] < m2.logp.shape[1]
+    q = [random_game(rng, habit_of(1), 60) for _ in range(3)]
+    rot = [transform_sgf(s, k) for s, k in zip(q, (1, 5, 6))]
+    assert np.allclose(m0.profile([parse_moves(s) for s in q]), m0.profile([parse_moves(s) for s in rot]))
+    assert fit_ref({p: [f"{p}:{j}" for j in range(10)] for p in raw}, {f"{p}:{j}": refs[p][j] for p in raw for j in range(10)}, {"ref_orient_raw": 0}).orient is None
+    with pytest.raises(ValueError):
+        ref.RefModel(orient_raw=-1)

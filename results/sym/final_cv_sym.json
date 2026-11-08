@@ -1,0 +1,935 @@
+{
+ "pools": [
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 0,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 45,
+     "C": 44,
+     "B": 47,
+     "A": 29,
+     "1D": 38,
+     "2D": 39,
+     "3D": 40,
+     "4D": 41,
+     "5D": 36,
+     "6D": 41
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 0,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9880080311506251,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9913825044819399,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "symfit+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "sym": {
+     "score": 0.9915963750191117,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "sym+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 1,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 42,
+     "C": 46,
+     "B": 47,
+     "A": 24,
+     "1D": 38,
+     "2D": 48,
+     "3D": 41,
+     "4D": 40,
+     "5D": 42,
+     "6D": 32
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 1,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9829002009273536,
+     "top1": 0.98,
+     "wrong": 8
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9830246685982732,
+     "top1": 0.98,
+     "wrong": 8
+    },
+    "symfit+assign": {
+     "score": 0.9935441662738483,
+     "top1": 0.9925,
+     "wrong": 3
+    },
+    "sym": {
+     "score": 0.9841087108142496,
+     "top1": 0.98,
+     "wrong": 8
+    },
+    "sym+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 2,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 30,
+     "C": 44,
+     "B": 47,
+     "A": 28,
+     "1D": 36,
+     "2D": 44,
+     "3D": 50,
+     "4D": 43,
+     "5D": 45,
+     "6D": 33
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 2,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9868554708278975,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9909357722249689,
+     "top1": 0.9875,
+     "wrong": 5
+    },
+    "symfit+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "sym": {
+     "score": 0.9871938090359891,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "sym+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 3,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 40,
+     "C": 31,
+     "B": 48,
+     "A": 28,
+     "1D": 37,
+     "2D": 44,
+     "3D": 44,
+     "4D": 45,
+     "5D": 41,
+     "6D": 42
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 3,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9885602398958886,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9891416002907256,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "symfit+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "sym": {
+     "score": 0.9877751694308262,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "sym+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 4,
+    "eligible": 599,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 43,
+     "C": 40,
+     "B": 44,
+     "A": 25,
+     "1D": 32,
+     "2D": 44,
+     "3D": 43,
+     "4D": 45,
+     "5D": 44,
+     "6D": 40
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 4,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9856432231140991,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "f3oreft+assign": {
+     "score": 0.9959196986029286,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "symfit": {
+     "score": 0.9889282935791617,
+     "top1": 0.9875,
+     "wrong": 5
+    },
+    "symfit+assign": {
+     "score": 0.9959654877001505,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "sym": {
+     "score": 0.9888825044819398,
+     "top1": 0.9875,
+     "wrong": 5
+    },
+    "sym+assign": {
+     "score": 0.9959196986029286,
+     "top1": 0.995,
+     "wrong": 2
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 0,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 41,
+     "C": 45,
+     "B": 50,
+     "A": 31,
+     "1D": 36,
+     "2D": 40,
+     "3D": 40,
+     "4D": 38,
+     "5D": 33,
+     "6D": 46
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 0,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9869012599251192,
+     "top1": 0.9825,
+     "wrong": 7
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9920096539739987,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "symfit+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "sym": {
+     "score": 0.9904293525769273,
+     "top1": 0.9875,
+     "wrong": 5
+    },
+    "sym+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 1,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 40,
+     "C": 43,
+     "B": 52,
+     "A": 26,
+     "1D": 37,
+     "2D": 46,
+     "3D": 42,
+     "4D": 38,
+     "5D": 41,
+     "6D": 35
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 1,
+   "summary": {
+    "f3oreft": {
+     "score": 0.989598493014643,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9944638648767768,
+     "top1": 0.9925,
+     "wrong": 3
+    },
+    "symfit+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "sym": {
+     "score": 0.9928835634797055,
+     "top1": 0.99,
+     "wrong": 4
+    },
+    "sym+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 2,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 30,
+     "C": 43,
+     "B": 47,
+     "A": 32,
+     "1D": 36,
+     "2D": 44,
+     "3D": 45,
+     "4D": 45,
+     "5D": 40,
+     "6D": 38
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 2,
+   "summary": {
+    "f3oreft": {
+     "score": 0.980734237482935,
+     "top1": 0.975,
+     "wrong": 10
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9801065241652681,
+     "top1": 0.9725,
+     "wrong": 11
+    },
+    "symfit+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "sym": {
+     "score": 0.9815623578914199,
+     "top1": 0.975,
+     "wrong": 10
+    },
+    "sym+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 3,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 35,
+     "C": 34,
+     "B": 47,
+     "A": 29,
+     "1D": 35,
+     "2D": 45,
+     "3D": 44,
+     "4D": 44,
+     "5D": 39,
+     "6D": 48
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 3,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9882676907850189,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "f3oreft+assign": {
+     "score": 0.9968393972058572,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "symfit": {
+     "score": 0.9882676907850189,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "symfit+assign": {
+     "score": 0.9968393972058572,
+     "top1": 0.995,
+     "wrong": 2
+    },
+    "sym": {
+     "score": 0.9876863303901817,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "sym+assign": {
+     "score": 0.9968393972058572,
+     "top1": 0.995,
+     "wrong": 2
+    }
+   }
+  },
+  {
+   "pool": {
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 4,
+    "eligible": 594,
+    "players": 400,
+    "cand_games": 100,
+    "questions": 400,
+    "questions_by_n": {
+     "5": 100,
+     "10": 100,
+     "15": 100,
+     "20": 100
+    },
+    "players_by_rank": {
+     "D": 38,
+     "C": 42,
+     "B": 47,
+     "A": 29,
+     "1D": 31,
+     "2D": 45,
+     "3D": 39,
+     "4D": 46,
+     "5D": 39,
+     "6D": 44
+    },
+    "one_per_player": true,
+    "per_size": 100,
+    "order": "shuffle"
+   },
+   "seed": 4,
+   "summary": {
+    "f3oreft": {
+     "score": 0.9862931016156875,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "f3oreft+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "symfit": {
+     "score": 0.9862931016156875,
+     "top1": 0.985,
+     "wrong": 6
+    },
+    "symfit+assign": {
+     "score": 1.0,
+     "top1": 1.0,
+     "wrong": 0
+    },
+    "sym": {
+     "score": 0.9877947244390611,
+     "top1": 0.9875,
+     "wrong": 5
+    },
+    "sym+assign": {
+     "score": 0.9950457890972219,
+     "top1": 0.995,
+     "wrong": 2
+    }
+   }
+  }
+ ],
+ "overall": {
+  "f3oreft": {
+   "score": 0.9863761948739268,
+   "wrong_top1": 69
+  },
+  "f3oreft+assign": {
+   "score": 0.9992759095808785,
+   "wrong_top1": 4
+  },
+  "symfit": {
+   "score": 0.9884553674591818,
+   "wrong_top1": 58
+  },
+  "symfit+assign": {
+   "score": 0.9986349051179856,
+   "wrong_top1": 7
+  },
+  "sym": {
+   "score": 0.9879912897559411,
+   "wrong_top1": 61
+  },
+  "sym+assign": {
+   "score": 0.9987804884906007,
+   "wrong_top1": 6
+  }
+ },
+ "comparisons": {
+  "pre_specified": {
+   "symfit+assign vs f3oreft+assign": {
+    "diff": -0.0006410044628929898,
+    "ci95": [
+     -0.0015000478665355575,
+     0.0
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": -0.0025640178515719592,
+    "per_fold_set_diff": {
+     "[1, 2]": -0.0012820089257859796,
+     "[3, 4]": 0.0
+    },
+    "by_n": {
+     "5": -0.0025640178515719592,
+     "10": 0.0,
+     "15": 0.0,
+     "20": 0.0
+    },
+    "pass": false
+   },
+   "sym+assign vs f3oreft+assign": {
+    "diff": -0.0004954210902778165,
+    "ci95": [
+     -0.0012444045918334429,
+     0.0
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": -0.001981684361111266,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.0,
+     "[3, 4]": -0.000990842180555633
+    },
+    "by_n": {
+     "5": -0.001981684361111266,
+     "10": 0.0,
+     "15": 0.0,
+     "20": 0.0
+    },
+    "pass": false
+   }
+  },
+  "report_only": {
+   "symfit vs f3oreft": {
+    "diff": 0.002079172585255166,
+    "ci95": [
+     0.0006407025235789291,
+     0.0035923819296434347
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.006501812692625142,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.0022891346518410472,
+     "[3, 4]": 0.0018692105186692855
+    },
+    "by_n": {
+     "5": 0.006501812692625142,
+     "10": 0.000550636530738408,
+     "15": 0.0006321205588285577,
+     "20": 0.0006321205588285577
+    },
+    "pass": true
+   },
+   "sym vs f3oreft": {
+    "diff": 0.0016150948820144082,
+    "ci95": [
+     3.447524901541695e-05,
+     0.0032506963930903085
+    ],
+    "n_players": 1186,
+    "n_questions": 4000,
+    "diff_n5": 0.004846574608117809,
+    "per_fold_set_diff": {
+     "[1, 2]": 0.0015178805732504424,
+     "[3, 4]": 0.0017123091907783738
+    },
+    "by_n": {
+     "5": 0.004846574608117809,
+     "10": 0.0003495638022827082,
+     "15": 0.0006321205588285577,
+     "20": 0.0006321205588285577
+    },
+    "pass": false
+   }
+  }
+ },
+ "baseline": "f3oreft",
+ "documents": {
+  "f3oreft": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient",
+    "ref",
+    "trunk"
+   ],
+   "weights": [
+    3.4477874563259756,
+    0.6804770332873076,
+    0.4181473476577743,
+    0.9473658407432878,
+    1.5634440039675304,
+    5.24016174525388
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12,
+    "orient_raw": 1,
+    "ref_alpha": 2.0,
+    "ref_beta": 5.0,
+    "ref_min_black": 30,
+    "ref_cap": 40,
+    "ref_orient_raw": 2,
+    "ref_seed": 0,
+    "trunk_feats": "all",
+    "trunk_shrink": 0.1
+   }
+  },
+  "symfit": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "orient",
+    "ref",
+    "trunk"
+   ],
+   "weights": [
+    3.6383161634099066,
+    0.8014067542810186,
+    0.41410225974736686,
+    0.5472107917997865,
+    0.9905002162840044,
+    5.5090893436397375
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12,
+    "orient_raw": 1,
+    "ref_alpha": 2.0,
+    "ref_beta": 5.0,
+    "ref_min_black": 30,
+    "ref_cap": 40,
+    "ref_orient_raw": 2,
+    "ref_seed": 0,
+    "trunk_feats": "all",
+    "trunk_shrink": 0.1
+   }
+  },
+  "sym": {
+   "components": [
+    "opening",
+    "style",
+    "local",
+    "ref",
+    "trunk"
+   ],
+   "weights": [
+    3.688722782118288,
+    0.9946771635721422,
+    0.39218641909787666,
+    0.9248110094678004,
+    5.585464992991239
+   ],
+   "cfg": {
+    "depth": 12,
+    "alpha": 2.0,
+    "beta": 5.0,
+    "shrink": 0.1,
+    "local_alpha": 2.0,
+    "local_beta": 5.0,
+    "local_start": 12,
+    "orient_alpha": 2.0,
+    "orient_beta": 5.0,
+    "orient_depth": 12,
+    "orient_raw": 1,
+    "ref_alpha": 2.0,
+    "ref_beta": 5.0,
+    "ref_min_black": 30,
+    "ref_cap": 40,
+    "ref_orient_raw": 0,
+    "ref_seed": 0,
+    "trunk_feats": "all",
+    "trunk_shrink": 0.1
+   }
+  }
+ },
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "sym_seed": 0,
+ "order": "shuffle",
+ "questions": 4000,
+ "seconds": 1574.149593114853,
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "5decf6d",
+ "pid_git_dirty": true
+}
