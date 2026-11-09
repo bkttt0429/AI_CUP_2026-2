@@ -10,7 +10,7 @@
 set -euo pipefail
 R1=~/BK_AICUP_2026-1; R2=~/BK_AICUP_2026-2
 T=$(cd "$R2" && realpath "${1:?usage: pid_b3_official.sh <folder of the new official files>}")
-TAG=$(basename "$T"); STORE=$R2/data/trunk/$TAG; W=/work/u2507115/pid_b3/official_$TAG
+TAG=$(basename "$T"); STORE=${B3_STORE:-$R2/data/trunk/$TAG}; W=/work/u2507115/pid_b3/official_$TAG  # B3_STORE: another trunk store (the 10-30 files: data/trunk/official)
 FUS=$R2/results/pid_fusion3o_ref_trunk_emb_b3.json
 EXC="--exclude=25a-hgpn[001,003,004,005,006,007,008,009,010,039,062,155]"
 HEADS="--l1b-heads results/l1b/heads3_A.pt results/l1b/heads3_B.pt"
@@ -22,7 +22,7 @@ cd "$R1"
 sub() { local id; until id=$(sbatch --parsable $EXC "$@"); do sleep 60; done; echo "$id"; }
 wait_ids() { for id in "$@"; do until [ -z "$(squeue -h -j "$id" 2>/dev/null)" ]; do sleep 60; done; done; }
 B=$(sub -c 8 -t 00:30:00 -J b3o_build scripts/nano4/run.sbatch python -I $R2/scripts/pid_b3_official.py build --tests-dir $T --work $W)
-wait_ids "$B"; grep -E "^(pub|priv):|Error|Traceback|SystemExit" logs/nano4/b3o_build-$B.out
+wait_ids "$B"; grep -E "^(pub|priv):|Error|Traceback|SystemExit" logs/nano4/b3o_build-$B.out || true
 caps=()
 for P in pub priv; do
   IN="$W/$P/inputs/cands.csv $W/$P/inputs/quest.csv"
@@ -35,7 +35,7 @@ for P in pub priv; do
   echo "$P: score $S vec $V merge $M capture $C"; caps+=("$C")
 done
 wait_ids "${caps[@]}"
-for c in "${caps[@]}"; do grep -hE "passes over|SystemExit|Error|Traceback" logs/nano4/b3o_c_*-$c.out | tail -n 2; done
+for c in "${caps[@]}"; do grep -hE "passes over|SystemExit|Error|Traceback" logs/nano4/b3o_c_*-$c.out | tail -n 2 || true; done
 ids=(); outs=()
 for mode in off auto; do
   out=submission_${TAG}_emb_b3; [ $mode = auto ] && out=${out}_assign
@@ -43,7 +43,7 @@ for mode in off auto; do
   ids+=("$(sub -c 12 -t 01:30:00 -J p_$out scripts/nano4/run.sbatch python -I $R2/scripts/predict_pid.py --candidates $CANDS --questions $QS --fusion $FUS --out $R2/results/$out/submission_player.csv --workers 12 --assign $mode --trunk-store $STORE --b3-dir $W)")
 done
 wait_ids "${ids[@]}"
-for i in "${!ids[@]}"; do echo "== ${outs[$i]} (job ${ids[$i]})"; grep -E "^wrote|b3 component|Error|Traceback" logs/nano4/p_${outs[$i]}-${ids[$i]}.out | tail -n 4; done
+for i in "${!ids[@]}"; do echo "== ${outs[$i]} (job ${ids[$i]})"; grep -E "^wrote|b3 component|Error|Traceback" logs/nano4/p_${outs[$i]}-${ids[$i]}.out | tail -n 4 || true; done
 cat > $R2/data/day_scripts/pid_b3_check_$TAG.py <<EOS
 import pandas as pd
 T, R2 = "$T", "$R2"
