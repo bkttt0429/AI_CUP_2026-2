@@ -17,6 +17,10 @@ eval     rebuilds every component on the same pools, adds b3 (candidate = mean o
          averaged; zq is the pre-set layer), compares main+b3 vs main, with and without the assignment.
 Pre-specified (primary, the no-one-to-one scenario): main+b3 vs main WITHOUT assignment, player bootstrap; both
 cross-fit halves positive, CI lower > 0, and >= 0.003 overall or >= 0.005 at n=5. Also required: no loss with assignment.
+Added 11-09 before any eval output (the 8 remaining errors leave the primary test almost no power):
+  secondary  held-out log P(truth) of the cross-fitted fusion, main+b3 vs main: CI lower > 0 and both halves > 0;
+  stress     candidates cut to their first 2 chunks (40 games; every component refitted on them), official score
+             without assignment, main+b3 vs main: CI lower > 0 and both halves > 0; 1 chunk (20 games) report only.
 """
 import argparse
 import json
@@ -128,20 +132,21 @@ def capture(a):
     folds_of = {m["name"]: m.get("train_folds") for m in rep.get("l1b_models", [])}
     if used != [HEADS[v]] or v in (folds_of.get(HEADS[v]) or [v]) or rep.get("fallback_questions"):
         raise SystemExit(f"fold {v}: L1b heads used {used} (train folds {folds_of}), fallbacks {len(rep.get('fallback_questions') or [])} -> not leak-free")
-    qids = pd.read_csv(out / "submission_rank_ct9_proba.csv").question_id.to_numpy()
+    qids = pd.read_csv(out / "submission_rank_ct9_proba.csv").question_id.to_numpy(dtype=str)
     np.savez(out / "b3.npz", qids=qids, names=np.array([c[0] for c in cap]), zq=np.stack([c[1] for c in cap]), pooled=np.stack([c[2] for c in cap]))
     print(f"fold {v}: predict exit {rc}, {len(cap)} passes ({sorted(set(c[0] for c in cap))}) -> {out / 'b3.npz'}", flush=True)
 
 
-def b3_matrix(work, v, players, q_ids, layer="zq"):
-    """[Q, C] mean over passes of the z-scored cosine (candidate = mean of its chunks), candidates in `players` order."""
+def b3_matrix(work, v, players, q_ids, layer="zq", k=5):
+    """[Q, C] mean over passes of the z-scored cosine (candidate = mean of its first k chunks), candidates in `players` order."""
     out = Path(work) / f"f{v}"
     meta = json.loads((out / "pool.json").read_text())
-    z = np.load(out / "b3.npz", allow_pickle=False)
+    z = np.load(out / "b3.npz", allow_pickle=True)  # our own capture file; 11-09 captures stored qids as an object array
     row = {q: i for i, q in enumerate(z["qids"])}
     chunk_rows = {}
     for qid, p in meta["chunks"].items():
-        chunk_rows.setdefault(p, []).append(row[qid])
+        if int(qid.rsplit("_k", 1)[1]) < k:
+            chunk_rows.setdefault(p, []).append(row[qid])
     sims = []
     for M in z[layer]:
         C = np.stack([M[chunk_rows[p]].mean(axis=0) for p in players])
@@ -177,6 +182,15 @@ def fit_ragged(comp_lists, truths, l2=1e-3, max_iter=200):
     return fus
 
 
+SCENARIOS = {"full": 5, "k2": 2, "k1": 1}  # candidate chunks of 20 games used: 100 (the pre-specified test), 40, 20 games
+
+
+def log_p_truth(Sf, truth):
+    m = Sf.max(axis=1, keepdims=True)
+    lse = m[:, 0] + np.log(np.exp(Sf - m).sum(axis=1))
+    return Sf[np.arange(len(Sf)), truth] - lse
+
+
 def evaluate(a):
     import torch
     from aicup.ladder import to_json
@@ -184,7 +198,7 @@ def evaluate(a):
     from aicup_pid.assign import assign_topk
     from aicup_pid.components import features_all, fit_from_parsed, fit_local, fit_orient, fit_ref, parse_all, score_components, score_ref
     from aicup_pid.embed import PlayerEmbedding, score_embed
-    from aicup_pid.fusion import Fusion, topk
+    from aicup_pid.fusion import topk
     from aicup_pid.ref import reference_players
     from aicup_pid.stats import paired_player_bootstrap
     from aicup_pid.trunkstyle import fit_trunk, load_store, score_trunk
@@ -194,7 +208,8 @@ def evaluate(a):
     emb = {k: PlayerEmbedding.from_state(torch.load(p, map_location="cpu", weights_only=False)) for k, p in (("12", a.emb12), ("34", a.emb34))}
     games = pools.black_games(aicup_pid.TRAIN_DIR)
     folds_df = pd.read_csv(FOLDS_CSV, dtype={"player_id": str})
-    runs = {}
+    scen = {s: SCENARIOS[s] for s in a.scenarios}
+    runs = {s: {} for s in scen}
     for v in FOLDS:
         meta = json.loads((Path(a.work) / f"f{v}" / "pool.json").read_text())
         cands, qs, _ = make(games, folds_df, v)
@@ -213,56 +228,88 @@ def evaluate(a):
         sgfs = {k: s for k, (s, _c) in load_games(sorted(keys), aicup_pid.TRAIN_DIR).items()}
         moves, feats = parse_all(sgfs, a.workers), features_all({k: sgfs[k] for k in pool_keys}, a.workers)
         q_keys = [list(k) for k in qs.game_keys]
-        opening, style = fit_from_parsed(by_player, moves, feats, cfg)
-        S = score_components(("opening", "style", "local", "orient"), opening, style, q_keys, moves, feats, local=fit_local(by_player, moves, cfg),
-                             orient=fit_orient(by_player, moves, cfg))
-        S["ref"] = score_ref(fit_ref(refs, moves, cfg), by_player, q_keys, moves)
-        S["trunk"] = score_trunk(fit_trunk(by_player, store, cfg), q_keys, store)
-        S["emb"] = score_embed(emb["12" if v in (1, 2) else "34"], by_player, q_keys, store)  # embx_p12 never saw folds 1, 2; embx_p34 never saw 3, 4
-        S["b3"] = b3_matrix(a.work, v, players, q_ids, "zq")
-        S["b3_pooled"] = b3_matrix(a.work, v, players, q_ids, "pooled")
-        truth = np.array([opening.index[p] for p in qs.player_id])
-        runs[v] = {"S": S, "truth": truth, "pid": qs.player_id.to_numpy(dtype=str), "n": qs.n_games.to_numpy(), "players": players}
-        print(f"fold {v}: {len(players)} candidates, {len(qs)} questions; components ready", flush=True)
-    arms = {"main": MAIN, "main+b3": (*MAIN, "b3"), "main+b3_pooled": (*MAIN, "b3_pooled")}
-    per_q, summary = {}, {}
-    for v, r in runs.items():
-        others = [runs[u] for u in runs if (u in (1, 2)) != (v in (1, 2))]
-        for name, comps in arms.items():
-            fus = fit_ragged([[o["S"][c] for c in comps] for o in others], [o["truth"] for o in others])
-            Sf = fus.scores([r["S"][c] for c in comps])
-            for arm, idx in ((name, topk(Sf, 5)), (name + "+assign", assign_topk(Sf, 5))):
-                hit = [np.where(idx[q] == r["truth"][q])[0] for q in range(len(idx))]
-                sc = np.array([np.exp(-h[0]) if len(h) else 0.0 for h in hit])
-                per_q.setdefault(arm, {})[v] = sc
-                summary.setdefault(arm, {})[v] = {"score": float(sc.mean()), "wrong": int((idx[:, 0] != r["truth"]).sum()), "weights": fus.w.tolist()}
-        for c in ("trunk", "emb", "b3", "b3_pooled"):
-            idx = topk(r["S"][c], 5)
-            sc = np.array([np.exp(-np.where(idx[q] == r["truth"][q])[0][0]) if (idx[q] == r["truth"][q]).any() else 0.0 for q in range(len(idx))])
-            summary.setdefault(c + " alone", {})[v] = {"score": float(sc.mean())}
-    pid = np.concatenate([runs[v]["pid"] for v in FOLDS])
-    n = np.concatenate([runs[v]["n"] for v in FOLDS])
-    comps = {}
-    for x, z, group in (("main+b3", "main", "pre_specified"), ("main+b3+assign", "main+assign", "required_no_loss"),
-                        ("main+b3_pooled", "main", "report_only"), ("main+b3_pooled+assign", "main+assign", "report_only")):
-        qx, qz = np.concatenate([per_q[x][v] for v in FOLDS]), np.concatenate([per_q[z][v] for v in FOLDS])
-        d = paired_player_bootstrap(qx, qz, pid, n=a.n_boot)
-        halves = [float(np.mean(np.concatenate([per_q[x][v] - per_q[z][v] for v in hv]))) for hv in ((1, 2), (3, 4))]
-        n5 = n == 5
-        d.update({"halves": halves, "diff_n5": float(np.mean((qx - qz)[n5])), "by_n": {str(k): float(np.mean((qx - qz)[n == k])) for k in sorted(set(n.tolist()))}})
-        d["pass"] = bool(d["ci95"][0] > 0 and all(h > 0 for h in halves) and (d["diff"] >= 0.003 or d["diff_n5"] >= 0.005)) if group == "pre_specified" else \
-            (bool(d["diff"] >= 0) if group == "required_no_loss" else None)
-        comps[f"{x} vs {z}"] = {"group": group, **d}
-        print(f"[{group}] {x} vs {z}: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  halves {halves[0]:+.4f} {halves[1]:+.4f}  n=5 {d['diff_n5']:+.4f}"
-              + (f"  -> {'PASS' if d['pass'] else 'no'}" if d["pass"] is not None else ""), flush=True)
-    for arm, per in summary.items():
-        tot = {"score": float(np.mean([p["score"] for p in per.values()]))}
-        if "wrong" in next(iter(per.values())):
-            tot["wrong"] = int(sum(p["wrong"] for p in per.values()))
-        print(f"{arm}: " + "  ".join(f"f{v} {p['score']:.4f}" + (f" ({p['wrong']} wrong)" if "wrong" in p else "") for v, p in per.items()) + f"  | mean {tot['score']:.4f}"
-              + (f", {tot['wrong']} wrong of {len(pid)}" if "wrong" in tot else ""), flush=True)
+        ref_model = fit_ref(refs, moves, cfg)
+        first = pd.read_csv(Path(a.work) / f"f{v}" / "inputs" / "pool.csv", usecols=["question_id", "sgf_1"], dtype=str).set_index("question_id").sgf_1
+        bad = [q for q, p in meta["chunks"].items() if first[q].strip() != sgfs[by_player[p][CHUNK * int(q.rsplit("_k", 1)[1])]].strip()]
+        if bad:  # the stress scenarios need chunk j = candidate games [20 j, 20 j + 20) exactly as captured
+            raise ValueError(f"fold {v}: {len(bad)} chunks do not start with the expected game, e.g. {bad[:3]}")
+        for s, k in scen.items():
+            bp = {p: ks[:CHUNK * k] for p, ks in by_player.items()}  # chunk j = games [20 j, 20 j + 20) of the build
+            opening, style = fit_from_parsed(bp, moves, feats, cfg)
+            S = score_components(("opening", "style", "local", "orient"), opening, style, q_keys, moves, feats, local=fit_local(bp, moves, cfg),
+                                 orient=fit_orient(bp, moves, cfg))
+            S["ref"] = score_ref(ref_model, bp, q_keys, moves)
+            S["trunk"] = score_trunk(fit_trunk(bp, store, cfg), q_keys, store)
+            S["emb"] = score_embed(emb["12" if v in (1, 2) else "34"], bp, q_keys, store)  # embx_p12 never saw folds 1, 2; embx_p34 never saw 3, 4
+            S["b3"] = b3_matrix(a.work, v, players, q_ids, "zq", k)
+            if s == "full":
+                S["b3_pooled"] = b3_matrix(a.work, v, players, q_ids, "pooled", k)
+            truth = np.array([opening.index[p] for p in qs.player_id])
+            runs[s][v] = {"S": S, "truth": truth, "pid": qs.player_id.to_numpy(dtype=str), "n": qs.n_games.to_numpy()}
+            print(f"fold {v} [{s}: {CHUNK * k} candidate games]: {len(players)} candidates, {len(qs)} questions; components ready", flush=True)
+    comps, summary = {}, {}
+    for s in scen:
+        R = runs[s]
+        arms = {"main": MAIN, "main+b3": (*MAIN, "b3")}
+        if s == "full":
+            arms["main+b3_pooled"] = (*MAIN, "b3_pooled")
+        per_q, per_lp, summ = {}, {}, {}
+        for v, r in R.items():
+            others = [R[u] for u in R if (u in (1, 2)) != (v in (1, 2))]
+            for name, cs in arms.items():
+                fus = fit_ragged([[o["S"][c] for c in cs] for o in others], [o["truth"] for o in others])
+                Sf = fus.scores([r["S"][c] for c in cs])
+                per_lp.setdefault(name, {})[v] = log_p_truth(Sf, r["truth"])
+                for arm, idx in ((name, topk(Sf, 5)), (name + "+assign", assign_topk(Sf, 5))):
+                    hit = [np.where(idx[q] == r["truth"][q])[0] for q in range(len(idx))]
+                    sc = np.array([np.exp(-h[0]) if len(h) else 0.0 for h in hit])
+                    per_q.setdefault(arm, {})[v] = sc
+                    summ.setdefault(arm, {})[v] = {"score": float(sc.mean()), "wrong": int((idx[:, 0] != r["truth"]).sum()), "weights": fus.w.tolist()}
+            for c in ("trunk", "emb", "b3", "b3_pooled"):
+                if c not in r["S"]:
+                    continue
+                idx = topk(r["S"][c], 5)
+                sc = np.array([np.exp(-np.where(idx[q] == r["truth"][q])[0][0]) if (idx[q] == r["truth"][q]).any() else 0.0 for q in range(len(idx))])
+                summ.setdefault(c + " alone", {})[v] = {"score": float(sc.mean())}
+        pid = np.concatenate([R[v]["pid"] for v in FOLDS])
+        n = np.concatenate([R[v]["n"] for v in FOLDS])
+        # (metric, x, z, group). Rules fixed 2026-11-09 before any eval output was seen (METHOD_NOTES 2.26):
+        #   pre_specified        full, official score, no assignment: CI lower > 0, both halves > 0, >= 0.003 overall or >= 0.005 at n=5
+        #   required_no_loss     full, with assignment: diff >= 0
+        #   secondary            full, held-out log P(truth) of the cross-fitted fusion: CI lower > 0 and both halves > 0 (= b3 adds information)
+        #   stress               k2 (40 candidate games), official score, no assignment: CI lower > 0 and both halves > 0
+        if s == "full":
+            todo = [("score", "main+b3", "main", "pre_specified"), ("score", "main+b3+assign", "main+assign", "required_no_loss"),
+                    ("logp", "main+b3", "main", "secondary"),
+                    ("score", "main+b3_pooled", "main", "report_only"), ("score", "main+b3_pooled+assign", "main+assign", "report_only"),
+                    ("logp", "main+b3_pooled", "main", "report_only")]
+        else:
+            todo = [("score", "main+b3", "main", "stress" if s == "k2" else "report_only"), ("score", "main+b3+assign", "main+assign", "report_only"),
+                    ("logp", "main+b3", "main", "report_only")]
+        for metric, x, z, group in todo:
+            src = per_q if metric == "score" else per_lp
+            qx, qz = np.concatenate([src[x][v] for v in FOLDS]), np.concatenate([src[z][v] for v in FOLDS])
+            d = paired_player_bootstrap(qx, qz, pid, n=a.n_boot)
+            halves = [float(np.mean(np.concatenate([src[x][v] - src[z][v] for v in hv]))) for hv in ((1, 2), (3, 4))]
+            n5 = n == 5
+            d.update({"halves": halves, "diff_n5": float(np.mean((qx - qz)[n5])), "by_n": {str(k): float(np.mean((qx - qz)[n == k])) for k in sorted(set(n.tolist()))}})
+            base = bool(d["ci95"][0] > 0 and all(h > 0 for h in halves))
+            d["pass"] = {"pre_specified": base and (d["diff"] >= 0.003 or d["diff_n5"] >= 0.005), "required_no_loss": bool(d["diff"] >= 0),
+                         "secondary": base, "stress": base}.get(group)
+            key = f"{metric}: {x} vs {z}" if s == "full" else f"{s} {metric}: {x} vs {z}"
+            comps[key if metric == "logp" or s != "full" else f"{x} vs {z}"] = {"scenario": s, "metric": metric, "group": group, **d}
+            print(f"[{group}] {s} {metric} {x} vs {z}: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}]  halves {halves[0]:+.4f} {halves[1]:+.4f}  "
+                  f"n=5 {d['diff_n5']:+.4f}" + (f"  -> {'PASS' if d['pass'] else 'no'}" if d["pass"] is not None else ""), flush=True)
+        for arm, per in summ.items():
+            tot = {"score": float(np.mean([p["score"] for p in per.values()]))}
+            if "wrong" in next(iter(per.values())):
+                tot["wrong"] = int(sum(p["wrong"] for p in per.values()))
+            print(f"{s} {arm}: " + "  ".join(f"f{v} {p['score']:.4f}" + (f" ({p['wrong']} wrong)" if "wrong" in p else "") for v, p in per.items())
+                  + f"  | mean {tot['score']:.4f}" + (f", {tot['wrong']} wrong of {len(pid)}" if "wrong" in tot else ""), flush=True)
+        summary[s] = summ
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text(to_json({"comparisons": comps, "summary": summary, "questions": int(len(pid)), "fusion": a.fusion}, indent=1) + "\n")
+    Path(a.out).write_text(to_json({"comparisons": comps, "summary": summary, "questions": int(len(pid)), "fusion": a.fusion,
+                                    "scenarios": {s: CHUNK * k for s, k in scen.items()}}, indent=1) + "\n")
     print(f"wrote {a.out}")
 
 
@@ -277,6 +324,7 @@ def main(argv=None):
     ap.add_argument("--emb34", default=str(ROOT / "results" / "embed" / "embx_p34.pt"), help="embedding trained on folds 1,2 (+ old official): for pools of folds 3, 4")
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--n-boot", type=int, default=2000)
+    ap.add_argument("--scenarios", nargs="+", choices=list(SCENARIOS), default=list(SCENARIOS))
     ap.add_argument("--out", default=str(ROOT / "results" / "b1" / "pools_b3.json"))
     a = ap.parse_args(argv)
     return {"build": build, "capture": capture, "eval": evaluate}[a.cmd](a) or 0
