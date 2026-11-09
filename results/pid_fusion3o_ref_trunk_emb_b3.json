@@ -1,0 +1,88 @@
+{
+ "cfg": {
+  "depth": 12,
+  "alpha": 2.0,
+  "beta": 5.0,
+  "shrink": 0.1,
+  "local_alpha": 2.0,
+  "local_beta": 5.0,
+  "local_start": 12,
+  "orient_alpha": 2.0,
+  "orient_beta": 5.0,
+  "orient_depth": 12,
+  "orient_raw": 1,
+  "ref_alpha": 2.0,
+  "ref_beta": 5.0,
+  "ref_min_black": 30,
+  "ref_cap": 40,
+  "ref_orient_raw": 2,
+  "ref_seed": 0,
+  "trunk_feats": "all",
+  "trunk_shrink": 0.1
+ },
+ "ref_folds_official": [
+  1,
+  2,
+  3,
+  4
+ ],
+ "trunk_store_official": "data/trunk/official",
+ "emb_model_official": "results/embed/embx_final.pt",
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "8df02a3",
+ "pid_git_dirty": false,
+ "components": [
+  "opening",
+  "style",
+  "local",
+  "orient",
+  "ref",
+  "trunk",
+  "emb",
+  "b3"
+ ],
+ "weights": [
+  2.226864436525645,
+  0.2336864914623851,
+  0.5590360777002696,
+  0.341510965172503,
+  0.8561535276313577,
+  0.7683726566117721,
+  2.623225087990316,
+  1.023853080456839
+ ],
+ "fitted_on_pools": [
+  [
+   1,
+   2,
+   3,
+   4
+  ]
+ ],
+ "questions": 1193,
+ "fitted_by": "scripts/pid_b3_pools.py eval --final-fusion-out (single-fold leak-free pools f1-f4, 100 candidate games)",
+ "b3_official": {
+  "layer": "zq",
+  "chunk": 20,
+  "models": "AI_CUP_2026-1 results/models/ct_cv_m33/val{1..4}_{C,T}-pc-f0-x40-oh_s{0,1,2}.pt",
+  "l1b_heads": [
+   "heads3_A",
+   "heads3_B"
+  ],
+  "capture": "scripts/pid_b3_official.py capture"
+ },
+ "base_fusion": "/home/u2507115/BK_AICUP_2026-2/results/pid_fusion3o_ref_trunk_emb.json"
+}

@@ -39,7 +39,7 @@ from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
 
 
-def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign="off", log=print, ref_folds=(1, 2, 3, 4), trunk_dirs=(), emb_path=None):
+def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign="off", log=print, ref_folds=(1, 2, 3, 4), trunk_dirs=(), emb_path=None, b3_dir=None):
     """[(question_id, top5 ids)], report dict for one pool."""
     t0 = time.time()
     cands = pools.read_candidates(cand_path)
@@ -96,7 +96,22 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign=
         emb_model = PlayerEmbedding.from_state(torch.load(str(ROOT / emb_path), map_location="cpu", weights_only=False))
         S_emb = score_embed(emb_model, by_player, usable, store)
         log(f"embedding component ({emb_path}, {emb_model.players_trained} training players) in {time.time() - t1:.0f} s", flush=True)
-    S = score_components(comps, opening, style, usable, moves, feats, local, hd, sgfs, orient, opening_raw, S_ref, S_trunk, S_emb)
+    S = score_components([c for c in comps if c != "b3"], opening, style, usable, moves, feats, local, hd, sgfs, orient, opening_raw, S_ref, S_trunk, S_emb)
+    b3_info = None
+    if "b3" in comps:  # line B3 (METHOD_NOTES 2.26): ct9's zq captured by scripts/pid_b3_official.py; only for the no-assignment fallback
+        from aicup_pid.b3 import score_b3
+        if not b3_dir:
+            raise ValueError("the fusion names 'b3' but no --b3-dir was given")
+        prefix = questions[0]["question_id"].split("_")[0]
+        z = np.load(Path(b3_dir) / prefix / "b3.npz")
+        cmap = pd.read_csv(Path(b3_dir) / prefix / "inputs" / "cands_map.csv", dtype=str, keep_default_na=False)
+        if set(cmap.player_id) != set(by_player):
+            raise ValueError(f"{b3_dir}/{prefix}: the captured candidates differ from {cand_path}")
+        chunks = cmap.groupby("player_id")["question_id"].apply(list).to_dict()
+        S["b3"], b3_info = score_b3(z["zq"], {q: i for i, q in enumerate(z["qids"])}, chunks, list(opening.players),
+                                    [q["question_id"] for q, keys in zip(questions, q_keys) if keys])
+        b3_info = {k: (len(v) if isinstance(v, list) else v) for k, v in b3_info.items()}
+        log(f"b3 component ({b3_dir}/{prefix}): {b3_info}", flush=True)
     S_f = fus.scores([S[c] for c in comps]) if usable else np.zeros((0, len(opening.players)))
     n_games = np.array([q["declared_games"] for q, keys in zip(questions, q_keys) if keys], dtype=int)
     collisions = checks.top1_collisions(S_f, n_games)
@@ -115,7 +130,7 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign=
     report = {"candidates": str(cand_path), "questions": str(q_path), "n_candidates": len(by_player), "n_candidate_games": int(len(cands)),
               "n_candidate_games_used": int(sum(len(k) for k in by_player.values())), "candidate_game_ids_unique": bool(cands["game_id"].is_unique),
               "n_questions": len(questions), "dropped_games": dropped, "fallback_questions": fallback, "median_top1_margin": float(np.median(margins)) if margins else None,
-              "assign": assign_rep,
+              "assign": assign_rep, "b3": b3_info,
               "seconds": time.time() - t0}
     return rows, report, set(by_player)
 
@@ -129,6 +144,7 @@ def main(argv=None):
     ap.add_argument("--expect-rows", type=int, default=None)
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--trunk-store", nargs="*", default=None, help="trunk rows of these official files (default: the fusion document's trunk_store_official); a re-released set has its own store")
+    ap.add_argument("--b3-dir", default=None, help="scripts/pid_b3_official.py work folder (<dir>/pub, <dir>/priv) for a fusion that names 'b3'")
     ap.add_argument("--assign", choices=["off", "auto", "on"], default="off",
                     help="line B3: one-to-one assignment of the Top-1 (auto = only when the pool's Top-1 picks name >= 87.5%% distinct candidates)")
     a = ap.parse_args(argv)
@@ -137,8 +153,8 @@ def main(argv=None):
     try:
         doc = json.loads(Path(a.fusion).read_text())
         comps = list(doc["components"])
-        if not comps or len(set(comps)) != len(comps) or any(c not in ALL_COMPONENTS for c in comps):
-            raise ValueError(f"{a.fusion}: components {comps} must be a non-empty subset of {list(ALL_COMPONENTS)}")
+        if not comps or len(set(comps)) != len(comps) or any(c not in (*ALL_COMPONENTS, "b3") for c in comps):
+            raise ValueError(f"{a.fusion}: components {comps} must be a non-empty subset of {[*ALL_COMPONENTS, 'b3']}")
         if len(doc["weights"]) != len(comps):
             raise ValueError(f"{a.fusion}: {len(doc['weights'])} weights for {len(comps)} components")
         fus = Fusion()
@@ -147,7 +163,7 @@ def main(argv=None):
         for cand_path, q_path in zip(a.candidates, a.questions):
             r, rep, players = predict_pool(cand_path, q_path, fus, doc.get("cfg", {}), a.workers, comps=comps, assign=a.assign, ref_folds=tuple(doc.get("ref_folds_official", (1, 2, 3, 4))),
                                            trunk_dirs=tuple(a.trunk_store) if a.trunk_store else (str(ROOT / doc.get("trunk_store_official", "data/trunk/official")),),
-                                           emb_path=doc.get("emb_model_official"))
+                                           emb_path=doc.get("emb_model_official"), b3_dir=a.b3_dir)
             prefix = next((p for p in pools.PREFIXES if r and r[0][0].startswith(p)), None)
             if prefix is not None:
                 pool_players[prefix] = players

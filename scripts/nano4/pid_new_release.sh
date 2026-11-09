@@ -8,6 +8,7 @@
 #      Rule: emb with --assign auto (assignment applies only when the pool's Top-1 picks are >= 87.5% distinct); emb was
 #      never worse than f3oreft in the plain or the rotated simulation, with or without assignment (2.22 symfit retired)
 #   4. reconcile against the checks + format check against the new sample submission
+#   5. if the assignment did not apply to a pool, it prints the B3 command (scripts/nano4/pid_b3_official.sh; METHOD_NOTES 2.26 option A)
 # Nothing here uploads anything; which file to upload stays the user's call.
 set -euo pipefail
 R1=~/BK_AICUP_2026-1; R2=~/BK_AICUP_2026-2
@@ -41,6 +42,11 @@ for spec in "emb:$R2/results/pid_fusion3o_ref_trunk_emb.json:--trunk-store $STOR
 done
 wait_ids "$chk" "${ids[@]}"
 for i in "${!ids[@]}"; do echo "== ${outs[$i]} (job ${ids[$i]})"; grep -E "^wrote|assign|Error|Traceback" logs/nano4/p_${outs[$i]}-${ids[$i]}.out | tail -n 4; done
+for i in "${!ids[@]}"; do
+  if [ "${outs[$i]}" = "submission_${TAG}_emb_assign" ] && grep -q "not applied" "logs/nano4/p_${outs[$i]}-${ids[$i]}.out"; then
+    echo "B3 (METHOD_NOTES 2.26, option A): the assignment did not apply to a pool -> bash scripts/nano4/pid_b3_official.sh $T (8 GPUs x 2 pools, ~2.5 h)"
+  fi
+done
 cat > $R2/data/day_scripts/pid_release_check_$TAG.sh <<EOS
 set -uo pipefail
 for v in ${outs[*]}; do

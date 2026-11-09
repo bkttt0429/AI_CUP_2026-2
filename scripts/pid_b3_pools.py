@@ -138,25 +138,20 @@ def capture(a):
 
 
 def b3_matrix(work, v, players, q_ids, layer="zq", k=5):
-    """[Q, C] mean over passes of the z-scored cosine (candidate = mean of its first k chunks), candidates in `players` order."""
+    """[Q, C] aicup_pid.b3.score_b3 (candidate = mean of its first k chunks), candidates in `players` order."""
+    from aicup_pid.b3 import score_b3
     out = Path(work) / f"f{v}"
     meta = json.loads((out / "pool.json").read_text())
     z = np.load(out / "b3.npz", allow_pickle=True)  # our own capture file; 11-09 captures stored qids as an object array
-    row = {q: i for i, q in enumerate(z["qids"])}
-    chunk_rows = {}
+    row = {str(q): i for i, q in enumerate(z["qids"])}
+    chunks = {}
     for qid, p in meta["chunks"].items():
         if int(qid.rsplit("_k", 1)[1]) < k:
-            chunk_rows.setdefault(p, []).append(row[qid])
-    sims = []
-    for M in z[layer]:
-        C = np.stack([M[chunk_rows[p]].mean(axis=0) for p in players])
-        Q = M[[row[q] for q in q_ids]]
-        mu, sd = C.mean(axis=0), C.std(axis=0) + 1e-6
-        Zc, Zq = (C - mu) / sd, (Q - mu) / sd
-        Zc /= np.linalg.norm(Zc, axis=1, keepdims=True) + 1e-12
-        Zq /= np.linalg.norm(Zq, axis=1, keepdims=True) + 1e-12
-        sims.append(Zq @ Zc.T)
-    return np.mean(sims, axis=0)
+            chunks.setdefault(p, []).append(qid)
+    S, info = score_b3(z[layer], row, chunks, players, q_ids)
+    if info["missing_questions"] or info["missing_candidates"]:
+        raise ValueError(f"fold {v}: captures miss {len(info['missing_questions'])} questions / {len(info['missing_candidates'])} candidates")
+    return S
 
 
 def fit_ragged(comp_lists, truths, l2=1e-3, max_iter=200):
@@ -247,6 +242,20 @@ def evaluate(a):
             truth = np.array([opening.index[p] for p in qs.player_id])
             runs[s][v] = {"S": S, "truth": truth, "pid": qs.player_id.to_numpy(dtype=str), "n": qs.n_games.to_numpy()}
             print(f"fold {v} [{s}: {CHUNK * k} candidate games]: {len(players)} candidates, {len(qs)} questions; components ready", flush=True)
+    if a.final_fusion_out:  # the no-assignment fallback document (METHOD_NOTES 2.26, user's option A): main + b3 fitted on all four pools
+        if "full" not in runs:
+            raise ValueError("--final-fusion-out needs the full scenario")
+        R = runs["full"]
+        cs = (*MAIN, "b3")
+        fus = fit_ragged([[R[v]["S"][c] for c in cs] for v in FOLDS], [R[v]["truth"] for v in FOLDS])
+        out_doc = {k: v for k, v in doc.items() if k not in ("components", "weights", "fitted_on_pools", "questions")}
+        out_doc.update({"components": list(cs), "weights": fus.w.tolist(), "fitted_on_pools": [list(FOLDS)], "questions": int(sum(len(R[v]["truth"]) for v in FOLDS)),
+                        "fitted_by": "scripts/pid_b3_pools.py eval --final-fusion-out (single-fold leak-free pools f1-f4, 100 candidate games)",
+                        "b3_official": {"layer": "zq", "chunk": CHUNK, "models": "AI_CUP_2026-1 results/models/ct_cv_m33/val{1..4}_{C,T}-pc-f0-x40-oh_s{0,1,2}.pt",
+                                        "l1b_heads": ["heads3_A", "heads3_B"], "capture": "scripts/pid_b3_official.py capture"},
+                        "base_fusion": a.fusion})
+        Path(a.final_fusion_out).write_text(json.dumps(out_doc, indent=1) + "\n")
+        print(f"final fusion {list(cs)} weights {[round(w, 3) for w in fus.w]} -> {a.final_fusion_out}", flush=True)
     comps, summary = {}, {}
     for s in scen:
         R = runs[s]
@@ -324,6 +333,7 @@ def main(argv=None):
     ap.add_argument("--emb34", default=str(ROOT / "results" / "embed" / "embx_p34.pt"), help="embedding trained on folds 1,2 (+ old official): for pools of folds 3, 4")
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--n-boot", type=int, default=2000)
+    ap.add_argument("--final-fusion-out", default=None, help="also fit main+b3 on all four full pools and write that fusion document")
     ap.add_argument("--scenarios", nargs="+", choices=list(SCENARIOS), default=list(SCENARIOS))
     ap.add_argument("--out", default=str(ROOT / "results" / "b1" / "pools_b3.json"))
     a = ap.parse_args(argv)
