@@ -12,14 +12,20 @@ from scipy.optimize import linear_sum_assignment
 from aicup_pid.fusion import topk
 
 
-def assign_topk(S, k=5):
-    """[Q, min(k, C)] candidate indices: Top-1 from the one-to-one assignment, then the row's remaining order."""
+def assign_topk(S, k=5, capacity=1):
+    """[Q, min(k, C)] candidate indices: Top-1 from the one-to-one assignment, then the row's remaining order.
+    capacity > 1: every candidate may take up to `capacity` questions (the columns are tiled), for pools with several
+    questions per candidate."""
     S = np.asarray(S, dtype=float)
     base = topk(S, k)
     Q, C = S.shape
     if Q == 0 or C == 0:
         return base
-    rows, cols = linear_sum_assignment(S, maximize=True)
+    capacity = int(capacity)
+    if capacity < 1:
+        raise ValueError("capacity must be >= 1")
+    rows, cols = linear_sum_assignment(np.tile(S, (1, capacity)) if capacity > 1 else S, maximize=True)
+    cols = cols % C
     out = base.copy()
     width = base.shape[1]
     for q, c in zip(rows, cols):
@@ -40,3 +46,16 @@ def assignment_report(S, assigned):
     after = np.asarray(assigned)[:, 0]
     return {"n_questions": int(Q), "n_candidates": int(C), "distinct_top1_before": int(len(set(before.tolist()))),
             "distinct_top1_after": int(len(set(after.tolist()))), "n_top1_changed": int((before != after).sum())}
+
+
+def assign_blocks(S, blocks, apply, k=5):
+    """assign_topk block by block (11-11 release: the original questions and the added ones are separate one-to-one sets
+    over the same candidates). blocks [Q] labels; apply {label: bool}: a block with False keeps its per-question Top-k."""
+    S = np.asarray(S, dtype=float)
+    blocks = np.asarray(blocks)
+    out = topk(S, k)
+    for b in sorted(set(blocks.tolist())):
+        if apply.get(b):
+            rows = np.flatnonzero(blocks == b)
+            out[rows] = assign_topk(S[rows], k)
+    return out

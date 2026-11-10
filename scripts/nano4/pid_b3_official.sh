@@ -40,7 +40,7 @@ ids=(); outs=()
 for mode in off auto; do
   out=submission_${TAG}_emb_b3; [ $mode = auto ] && out=${out}_assign
   outs+=("$out")
-  ids+=("$(sub -c 12 -t 01:30:00 -J p_$out scripts/nano4/run.sbatch python -I $R2/scripts/predict_pid.py --candidates $CANDS --questions $QS --fusion $FUS --out $R2/results/$out/submission_player.csv --workers 12 --assign $mode --trunk-store $STORE --b3-dir $W)")
+  ids+=("$(sub -c 12 -t 01:30:00 -J p_$out scripts/nano4/run.sbatch python -I $R2/scripts/predict_pid.py --candidates $CANDS --questions $QS --fusion $FUS --out $R2/results/$out/submission_player.csv --workers 12 --assign $mode --assign-blocks $R2/data/tests/player_identification_test_public.csv $R2/data/tests/player_identification_test_private.csv --trunk-store $STORE --b3-dir $W)")
 done
 wait_ids "${ids[@]}"
 for i in "${!ids[@]}"; do echo "== ${outs[$i]} (job ${ids[$i]})"; grep -E "^wrote|b3 component|Error|Traceback" logs/nano4/p_${outs[$i]}-${ids[$i]}.out | tail -n 4 || true; done

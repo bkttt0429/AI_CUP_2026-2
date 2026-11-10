@@ -30,7 +30,7 @@ TRAIN_DIR = aicup_pid.TRAIN_DIR  # the shared data location (also puts AI_CUP_20
 from aicup.ladder import to_json  # noqa: E402
 from aicup.submission import check_game  # noqa: E402
 from aicup_pid import checks, pools  # noqa: E402
-from aicup_pid.assign import assign_topk, assignment_report  # noqa: E402
+from aicup_pid.assign import assign_blocks, assign_topk, assignment_report  # noqa: E402
 from aicup_pid.components import ALL_COMPONENTS, COMPONENTS, fit_hd, fit_local, fit_models, fit_opening_raw, fit_orient, fit_ref, parse_all, score_components, score_ref
 from aicup_pid.paths import FOLDS_CSV
 from aicup_pid.ref import reference_players
@@ -39,8 +39,9 @@ from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.provenance import pid_environment  # noqa: E402
 
 
-def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign="off", log=print, ref_folds=(1, 2, 3, 4), trunk_dirs=(), emb_path=None, b3_dir=None):
-    """[(question_id, top5 ids)], report dict for one pool."""
+def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign="off", log=print, ref_folds=(1, 2, 3, 4), trunk_dirs=(), emb_path=None, b3_dir=None, orig_keys=None):
+    """[(question_id, top5 ids)], report dict for one pool. orig_keys: the game tuples of an earlier release's questions; when given, the
+    assignment rule and the assignment run separately on the questions found there (block "orig") and on the others ("added")."""
     t0 = time.time()
     cands = pools.read_candidates(cand_path)
     questions = pools.read_questions(q_path)
@@ -115,9 +116,25 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign=
     S_f = fus.scores([S[c] for c in comps]) if usable else np.zeros((0, len(opening.players)))
     n_games = np.array([q["declared_games"] for q, keys in zip(questions, q_keys) if keys], dtype=int)
     collisions = checks.top1_collisions(S_f, n_games)
-    applied = assign == "on" or (assign == "auto" and bool(collisions["one_to_one_likely"]))
-    idx = assign_topk(S_f, pools.TOP_K) if applied else topk(S_f, pools.TOP_K)
-    assign_rep = {"mode": assign, "applied": applied, "top1_collisions": collisions, **({k: v for k, v in assignment_report(S_f, idx).items() if k == "n_top1_changed"} if applied else {"n_top1_changed": 0})}
+    if orig_keys is None:
+        applied = assign == "on" or (assign == "auto" and bool(collisions["one_to_one_likely_v2"]))
+        idx = assign_topk(S_f, pools.TOP_K) if applied else topk(S_f, pools.TOP_K)
+        assign_rep = {"mode": assign, "applied": applied, "top1_collisions": collisions, **({k: v for k, v in assignment_report(S_f, idx).items() if k == "n_top1_changed"} if applied else {"n_top1_changed": 0})}
+    else:  # 11-11 release (METHOD_NOTES 2.27): original and added questions are separate sets over the same candidates
+        labels = np.array(["orig" if tuple(sgf for sgf, _c in q["games"]) in orig_keys else "added" for q, keys in zip(questions, q_keys) if keys])
+        base, blocks, apply = topk(S_f, pools.TOP_K), {}, {}
+        for b in sorted(set(labels.tolist())):
+            m = labels == b
+            col = checks.top1_collisions(S_f[m], n_games[m])
+            apply[b] = assign == "on" or (assign == "auto" and bool(col["one_to_one_likely_v2"]))
+            blocks[b] = {"applied": apply[b], "top1_collisions": col}
+        idx = assign_blocks(S_f, labels, apply, pools.TOP_K) if len(labels) else base
+        for b in blocks:
+            blocks[b]["n_top1_changed"] = int((idx[labels == b, 0] != base[labels == b, 0]).sum())
+        applied = any(apply.values())
+        assign_rep = {"mode": assign, "applied": applied, "top1_collisions": collisions, "n_top1_changed": int((idx[:, 0] != base[:, 0]).sum()) if len(labels) else 0, "blocks": blocks}
+        log("assignment by block: " + ", ".join(f"{b}: {'applied' if v['applied'] else 'not applied'} (distinct Top-1 {v['top1_collisions']['distinct_top1']}/{v['top1_collisions']['n_questions']}, "
+                                                 f"changed {v['n_top1_changed']})" for b, v in blocks.items()), flush=True)
     rows, j, fallback = [], 0, []
     for q, keys in zip(questions, q_keys):
         if keys:
@@ -144,9 +161,12 @@ def main(argv=None):
     ap.add_argument("--expect-rows", type=int, default=None)
     ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--trunk-store", nargs="*", default=None, help="trunk rows of these official files (default: the fusion document's trunk_store_official); a re-released set has its own store")
+    ap.add_argument("--assign-blocks", nargs="*", default=None, help="test CSVs of an earlier release: the questions found there (same games) form block 'orig', the rest 'added'; "
+                    "the assignment rule and the assignment then run block by block")
     ap.add_argument("--b3-dir", default=None, help="scripts/pid_b3_official.py work folder (<dir>/pub, <dir>/priv) for a fusion that names 'b3'")
     ap.add_argument("--assign", choices=["off", "auto", "on"], default="off",
-                    help="line B3: one-to-one assignment of the Top-1 (auto = only when the pool's Top-1 picks name >= 87.5%% distinct candidates)")
+                    help="line B3: one-to-one assignment of the Top-1 (auto = only when the Top-1 picks name >= 87.5%% distinct candidates, or >= 95%% "
+                         "distinct among the more confident half with no more questions than candidates: aicup_pid.checks.top1_collisions)")
     a = ap.parse_args(argv)
     if len(a.candidates) != len(a.questions):
         ap.error("--candidates and --questions must pair up")
@@ -160,10 +180,13 @@ def main(argv=None):
         fus = Fusion()
         fus.w = np.asarray(doc["weights"], dtype=float)
         rows, reports, pool_players = [], [], {}
+        orig_keys = None
+        if a.assign_blocks:
+            orig_keys = {tuple(sgf for sgf, _c in q["games"]) for f in a.assign_blocks for q in pools.read_questions(f)}
         for cand_path, q_path in zip(a.candidates, a.questions):
             r, rep, players = predict_pool(cand_path, q_path, fus, doc.get("cfg", {}), a.workers, comps=comps, assign=a.assign, ref_folds=tuple(doc.get("ref_folds_official", (1, 2, 3, 4))),
                                            trunk_dirs=tuple(a.trunk_store) if a.trunk_store else (str(ROOT / doc.get("trunk_store_official", "data/trunk/official")),),
-                                           emb_path=doc.get("emb_model_official"), b3_dir=a.b3_dir)
+                                           emb_path=doc.get("emb_model_official"), b3_dir=a.b3_dir, orig_keys=orig_keys)
             prefix = next((p for p in pools.PREFIXES if r and r[0][0].startswith(p)), None)
             if prefix is not None:
                 pool_players[prefix] = players

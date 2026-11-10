@@ -32,18 +32,21 @@ wait_ids "$cmp"; tail -n 60 logs/nano4/p_relcmp-$cmp.out
 wait_ids "${tx[@]}"
 n_parts=$(ls "$STORE"/*.npz 2>/dev/null | grep -vc tmp.npz || true); echo "trunk parts: $n_parts"
 ids=(); outs=()
-for spec in "emb:$R2/results/pid_fusion3o_ref_trunk_emb.json:--trunk-store $STORE" "f3oreft:$R2/results/pid_fusion3o_ref_trunk.json:--trunk-store $STORE" "f3oref:$R2/results/pid_fusion3o_ref.json:"; do
+# 11-10: the 11-11 release keeps the 10-30 questions and adds new ones -> the assignment rule runs block by block (original / added);
+# embt = the embedding trained on training players only (no official game; the 10-30 pools are live again), emb = embx_final (saw the 10-30 candidates)
+OLDQ="--assign-blocks $R2/data/tests/player_identification_test_public.csv $R2/data/tests/player_identification_test_private.csv"
+for spec in "embt:$R2/results/pid_fusion3o_ref_trunk_embt.json:--trunk-store $STORE" "emb:$R2/results/pid_fusion3o_ref_trunk_emb.json:--trunk-store $STORE" "f3oreft:$R2/results/pid_fusion3o_ref_trunk.json:--trunk-store $STORE" "f3oref:$R2/results/pid_fusion3o_ref.json:"; do
   IFS=: read -r name fus extra <<<"$spec"
   for mode in off auto; do
     out=submission_${TAG}_$name; [ $mode = auto ] && out=${out}_assign
     outs+=("$out")
-    ids+=("$(sub -c 12 -t 01:30:00 -J p_$out scripts/nano4/run.sbatch python -I $R2/scripts/predict_pid.py --candidates $CANDS --questions $QS --fusion $fus --out $R2/results/$out/submission_player.csv --workers 12 --assign $mode $extra)")
+    ids+=("$(sub -c 12 -t 01:30:00 -J p_$out scripts/nano4/run.sbatch python -I $R2/scripts/predict_pid.py --candidates $CANDS --questions $QS --fusion $fus --out $R2/results/$out/submission_player.csv --workers 12 --assign $mode $OLDQ $extra)")
   done
 done
 wait_ids "$chk" "${ids[@]}"
 for i in "${!ids[@]}"; do echo "== ${outs[$i]} (job ${ids[$i]})"; grep -E "^wrote|assign|Error|Traceback" logs/nano4/p_${outs[$i]}-${ids[$i]}.out | tail -n 4; done
 for i in "${!ids[@]}"; do
-  if [ "${outs[$i]}" = "submission_${TAG}_emb_assign" ] && grep -q "not applied" "logs/nano4/p_${outs[$i]}-${ids[$i]}.out"; then
+  if [ "${outs[$i]}" = "submission_${TAG}_embt_assign" ] && grep -q "not applied" "logs/nano4/p_${outs[$i]}-${ids[$i]}.out"; then
     echo "B3 (METHOD_NOTES 2.26, option A): the assignment did not apply to a pool -> bash scripts/nano4/pid_b3_official.sh $T (8 GPUs x 2 pools, ~2.5 h)"
   fi
 done

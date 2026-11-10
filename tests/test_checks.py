@@ -101,3 +101,25 @@ def test_num_games_and_record_properties():
     assert checks.record_properties({}, ["9", "10", "100"])["game_id_sorted_in_file"] is True
     assert checks.record_properties({}, [])["game_id_sorted_in_file"] is None
     assert checks.record_properties({}, ["a", "a", "b"])["game_id_unique"] is False and p["game_id_unique"] is True and p["n_game_ids"] == 2
+
+
+def test_confident_distinct_separates_one_to_one_from_random_draws_on_hard_questions():
+    import numpy as np
+    from aicup_pid.checks import confident_distinct, top1_collisions
+    rng = np.random.RandomState(0)
+    C = 200
+
+    def scores(truth):  # half of the questions carry a clear signal, the other half none at all (hopeless questions)
+        S = rng.randn(len(truth), C)
+        clear = rng.permutation(len(truth))[:len(truth) // 2]
+        S[clear, truth[clear]] += 8.0
+        return S
+
+    hard_one = scores(rng.permutation(C))        # one question per candidate, about half right
+    hard_rand = scores(rng.randint(0, C, C))     # drawn with replacement
+    a, b = top1_collisions(hard_one, np.full(C, 2)), top1_collisions(hard_rand, np.full(C, 2))
+    assert a["one_to_one_likely"] is False and a["confident_distinct"] >= 0.99 and a["one_to_one_likely_v2"] is True
+    assert b["confident_distinct"] < 0.9 and b["one_to_one_likely_v2"] is False
+    assert confident_distinct(np.zeros((1, C))) == 1.0
+    two_each = np.concatenate([rng.permutation(C), rng.permutation(C)])  # two questions per candidate: more questions than candidates
+    assert top1_collisions(scores(two_each), np.full(2 * C, 5))["one_to_one_likely_v2"] is False

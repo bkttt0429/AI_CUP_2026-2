@@ -79,7 +79,7 @@ def test_predict_pid_cli(tmp_path, capsys):
     assert rep_on["mode"] == "on" and rep_on["applied"] is True and rep_on["top1_collisions"]["n_questions"] == 3 and "n_top1_changed" in rep_on
     assert predict_pid.main([*args, "--assign", "auto"]) == 0
     rep_auto = json.loads(out.with_suffix(".report.json").read_text())["pools"][0]["assign"]
-    assert rep_auto["applied"] == rep_auto["top1_collisions"]["one_to_one_likely"]
+    assert rep_auto["applied"] == rep_auto["top1_collisions"]["one_to_one_likely_v2"]
     assert rep["pools"][0]["assign"] == {"mode": "off", "applied": False, "top1_collisions": rep["pools"][0]["assign"]["top1_collisions"], "n_top1_changed": 0}
     # a fusion document may name a subset of the components (the opening-only fallback); unknown names or a weight mismatch are refused
     (tmp_path / "opening.json").write_text(json.dumps({"components": ["opening"], "weights": [1.0], "cfg": {"depth": 8}}))
@@ -96,3 +96,31 @@ def test_predict_pid_cli(tmp_path, capsys):
     assert predict_pid.main([*args[:-4], "--fusion", str(tmp_path / "bad2.json"), "--out", str(out)]) == 2
     with pytest.raises(SystemExit):
         predict_pid.main(["--candidates", str(cp1), "--questions", str(qp1), str(qp2), "--fusion", str(fus), "--out", str(out)])
+
+
+def test_predict_pid_assign_blocks(tmp_path):
+    """11-11 release: original + added questions over the same candidates -> the assignment runs block by block."""
+    frame, _ = training_frame(folds=(1,), players_per_fold=6, games_per_player=40, seed=5)
+    cp, qp, _players = official_files(tmp_path, frame, "pub_")
+    orig = pd.read_csv(qp, dtype=str, keep_default_na=False)
+    added = orig.copy()  # the same players again: the first game only, so the game tuples differ from the original questions
+    added["question_id"] = [f"pub_q_{i + 4:04d}" for i in range(len(added))]
+    added["num_games"] = "1"
+    for j in range(2, 21):
+        added[f"sgf_{j}"], added[f"color_{j}"] = "", ""
+    new_q = tmp_path / "test_updated.csv"
+    pd.concat([orig, added]).to_csv(new_q, index=False)
+    fus = tmp_path / "fusion.json"
+    fus.write_text(json.dumps({"components": ["opening", "style"], "weights": [1.0, 0.5], "cfg": {"depth": 8}}))
+    out = tmp_path / "sub.csv"
+    base = ["--candidates", str(cp), "--questions", str(new_q), "--fusion", str(fus), "--out", str(out), "--expect-rows", "6"]
+    assert predict_pid.main([*base, "--assign", "on", "--assign-blocks", str(qp)]) == 0
+    rep = json.loads(out.with_suffix(".report.json").read_text())["pools"][0]["assign"]
+    assert set(rep["blocks"]) == {"orig", "added"} and all(b["applied"] and b["top1_collisions"]["n_questions"] == 3 for b in rep["blocks"].values())
+    sub = pd.read_csv(out, dtype=str)
+    assert sub["top_1"][:3].nunique() == 3 and sub["top_1"][3:].nunique() == 3  # one-to-one inside each block, not across the pool
+    assert predict_pid.main([*base, "--assign", "off", "--assign-blocks", str(qp)]) == 0
+    rep_off = json.loads(out.with_suffix(".report.json").read_text())["pools"][0]["assign"]
+    assert rep_off["applied"] is False and rep_off["n_top1_changed"] == 0 and not any(b["applied"] for b in rep_off["blocks"].values())
+    assert predict_pid.main([*base, "--assign", "on"]) == 0  # without the blocks: one assignment over all six questions
+    assert pd.read_csv(out, dtype=str)["top_1"].nunique() == 6

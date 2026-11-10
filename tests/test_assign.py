@@ -24,3 +24,29 @@ def test_assign_edge_cases():
     S = np.eye(4)
     assert assign_topk(S, 5).tolist() == topk(S, 5).tolist()  # already one-to-one: nothing changes
     assert assignment_report(S, assign_topk(S, 5))["n_top1_changed"] == 0
+
+
+def test_capacity_assignment_lets_every_candidate_take_two_questions():
+    from aicup_pid.assign import assign_topk
+    rng = np.random.RandomState(0)
+    C = 30
+    truth = np.concatenate([np.arange(C), np.arange(C)])
+    S = rng.randn(2 * C, C) * 0.6
+    S[np.arange(2 * C), truth] += 1.0
+    plain = S.argmax(axis=1)
+    cap = assign_topk(S, 5, capacity=2)[:, 0]
+    assert np.bincount(cap, minlength=C).max() <= 2 and (cap == truth).mean() >= (plain == truth).mean()
+    assert (assign_topk(S[:C], 5, capacity=1)[:, 0] == assign_topk(S[:C], 5)[:, 0]).all()
+
+
+def test_assign_blocks_assigns_inside_each_block_only():
+    from aicup_pid.assign import assign_blocks, assign_topk
+    from aicup_pid.fusion import topk
+    rng = np.random.RandomState(1)
+    C = 25
+    S = rng.randn(2 * C, C)
+    blocks = np.array(["old"] * C + ["new"] * C)
+    out = assign_blocks(S, blocks, {"old": True, "new": False})
+    assert (out[:C] == assign_topk(S[:C], 5)).all() and (out[C:] == topk(S[C:], 5)).all()
+    both = assign_blocks(S, blocks, {"old": True, "new": True})
+    assert len(set(both[:C, 0].tolist())) == C and len(set(both[C:, 0].tolist())) == C

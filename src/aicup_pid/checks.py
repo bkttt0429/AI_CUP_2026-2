@@ -195,20 +195,39 @@ def self_identification(by_player, moves, feats, cfg, weights, seed=0, model_gam
 
 # ---------------------------------------------------------------- Top-1 collisions (check 8), num_games (9), records (10)
 
+CONFIDENT_FRACTION, CONFIDENT_DISTINCT = 0.5, 0.95  # rule v2 (METHOD_NOTES 2.27), fixed 11-10 from the birthday rate before its simulation
+
+
+def confident_distinct(S_f, frac=CONFIDENT_FRACTION):
+    """Share of distinct Top-1 candidates among the `frac` most confident questions (largest Top-1 margin). One question per
+    candidate -> about 1 whatever the difficulty (confident picks are right, so they do not collide); questions drawn with
+    replacement over C candidates -> at most the birthday rate C (1 - (1 - 1/C)^m) / m (0.79 for m = 200, C = 400)."""
+    S = np.asarray(S_f, dtype=float)
+    if len(S) < 2 or S.shape[1] < 2:
+        return 1.0
+    top = np.sort(S, axis=1)
+    keep = np.argsort(-(top[:, -1] - top[:, -2]), kind="stable")[:int(np.ceil(frac * len(S)))]
+    return float(len(set(S[keep].argmax(axis=1).tolist())) / len(keep))
+
+
 def top1_collisions(S_f, n_games, fraction=ONE_TO_ONE_FRACTION):
     """How many distinct candidates the questions' Top-1 picks name, overall and per size, against the random expectation
-    C (1 - (1 - 1/C)^Q); one_to_one_likely when distinct >= fraction * Q."""
+    C (1 - (1 - 1/C)^Q); one_to_one_likely when distinct >= fraction * Q; one_to_one_likely_v2 adds the confident-half clause
+    (predict_pid.py --assign auto uses v2; the file-check flags keep the first rule)."""
     S = np.asarray(S_f, dtype=float)
     n_games = np.asarray(n_games)
     Q, C = S.shape
     if Q == 0:
-        return {"n_questions": 0, "n_candidates": int(C), "distinct_top1": 0, "expected_random": 0.0, "by_n": {}, "one_to_one_likely": None}
+        return {"n_questions": 0, "n_candidates": int(C), "distinct_top1": 0, "expected_random": 0.0, "by_n": {}, "one_to_one_likely": None,
+                "confident_distinct": None, "one_to_one_likely_v2": None}
     t1 = np.argmax(S, axis=1)
     distinct = len(set(t1.tolist()))
     return {"n_questions": int(Q), "n_candidates": int(C), "distinct_top1": int(distinct),
             "expected_random": float(C * (1 - (1 - 1 / C) ** Q)) if C > 0 else 0.0,
             "by_n": {str(n): len(set(t1[n_games == n].tolist())) for n in sorted(set(n_games.tolist()))},
-            "one_to_one_likely": bool(distinct >= fraction * Q)}
+            "one_to_one_likely": bool(distinct >= fraction * Q), "confident_distinct": (conf := confident_distinct(S)),
+            # v2: the 87.5% rule, or no more questions than candidates and >= 95% distinct Top-1 among the more confident half (hard blocks)
+            "one_to_one_likely_v2": bool(distinct >= fraction * Q or (Q <= C and conf >= CONFIDENT_DISTINCT))}
 
 
 def num_games_counts(questions):

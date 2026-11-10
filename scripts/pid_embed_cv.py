@@ -97,6 +97,8 @@ def main(argv=None):
     ap.add_argument("--out", required=True)
     ap.add_argument("--fusion-out", default=None)
     ap.add_argument("--final-model-out", default=None, help="repo-relative path (recorded in the fusion document as emb_model_official)")
+    ap.add_argument("--fusion-out-plain", default=None, help="fusion document of main + emb trained on training players only (no official game)")
+    ap.add_argument("--final-plain-model-out", default=None, help="repo-relative path of the training-only embedding (folds 1-4), recorded in --fusion-out-plain")
     a = ap.parse_args(argv)
     t0 = time.time()
     log = print
@@ -186,6 +188,23 @@ def main(argv=None):
         Path(a.fusion_out).parent.mkdir(parents=True, exist_ok=True)
         Path(a.fusion_out).write_text(to_json(doc, indent=1) + "\n")
         log(f"wrote {a.fusion_out}: weights {np.round(fus.w, 4).tolist()}")
+    if a.fusion_out_plain:  # 11-10: the 10-30 pools stay live in the 11-11 release, so an embedding that never saw an official game is kept ready
+        comps_ = (*MAIN, "emb")
+        fus = Fusion().fit([np.vstack([r["S"][c] for r in runs]) for c in comps_], np.concatenate([r["truth"] for r in runs]))
+        doc = {"components": list(comps_), "weights": fus.w.tolist(), "cfg": cfg, "fitted_on_pools": [r["info"]["folds"] for r in runs], "questions": int(len(pid)),
+               "ref_folds_official": [1, 2, 3, 4], "trunk_store_official": "data/trunk/official", "emb_model_official": a.final_plain_model_out,
+               "note": "emb trained on training folds 1-4 only: no official candidate or question game enters any training", **pid_environment("cpu")}
+        Path(a.fusion_out_plain).parent.mkdir(parents=True, exist_ok=True)
+        Path(a.fusion_out_plain).write_text(to_json(doc, indent=1) + "\n")
+        log(f"wrote {a.fusion_out_plain}: weights {np.round(fus.w, 4).tolist()}")
+    if a.final_plain_model_out:
+        rows, arows = training_rows(games, folds_df, (1, 2, 3, 4), store, aug)
+        log("final emb: folds 1-4 only", flush=True)
+        m = train(rows, arows, ecfg, log)
+        dest = Path(a.final_plain_model_out) if Path(a.final_plain_model_out).is_absolute() else ROOT / a.final_plain_model_out
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        torch.save(m.state_dict(), dest)
+        log(f"wrote {dest}")
     if a.final_model_out:
         rows, arows = training_rows(games, folds_df, (1, 2, 3, 4), store, aug)
         log("final embx: folds 1-4 + old official pools", flush=True)
