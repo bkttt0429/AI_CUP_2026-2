@@ -1,0 +1,126 @@
+{
+ "components": [
+  "opening",
+  "opening_raw",
+  "orient4",
+  "orient4_merged",
+  "local",
+  "style",
+  "hd",
+  "emb",
+  "seq"
+ ],
+ "weights": [
+  0.2904254623577314,
+  0.24182867164726748,
+  0.3319431461065148,
+  0.11942401460013283,
+  0.19179405906107644,
+  0.14344946616624626,
+  0.5106656677660776,
+  1.6077431133190256,
+  2.1303437152342344
+ ],
+ "cfg": {
+  "depth": 12,
+  "alpha": 2.0,
+  "beta": 5.0,
+  "shrink": 0.1,
+  "local_alpha": 2.0,
+  "local_beta": 5.0,
+  "local_start": 12,
+  "orient_alpha": 2.0,
+  "orient_beta": 5.0,
+  "orient_depth": 12,
+  "orient_raw": 1,
+  "ref_alpha": 2.0,
+  "ref_beta": 5.0,
+  "ref_min_black": 30,
+  "ref_cap": 40,
+  "ref_orient_raw": 2,
+  "ref_seed": 0,
+  "trunk_feats": "all",
+  "trunk_shrink": 0.1
+ },
+ "emb_model": "results/embed/emb2_final.pt",
+ "seq_official": [
+  "/home/u2507115/BK_AICUP_2026-2/data/seq/official_m88.npz",
+  "/home/u2507115/BK_AICUP_2026-2/data/seq/official_m88_net1.npz",
+  "/home/u2507115/BK_AICUP_2026-2/data/seq/official_m88_net2.npz",
+  "/home/u2507115/BK_AICUP_2026-2/data/seq/official_m88_net3.npz",
+  "/home/u2507115/BK_AICUP_2026-2/data/seq/official_m88_net4.npz"
+ ],
+ "soft_lam": null,
+ "geometry": {
+  "candidates": 600,
+  "candidate_games": 10,
+  "sizes": [
+   1,
+   2,
+   3,
+   5
+  ]
+ },
+ "fitted_on": [
+  {
+   "eligible": 1033,
+   "skipped_R": 0,
+   "fold": 1,
+   "seed": 0,
+   "questions": 800
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 1,
+   "fold": 1,
+   "seed": 1,
+   "questions": 799
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 0,
+   "fold": 2,
+   "seed": 0,
+   "questions": 800
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 2,
+   "fold": 2,
+   "seed": 1,
+   "questions": 798
+  },
+  {
+   "eligible": 1031,
+   "skipped_R": 5,
+   "fold": 3,
+   "seed": 0,
+   "questions": 795
+  },
+  {
+   "eligible": 1031,
+   "skipped_R": 1,
+   "fold": 3,
+   "seed": 1,
+   "questions": 799
+  },
+  {
+   "eligible": 1030,
+   "skipped_R": 1,
+   "fold": 4,
+   "seed": 0,
+   "questions": 799
+  },
+  {
+   "eligible": 1030,
+   "skipped_R": 3,
+   "fold": 4,
+   "seed": 1,
+   "questions": 797
+  }
+ ],
+ "questions": 6387,
+ "simulated_score": 0.707931794217435,
+ "note": "v2 added pools: both colours, per-view models, emb2 and the rank session's sequence identity model (net -1 for official games); no official game enters any training; v2c: five sequence networks averaged (not simulated: every training fold was seen by four of the five networks; tested on the Public leaderboard)",
+ "seq_model": "AI_CUP_2026-1 results/m88/ckpt_{-1,1,2,3,4}.pt (best_state): mean of the five networks' row-standardised similarity matrices; weights as pid_fusion_v2b.json (one network)"
+}

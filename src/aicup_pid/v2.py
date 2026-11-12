@@ -86,9 +86,16 @@ def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=No
         S["emb"] = emb.scale * (Q @ C.T)
     if "seq" in which and seq is not None:  # prototype = normalised sum of the game vectors, as the model was trained
         unit = lambda X: X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-12)  # noqa: E731
-        C = unit(np.stack([np.sum([seq[k] for k, _ in cands[p]], axis=0) for p in players]).astype(np.float64))
-        Q = unit(np.stack([np.sum([seq[k] for k, _ in q], axis=0) for q in questions]).astype(np.float64))
-        S["seq"] = Q @ C.T
+        mats = []
+        for one in (seq if isinstance(seq, (list, tuple)) else [seq]):  # several networks: mean of their row-standardised matrices
+            C = unit(np.stack([np.sum([one[k] for k, _ in cands[p]], axis=0) for p in players]).astype(np.float64))
+            Q = unit(np.stack([np.sum([one[k] for k, _ in q], axis=0) for q in questions]).astype(np.float64))
+            mats.append(Q @ C.T)
+        if len(mats) == 1:
+            S["seq"] = mats[0]
+        else:
+            from aicup_pid.fusion import standardise
+            S["seq"] = np.mean([standardise(m) for m in mats], axis=0)
     return S
 
 
@@ -149,3 +156,21 @@ def training_games(train_dir):
         df["game_key"] = df["rank"] + ":" + df["game_id"]
         frames.append(df[["player_id", "rank", "game_key", "color"]])
     return pd.concat(frames, ignore_index=True)
+
+
+def pool_normalised(vecs, cands, questions, shrink=0.3):
+    """[Q, C] cosine of prototypes and question vectors after within-class covariance normalisation fitted on the pool's own
+    candidates: W = covariance of the candidates' game vectors around their player's mean, shrunk towards (trace / d) I by
+    `shrink`; every vector is multiplied by W^(-1/2) and renormalised. vecs {key: unit vector}; no question enters W."""
+    players = sorted(cands)
+    X = [np.stack([vecs[k] for k, _ in cands[p]]).astype(np.float64) for p in players]
+    resid = np.vstack([x - x.mean(axis=0) for x in X])
+    d = resid.shape[1]
+    W = resid.T @ resid / max(len(resid) - len(X), 1)
+    W = (1 - shrink) * W + shrink * (np.trace(W) / d) * np.eye(d)
+    val, vec = np.linalg.eigh(W)
+    B = vec @ np.diag(1.0 / np.sqrt(np.maximum(val, 1e-12))) @ vec.T
+    unit = lambda M: M / (np.linalg.norm(M, axis=-1, keepdims=True) + 1e-12)  # noqa: E731
+    C = unit(np.stack([unit(x @ B).sum(axis=0) for x in X]))
+    Q = unit(np.stack([unit(np.stack([vecs[k] for k, _ in q]).astype(np.float64) @ B).sum(axis=0) for q in questions]))
+    return Q @ C.T

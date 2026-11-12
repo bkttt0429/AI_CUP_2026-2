@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+"""Pool adaptation of the sequence identity model (METHOD_NOTES 2.31): a short fine-tune of the rank session's network
+(AI_CUP_2026-1 logs/nano4/m88_seqid.py) on ONE pool's own candidates (600 players x 10 games, ids given by the organisers), with
+the model's own objective: every game is a query against the prototypes of the players in the episode, its own game left out.
+No question game enters the fine-tune; a pool is adapted on its own candidates only (Public and Private never mixed).
+Why: the network identifies players it was trained on far better than unseen ones (held-out games: 0.21-0.23 against 0.15-0.17
+top-1 in the rank session's evaluation); official players are unseen.
+  --mode sim --fold v --seed s        the simulated pool of pid_v2_sim2.py (fold v, net v) -> <out>/sim_f<v>_s<s>_t<step>.npz
+  --mode official --pool pub2|priv2 --net v   an added official pool under net v -> <out>/official_<pool>_net<v>_t<step>.npz
+Each output holds the vectors of every game of the pool (candidates and questions) after <step> fine-tune steps (0 = as is).
+Run from the AI_CUP_2026-1 checkout."""
+import argparse
+import glob
+import math
+import multiprocessing as mp
+import sys
+import time
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import torch
+
+AICUP1 = Path.cwd()
+R2 = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(AICUP1 / "src"), str(AICUP1 / "logs/nano4"), str(R2 / "src"), str(R2 / "scripts")]
+import m88_seqid as m88  # noqa: E402
+
+
+def embed(net, A, idx, batch=1024):
+    net.eval()
+    out = np.zeros((len(idx), m88.D_OUT), np.float32)
+    with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
+        for i in range(0, len(idx), batch):
+            r = idx[i:i + batch]
+            out[i:i + batch] = net(torch.as_tensor(A["GL"][r]).cuda(), torch.as_tensor(A["POS"][r].astype(np.int64)).cuda(), torch.as_tensor(A["MOV"][r].astype(np.int64)).cuda(),
+                                   torch.as_tensor(A["LEN"][r].astype(np.int64)).cuda(), torch.as_tensor(A["SUBJ"][r].astype(np.int64)).cuda()).float().cpu().numpy()
+    net.train()
+    return out
+
+
+def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log):
+    """A: arrays of every pool game; owner [n] candidate index or -1 (question game). Calls save(step, vectors) at steps_out."""
+    rng = np.random.default_rng(seed)
+    torch.manual_seed(seed)
+    cand = np.flatnonzero(owner >= 0)
+    C = int(owner.max()) + 1
+    by = [cand[owner[cand] == c] for c in range(C)]
+    m_ep = min(m_ep, min(len(b) for b in by))
+    p_ep = min(p_ep, C)
+    everything = np.arange(len(owner))
+    if 0 in steps_out:
+        save(0, embed(net, A, everything))
+    last = max(steps_out)
+    if last == 0:
+        return
+    opt = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=0.05)
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / 50) * 0.5 * (1 + math.cos(math.pi * min(s, last) / last)))
+    net.train()
+    ar, tl, ta, t0 = np.arange(p_ep), 0.0, 0.0, time.time()
+    for step in range(last):
+        pl = rng.choice(C, p_ep, replace=False)
+        rows = np.concatenate([rng.choice(by[c], m_ep, replace=False) for c in pl])
+        with torch.autocast("cuda", dtype=torch.bfloat16):
+            z = net(torch.as_tensor(A["GL"][rows]).cuda(), torch.as_tensor(A["POS"][rows].astype(np.int64)).cuda(), torch.as_tensor(A["MOV"][rows].astype(np.int64)).cuda(),
+                    torch.as_tensor(A["LEN"][rows].astype(np.int64)).cuda(), torch.as_tensor(A["SUBJ"][rows].astype(np.int64)).cuda())
+        z = z.float().reshape(p_ep, m_ep, m88.D_OUT)
+        tot = z.sum(1)
+        sc = net.log_scale.exp()
+        logits = sc * z.reshape(-1, m88.D_OUT) @ torch.nn.functional.normalize(tot, dim=-1).T
+        own = sc * (z * torch.nn.functional.normalize(tot[:, None] - z, dim=-1)).sum(-1).reshape(-1)  # its own game left out of its player's prototype
+        tgt = torch.as_tensor(np.repeat(ar, m_ep)).cuda()
+        logits = logits.scatter(1, tgt[:, None], own[:, None])
+        loss = torch.nn.functional.cross_entropy(logits, tgt)
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
+        opt.step()
+        sched.step()
+        tl += float(loss.detach()); ta += float((logits.argmax(1) == tgt).float().mean())
+        if (step + 1) % 50 == 0:
+            log(f"  step {step + 1}/{last}: loss {tl / 50:.4f}, episode top-1 {ta / 50:.3f} of {p_ep}, {(time.time() - t0) / (step + 1):.2f} s/step")
+            tl = ta = 0.0
+        if step + 1 in steps_out:
+            save(step + 1, embed(net, A, everything))
+
+
+def load_net(ckpt):
+    net = m88.build_model()
+    net.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=False)["best_state"])
+    return net.cuda()
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--mode", required=True, choices=("sim", "official"))
+    ap.add_argument("--fold", type=int, default=1)
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--pool", choices=("pub2", "priv2"), default="pub2")
+    ap.add_argument("--net", type=int, default=-1)
+    ap.add_argument("--steps", nargs="+", type=int, default=[0, 100, 300, 600, 1000])
+    ap.add_argument("--lr", type=float, default=1e-4)
+    ap.add_argument("--p-ep", type=int, default=256)
+    ap.add_argument("--m-ep", type=int, default=8)
+    ap.add_argument("--ckpt-dir", default=str(AICUP1 / "results/m88"))
+    ap.add_argument("--ply-dir", default="/work/u2507115/pid_v2/ply_official")
+    ap.add_argument("--tests-dir", default=str(R2 / "data" / "tests_1111"))
+    ap.add_argument("--out", default="/work/u2507115/pid_v2/seq_ft")
+    a = ap.parse_args(argv)
+    t0 = time.time()
+    log = lambda s: print(f"{s} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
+    out = Path(a.out)
+    out.mkdir(parents=True, exist_ok=True)
+    if a.mode == "sim":
+        import aicup_pid
+        from aicup_pid import v2
+        from aicup_pid.paths import FOLDS_CSV
+        from pid_v2_sim2 import build
+        games = v2.training_games(aicup_pid.TRAIN_DIR).merge(pd.read_csv(FOLDS_CSV, dtype={"player_id": str})[["player_id", "fold"]], on="player_id")
+        rows = v2.load_side_rows(AICUP1)
+        z = np.load(R2 / "data" / "seq" / f"fold{a.fold}.npz")
+        g = games[(games.fold == a.fold) & games.game_key.isin(rows.keys()) & games.game_key.isin(set(z["key"].astype(str)))]
+        cands, questions, _owner, _block, _sgfs, _info = build(g, a.seed)
+        players = sorted(cands)
+        own = {k: i for i, p in enumerate(players) for k, _ in cands[p]}
+        need = set(own) | {k for q in questions for k, _ in q}
+        files = [f for d in m88.DIRS for f in sorted((d / f"fold{a.fold}").glob("games_s*_p*.csv"))]
+        parts = {x: [] for x in ("key", "GL", "POS", "MOV", "LEN", "SUBJ")}
+        with mp.get_context("fork").Pool(12) as pool:
+            for i in range(0, len(files), 48):
+                for key, _pid, GL, POS, MOV, LEN, SUBJ in pool.map(m88.read_part, files[i:i + 48], chunksize=2):
+                    m = np.array([k in need for k in key])
+                    if m.any():
+                        for name, arr in (("key", key), ("GL", GL), ("POS", POS), ("MOV", MOV), ("LEN", LEN), ("SUBJ", SUBJ)):
+                            parts[name].append(arr[m])
+        A = {k: np.concatenate(x) for k, x in parts.items()}
+        if set(A["key"].tolist()) != need:
+            raise ValueError(f"{len(need) - len(set(A['key'].tolist()))} pool games without per-ply vectors")
+        tag, ckpt = f"sim_f{a.fold}_s{a.seed}", Path(a.ckpt_dir) / f"ckpt_{a.fold}.pt"
+    else:
+        tagname = "public" if a.pool == "pub2" else "private"
+        c = pd.read_csv(Path(a.tests_dir) / f"player_identification_candidates2_{tagname}.csv", dtype=str, keep_default_na=False)
+        players = sorted(c.player_id.unique())
+        pidx = {p: i for i, p in enumerate(players)}
+        own = {f"c:{i}:{r.game_id}": pidx[r.player_id] for i, r in enumerate(c.itertuples())}
+        parts = {x: [] for x in ("key", "GL", "POS", "MOV", "LEN", "SUBJ")}
+        for f in sorted(glob.glob(f"{a.ply_dir}/ply_*.npz")):
+            if f.endswith(".tmp.npz"):
+                continue
+            z = np.load(f)
+            key = z["key"].astype(str)
+            m = np.array([(k in own) or k.startswith(f"q:{a.pool}_") for k in key])
+            if m.any():
+                for name in parts:
+                    parts[name].append(key[m] if name == "key" else z[name][m])
+        A = {k: np.concatenate(x) for k, x in parts.items()}
+        tag, ckpt = f"official_{a.pool}_net{a.net}", Path(a.ckpt_dir) / f"ckpt_{a.net}.pt"
+    owner = np.array([own.get(k, -1) for k in A["key"]])
+    log(f"{tag}: {len(owner)} games ({int((owner >= 0).sum())} candidate games of {len(players)} players, {int((owner < 0).sum())} question games); network {ckpt.name}")
+    net = load_net(ckpt)
+
+    def save(step, vec):
+        np.savez(out / f"{tag}_t{step}.npz", key=A["key"], emb=vec.astype(np.float16), step=np.array(step))
+        log(f"  vectors after {step} steps written")
+
+    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

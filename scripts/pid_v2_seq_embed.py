@@ -45,22 +45,26 @@ def main(argv=None):
     ap.add_argument("--ply-dir", default="/work/u2507115/pid_v2/ply_official")
     ap.add_argument("--out", default="/work/u2507115/pid_v2/seq")
     ap.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4])
+    ap.add_argument("--nets", nargs="+", type=int, default=[-1], help="official stage: which networks")
+    ap.add_argument("--tag", default="", help="suffix of the official output files (e.g. _m90)")
     a = ap.parse_args(argv)
     t0 = time.time()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    if a.stage == "official":
-        net, best = load_net(Path(a.ckpt_dir) / "ckpt_-1.pt")
-        keys, embs = [], []
-        for f in sorted(glob.glob(f"{a.ply_dir}/ply_*.npz")):
-            if f.endswith(".tmp.npz"):
-                continue
-            z = np.load(f)
-            keys.append(z["key"].astype(str))
-            embs.append(embed(net, z["GL"], z["POS"], z["MOV"], z["LEN"], z["SUBJ"]))
-        keys, embs = np.concatenate(keys), np.concatenate(embs)
-        np.savez(out / "official.npz", key=keys, emb=embs.astype(np.float16), net=np.array(-1), best=np.array(str(best)))
-        print(f"official: {len(keys)} games under net -1 (best {best}) -> {out / 'official.npz'} ({time.time() - t0:.0f} s)", flush=True)
+    if a.stage == "official":  # no official player is in any net's training set, so every net is usable here
+        for v in a.nets:
+            net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}.pt")
+            keys, embs = [], []
+            for f in sorted(glob.glob(f"{a.ply_dir}/ply_*.npz")):
+                if f.endswith(".tmp.npz"):
+                    continue
+                z = np.load(f)
+                keys.append(z["key"].astype(str))
+                embs.append(embed(net, z["GL"], z["POS"], z["MOV"], z["LEN"], z["SUBJ"]))
+            keys, embs = np.concatenate(keys), np.concatenate(embs)
+            dest = out / ("official.npz" if v == -1 and a.tag == "" else f"official{a.tag}_net{v}.npz")
+            np.savez(dest, key=keys, emb=embs.astype(np.float16), net=np.array(v), best=np.array(str(best)))
+            print(f"official: {len(keys)} games under net {v} (best {best}) -> {dest} ({time.time() - t0:.0f} s)", flush=True)
         return 0
     for v in a.folds:
         net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}.pt")

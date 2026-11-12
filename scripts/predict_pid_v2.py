@@ -36,7 +36,7 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
     cands, questions, qids, sgfs = v2.official_pool(cand_path, q_path)
     colour = {k: c for games in (*cands.values(), *questions) for k, c in games}
     need_rows = "emb" in doc["components"]
-    bad = sorted(k for k in sgfs if not check_game(sgfs[k], colour[k])[0] or (need_rows and k not in store) or (seq is not None and k not in seq))
+    bad = sorted(k for k in sgfs if not check_game(sgfs[k], colour[k])[0] or (need_rows and k not in store) or (seq is not None and k not in (seq[0] if isinstance(seq, list) else seq)))
     if bad:
         log(f"  {len(bad)} games left out (do not replay or have no trunk row): {bad[:5]}", flush=True)
     cands = {p: [(k, c) for k, c in g if k not in bad] for p, g in cands.items()}
@@ -96,9 +96,13 @@ def main(argv=None):
         print(f"embedding {doc['emb_model']} ({emb.players_trained} training players); {len(store)} trunk rows", flush=True)
     seq = None
     if "seq" in doc["components"]:
-        z = np.load(doc["seq_official"])
-        seq = dict(zip(z["key"].astype(str), z["emb"].astype(np.float32)))
-        print(f"sequence identity vectors {doc['seq_official']}: {len(seq)} games", flush=True)
+        paths = doc["seq_official"] if isinstance(doc["seq_official"], list) else [doc["seq_official"]]
+        seqs = []
+        for path in paths:
+            z = np.load(path)
+            seqs.append(dict(zip(z["key"].astype(str), z["emb"].astype(np.float32))))
+        seq = seqs[0] if len(seqs) == 1 else seqs
+        print(f"sequence identity vectors: {len(paths)} network(s), {len(seqs[0])} games", flush=True)
     new, reports, cand_ids = {}, [], {}
     for tag, prefix in (("public", "pub2_"), ("private", "priv2_")):
         rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq)
