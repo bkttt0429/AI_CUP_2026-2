@@ -81,9 +81,16 @@ def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=No
             raise ValueError("style: candidate order differs")
         S["style"] = np.stack([m.log_scores(np.stack([feats[k] for k, _ in q])) for q in questions])
     if "emb" in which and emb is not None:
-        C = np.stack([emb.set_vector(np.stack([rows[k] for k, _ in cands[p]])) for p in players])
-        Q = np.stack([emb.set_vector(np.stack([rows[k] for k, _ in q])) for q in questions])
-        S["emb"] = emb.scale * (Q @ C.T)
+        mats = []
+        for one in (emb if isinstance(emb, (list, tuple)) else [emb]):  # several seeds: mean of their row-standardised matrices
+            C = np.stack([one.set_vector(np.stack([rows[k] for k, _ in cands[p]])) for p in players])
+            Q = np.stack([one.set_vector(np.stack([rows[k] for k, _ in q])) for q in questions])
+            mats.append(one.scale * (Q @ C.T))
+        if len(mats) == 1:
+            S["emb"] = mats[0]
+        else:
+            from aicup_pid.fusion import standardise
+            S["emb"] = np.mean([standardise(m) for m in mats], axis=0)
     if "seq" in which and seq is not None:  # prototype = normalised sum of the game vectors, as the model was trained
         unit = lambda X: X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-12)  # noqa: E731
         mats = []

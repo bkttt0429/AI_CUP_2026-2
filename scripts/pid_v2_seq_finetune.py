@@ -39,7 +39,7 @@ def embed(net, A, idx, batch=1024):
     return out
 
 
-def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log):
+def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None):
     """A: arrays of every pool game; owner [n] candidate index or -1 (question game). Calls save(step, vectors) at steps_out."""
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
@@ -55,7 +55,8 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log):
     if last == 0:
         return
     opt = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=0.05)
-    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / 50) * 0.5 * (1 + math.cos(math.pi * min(s, last) / last)))
+    hz = horizon or last  # the cosine runs over `horizon` steps even when the fine-tune stops earlier (11-12: the first run's t = 100 came from a 1,000-step schedule)
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / 50) * 0.5 * (1 + math.cos(math.pi * min(s, hz) / hz)))
     net.train()
     ar, tl, ta, t0 = np.arange(p_ep), 0.0, 0.0, time.time()
     for step in range(last):
@@ -100,6 +101,7 @@ def main(argv=None):
     ap.add_argument("--net", type=int, default=-1)
     ap.add_argument("--steps", nargs="+", type=int, default=[0, 100, 300, 600, 1000])
     ap.add_argument("--lr", type=float, default=1e-4)
+    ap.add_argument("--horizon", type=int, default=None, help="length of the cosine schedule (default: the last step asked for)")
     ap.add_argument("--p-ep", type=int, default=256)
     ap.add_argument("--m-ep", type=int, default=8)
     ap.add_argument("--ckpt-dir", default=str(AICUP1 / "results/m88"))
@@ -163,7 +165,7 @@ def main(argv=None):
         np.savez(out / f"{tag}_t{step}.npz", key=A["key"], emb=vec.astype(np.float16), step=np.array(step))
         log(f"  vectors after {step} steps written")
 
-    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log)
+    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon)
     return 0
 
 

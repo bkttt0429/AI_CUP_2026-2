@@ -91,16 +91,21 @@ def main(argv=None):
     emb = store = None
     if "emb" in doc["components"]:
         import torch
-        emb = PlayerEmbedding.from_state(torch.load(str(ROOT / doc["emb_model"]), map_location="cpu", weights_only=False))
+        names = doc["emb_model"] if isinstance(doc["emb_model"], list) else [doc["emb_model"]]
+        embs = [PlayerEmbedding.from_state(torch.load(str(ROOT / m), map_location="cpu", weights_only=False)) for m in names]
+        emb = embs[0] if len(embs) == 1 else embs
         store = load_store(*a.trunk_store)
-        print(f"embedding {doc['emb_model']} ({emb.players_trained} training players); {len(store)} trunk rows", flush=True)
+        print(f"embedding {names} ({embs[0].players_trained} training players); {len(store)} trunk rows", flush=True)
     seq = None
     if "seq" in doc["components"]:
         paths = doc["seq_official"] if isinstance(doc["seq_official"], list) else [doc["seq_official"]]
         seqs = []
-        for path in paths:
-            z = np.load(path)
-            seqs.append(dict(zip(z["key"].astype(str), z["emb"].astype(np.float32))))
+        for path in paths:  # one entry per network; an entry may list several files (one per pool: pool-adapted vectors)
+            one = {}
+            for f in (path if isinstance(path, list) else [path]):
+                z = np.load(f)
+                one.update(zip(z["key"].astype(str), z["emb"].astype(np.float32)))
+            seqs.append(one)
         seq = seqs[0] if len(seqs) == 1 else seqs
         print(f"sequence identity vectors: {len(paths)} network(s), {len(seqs[0])} games", flush=True)
     new, reports, cand_ids = {}, [], {}

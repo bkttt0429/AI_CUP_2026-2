@@ -27,6 +27,7 @@ def main(argv=None):
     ap.add_argument("--steps", type=int, default=3000)
     ap.add_argument("--support", type=int, default=10)
     ap.add_argument("--tag", default="emb2")
+    ap.add_argument("--seeds", nargs="+", type=int, default=[0], help="seed 0 keeps the plain file names; seed k > 0 writes <tag>_<name>_s<k>.pt")
     a = ap.parse_args(argv)
     t0 = time.time()
     rows = load_side_rows(AICUP1)
@@ -38,12 +39,13 @@ def main(argv=None):
     for name, fs in (("p12", (3, 4)), ("p34", (1, 2)), ("final", (1, 2, 3, 4))):
         sub = g[g.fold.isin(fs)]
         by = {p: np.stack([rows[k] for k in ks]) for p, ks in sub.groupby("player_id")["game_key"]}
-        m = PlayerEmbedding(steps=a.steps, support=a.support, query_sizes=(1, 2, 3, 5), p_aug=0.0, min_games=12, seed=0)
-        t1 = time.time()
-        m.fit(by, None, log=print)
-        dest = Path(a.out_dir) / f"{a.tag}_{name}.pt"
-        torch.save(m.state_dict(), dest)
-        print(f"{name}: folds {fs}, {m.players_trained} players, {time.time() - t1:.0f} s -> {dest}", flush=True)
+        for seed in a.seeds:
+            m = PlayerEmbedding(steps=a.steps, support=a.support, query_sizes=(1, 2, 3, 5), p_aug=0.0, min_games=12, seed=seed)
+            t1 = time.time()
+            m.fit(by, None, log=None)
+            dest = Path(a.out_dir) / (f"{a.tag}_{name}.pt" if seed == 0 else f"{a.tag}_{name}_s{seed}.pt")
+            torch.save(m.state_dict(), dest)
+            print(f"{name} seed {seed}: folds {fs}, {m.players_trained} players, final loss {m.history[-1]['loss']:.3f}, {time.time() - t1:.0f} s -> {dest}", flush=True)
 
 
 if __name__ == "__main__":

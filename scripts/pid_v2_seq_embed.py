@@ -21,11 +21,14 @@ sys.path[:0] = [str(AICUP1 / "src"), str(AICUP1 / "logs/nano4")]
 import m88_seqid as m88  # noqa: E402
 
 
+STATE = "best"  # --state last: the state after the final step instead of the one with the best held-out top-1
+
+
 def load_net(ckpt):
     net = m88.build_model()
     st = torch.load(ckpt, map_location="cpu", weights_only=False)
-    net.load_state_dict(st["best_state"])
-    return net.cuda().eval(), st["best"]
+    net.load_state_dict(st["best_state"] if STATE == "best" else st["net"])
+    return net.cuda().eval(), (st["best"] if STATE == "best" else {"step": st["step"], "state": "last"})
 
 
 def embed(net, GL, POS, MOV, LEN, SUBJ, batch=1024):
@@ -47,7 +50,11 @@ def main(argv=None):
     ap.add_argument("--folds", nargs="+", type=int, default=[1, 2, 3, 4])
     ap.add_argument("--nets", nargs="+", type=int, default=[-1], help="official stage: which networks")
     ap.add_argument("--tag", default="", help="suffix of the official output files (e.g. _m90)")
+    ap.add_argument("--state", choices=("best", "last"), default="best")
     a = ap.parse_args(argv)
+    global STATE
+    STATE = a.state
+    sfx = "" if a.state == "best" else "_last"
     t0 = time.time()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -62,7 +69,7 @@ def main(argv=None):
                 keys.append(z["key"].astype(str))
                 embs.append(embed(net, z["GL"], z["POS"], z["MOV"], z["LEN"], z["SUBJ"]))
             keys, embs = np.concatenate(keys), np.concatenate(embs)
-            dest = out / ("official.npz" if v == -1 and a.tag == "" else f"official{a.tag}_net{v}.npz")
+            dest = out / ("official.npz" if v == -1 and a.tag == "" and not sfx else f"official{a.tag}_net{v}{sfx}.npz")
             np.savez(dest, key=keys, emb=embs.astype(np.float16), net=np.array(v), best=np.array(str(best)))
             print(f"official: {len(keys)} games under net {v} (best {best}) -> {dest} ({time.time() - t0:.0f} s)", flush=True)
         return 0
@@ -77,7 +84,7 @@ def main(argv=None):
                     embs.append(embed(net, GL, POS, MOV, LEN, SUBJ))
                 print(f"  fold {v}: {min(i + 48, len(files))}/{len(files)} parts, {sum(len(k) for k in keys)} games ({time.time() - t0:.0f} s)", flush=True)
         keys, pids, embs = np.concatenate(keys), np.concatenate(pids), np.concatenate(embs)
-        np.savez(out / f"fold{v}.npz", key=keys, pid=pids, emb=embs.astype(np.float16), best=np.array(str(best)))
+        np.savez(out / f"fold{v}{sfx}.npz", key=keys, pid=pids, emb=embs.astype(np.float16), best=np.array(str(best)))
         print(f"fold {v}: {len(keys)} games of {len(set(pids.tolist()))} players under net {v} (never saw them; best {best}) -> {out / f'fold{v}.npz'}", flush=True)
     return 0
 
