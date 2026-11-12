@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import aicup_pid  # noqa: E402
 from aicup_pid.embed import PlayerEmbedding  # noqa: E402
 from aicup_pid.paths import AICUP1, FOLDS_CSV  # noqa: E402
-from aicup_pid.v2 import load_side_rows, training_games  # noqa: E402
+from aicup_pid.v2 import load_phase_rows, load_side_rows, training_games  # noqa: E402
 
 
 def main(argv=None):
@@ -27,15 +27,16 @@ def main(argv=None):
     ap.add_argument("--steps", type=int, default=3000)
     ap.add_argument("--support", type=int, default=10)
     ap.add_argument("--tag", default="emb2")
+    ap.add_argument("--phase-dir", default=None, help="scripts/pid_v2_phase_rows.py output: train on the 640-dim rows with phase means (use --tag emb3)")
     ap.add_argument("--seeds", nargs="+", type=int, default=[0], help="seed 0 keeps the plain file names; seed k > 0 writes <tag>_<name>_s<k>.pt")
     a = ap.parse_args(argv)
     t0 = time.time()
-    rows = load_side_rows(AICUP1)
+    rows = load_phase_rows(AICUP1, a.phase_dir) if a.phase_dir else load_side_rows(AICUP1)
     games = training_games(aicup_pid.TRAIN_DIR)
     folds = pd.read_csv(FOLDS_CSV, dtype={"player_id": str})
     g = games.merge(folds[["player_id", "fold"]], on="player_id")
     g = g[g.game_key.isin(rows.keys())]
-    print(f"{len(rows)} rows, {len(g)} games of {g.player_id.nunique()} players with a fold; colours {g.color.value_counts().to_dict()} ({time.time() - t0:.0f} s)", flush=True)
+    print(f"{len(rows)} rows of {len(next(iter(rows.values())))} dims, {len(g)} games of {g.player_id.nunique()} players with a fold; colours {g.color.value_counts().to_dict()} ({time.time() - t0:.0f} s)", flush=True)
     for name, fs in (("p12", (3, 4)), ("p34", (1, 2)), ("final", (1, 2, 3, 4))):
         sub = g[g.fold.isin(fs)]
         by = {p: np.stack([rows[k] for k in ks]) for p, ks in sub.groupby("player_id")["game_key"]}

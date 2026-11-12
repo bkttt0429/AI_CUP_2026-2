@@ -39,7 +39,7 @@ def embed(net, A, idx, batch=1024):
     return out
 
 
-def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None):
+def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None, mix=None):
     """A: arrays of every pool game; owner [n] candidate index or -1 (question game). Calls save(step, vectors) at steps_out."""
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
@@ -49,6 +49,12 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
     m_ep = min(m_ep, min(len(b) for b in by))
     p_ep = min(p_ep, C)
     everything = np.arange(len(owner))
+    mix_by = None
+    if mix is not None:  # training players in every episode (half of it): keeps the general discrimination while the pool is learnt
+        m_own = mix["owner"]
+        ids = [c for c in np.unique(m_own) if (m_own == c).sum() >= m_ep]
+        mix_by = [np.flatnonzero(m_own == c) for c in ids]
+        log(f"  mixing in {len(mix_by)} training players ({len(m_own)} games)")
     if 0 in steps_out:
         save(0, embed(net, A, everything))
     last = max(steps_out)
@@ -60,11 +66,16 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
     net.train()
     ar, tl, ta, t0 = np.arange(p_ep), 0.0, 0.0, time.time()
     for step in range(last):
-        pl = rng.choice(C, p_ep, replace=False)
+        n_pool = p_ep if mix_by is None else p_ep // 2
+        pl = rng.choice(C, n_pool, replace=False)
         rows = np.concatenate([rng.choice(by[c], m_ep, replace=False) for c in pl])
+        batch = {k: A[k][rows] for k in ("GL", "POS", "MOV", "LEN", "SUBJ")}
+        if mix_by is not None:
+            mrows = np.concatenate([rng.choice(mix_by[c], m_ep, replace=False) for c in rng.choice(len(mix_by), p_ep - n_pool, replace=False)])
+            batch = {k: np.concatenate([batch[k], mix[k][mrows]]) for k in batch}
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            z = net(torch.as_tensor(A["GL"][rows]).cuda(), torch.as_tensor(A["POS"][rows].astype(np.int64)).cuda(), torch.as_tensor(A["MOV"][rows].astype(np.int64)).cuda(),
-                    torch.as_tensor(A["LEN"][rows].astype(np.int64)).cuda(), torch.as_tensor(A["SUBJ"][rows].astype(np.int64)).cuda())
+            z = net(torch.as_tensor(batch["GL"]).cuda(), torch.as_tensor(batch["POS"].astype(np.int64)).cuda(), torch.as_tensor(batch["MOV"].astype(np.int64)).cuda(),
+                    torch.as_tensor(batch["LEN"].astype(np.int64)).cuda(), torch.as_tensor(batch["SUBJ"].astype(np.int64)).cuda())
         z = z.float().reshape(p_ep, m_ep, m88.D_OUT)
         tot = z.sum(1)
         sc = net.log_scale.exp()
@@ -102,6 +113,8 @@ def main(argv=None):
     ap.add_argument("--steps", nargs="+", type=int, default=[0, 100, 300, 600, 1000])
     ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--horizon", type=int, default=None, help="length of the cosine schedule (default: the last step asked for)")
+    ap.add_argument("--tag", default="", help="suffix of the output names (a recipe label)")
+    ap.add_argument("--mix-fold", type=int, default=0, help="mix training players of this fold into every episode (0 = none; the network must not be scored on that fold)")
     ap.add_argument("--p-ep", type=int, default=256)
     ap.add_argument("--m-ep", type=int, default=8)
     ap.add_argument("--ckpt-dir", default=str(AICUP1 / "results/m88"))
@@ -138,7 +151,7 @@ def main(argv=None):
         A = {k: np.concatenate(x) for k, x in parts.items()}
         if set(A["key"].tolist()) != need:
             raise ValueError(f"{len(need) - len(set(A['key'].tolist()))} pool games without per-ply vectors")
-        tag, ckpt = f"sim_f{a.fold}_s{a.seed}", Path(a.ckpt_dir) / f"ckpt_{a.fold}.pt"
+        tag, ckpt = f"sim_f{a.fold}_s{a.seed}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.fold}.pt"
     else:
         tagname = "public" if a.pool == "pub2" else "private"
         c = pd.read_csv(Path(a.tests_dir) / f"player_identification_candidates2_{tagname}.csv", dtype=str, keep_default_na=False)
@@ -156,7 +169,7 @@ def main(argv=None):
                 for name in parts:
                     parts[name].append(key[m] if name == "key" else z[name][m])
         A = {k: np.concatenate(x) for k, x in parts.items()}
-        tag, ckpt = f"official_{a.pool}_net{a.net}", Path(a.ckpt_dir) / f"ckpt_{a.net}.pt"
+        tag, ckpt = f"official_{a.pool}_net{a.net}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.net}.pt"
     owner = np.array([own.get(k, -1) for k in A["key"]])
     log(f"{tag}: {len(owner)} games ({int((owner >= 0).sum())} candidate games of {len(players)} players, {int((owner < 0).sum())} question games); network {ckpt.name}")
     net = load_net(ckpt)
@@ -165,7 +178,18 @@ def main(argv=None):
         np.savez(out / f"{tag}_t{step}.npz", key=A["key"], emb=vec.astype(np.float16), step=np.array(step))
         log(f"  vectors after {step} steps written")
 
-    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon)
+    mix = None
+    if a.mix_fold:
+        files = [f for d in m88.DIRS for f in sorted((d / f"fold{a.mix_fold}").glob("games_s*_p*.csv"))]
+        parts = {x: [] for x in ("pid", "GL", "POS", "MOV", "LEN", "SUBJ")}
+        with mp.get_context("fork").Pool(12) as pool:
+            for i in range(0, len(files), 48):
+                for _key, pid, GL, POS, MOV, LEN, SUBJ in pool.map(m88.read_part, files[i:i + 48], chunksize=2):
+                    for name, arr in (("pid", pid), ("GL", GL), ("POS", POS), ("MOV", MOV), ("LEN", LEN), ("SUBJ", SUBJ)):
+                        parts[name].append(arr)
+        mix = {k: np.concatenate(x) for k, x in parts.items()}
+        mix["owner"] = np.unique(mix.pop("pid"), return_inverse=True)[1]
+    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon, mix)
     return 0
 
 

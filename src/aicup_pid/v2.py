@@ -181,3 +181,34 @@ def pool_normalised(vecs, cands, questions, shrink=0.3):
     C = unit(np.stack([unit(x @ B).sum(axis=0) for x in X]))
     Q = unit(np.stack([unit(np.stack([vecs[k] for k, _ in q]).astype(np.float64) @ B).sum(axis=0) for q in questions]))
     return Q @ C.T
+
+
+def load_phase_rows(aicup1_root, stored_dir, keep=None):
+    """{training game key: [640]} = the 256-dim row of the owner's side (competition 1's block order) + the three phase means
+    (plies t < 60, 60-150, >= 150; 128 dims each). Sources: the rank session's results/m84_rowsp (games without stored per-ply
+    vectors) and scripts/pid_v2_phase_rows.py's stored_f<fold>.npz (the others); the same function computed both."""
+    import glob
+    from pathlib import Path
+    out = {}
+    files = sorted(glob.glob(str(Path(aicup1_root) / RANK_ROWS[1] / "*.npz"))) + sorted(glob.glob(str(Path(stored_dir) / "stored_f*.npz")))
+    for f in files:
+        z = np.load(f)
+        n = z["nT"] if "nT" in z.files else np.ones(len(z["key"]))
+        for k, row, ph, m in zip(z["key"].astype(str), z["T"], z["PT"], n):
+            if m > 0 and (keep is None or k in keep):
+                out[k] = np.concatenate([row[_PERM].astype(np.float32), ph.astype(np.float32)])
+    return out
+
+
+def load_store_phase(*dirs):
+    """{official game key: [640]} from pid_trunk_extract.py parts that carry the phase means."""
+    import glob
+    store = {}
+    for d in dirs:
+        for f in sorted(glob.glob(f"{d}/*.npz")):
+            if f.endswith(".tmp.npz"):
+                continue
+            z = np.load(f, allow_pickle=False)
+            for k, row, ph in zip(z["keys"], z["feats"], z["phase"]):
+                store[str(k)] = np.concatenate([row.astype(np.float32), ph.astype(np.float32)])
+    return store

@@ -56,7 +56,8 @@ class PlayerEmbedding:
         self.mu, self.sd = allrows.mean(axis=0), allrows.std(axis=0) + 1e-6
         X = {p: self._x(rows_by_player[p]) for p in players}
         A = {p: self._x(aug_by_player[p]) for p in players if aug_by_player and aug_by_player.get(p) is not None} if aug_by_player else {}
-        self.net = EmbedNet(DIM, c["hidden"], c["d_out"], c["dropout"]).to(self.device)
+        self.d_in = int(allrows.shape[1])  # 256 trunk rows, or 640 with the phase means (METHOD_NOTES 2.33)
+        self.net = EmbedNet(self.d_in, c["hidden"], c["d_out"], c["dropout"]).to(self.device)
         opt = torch.optim.AdamW(self.net.parameters(), lr=c["lr"], weight_decay=c["weight_decay"])
         sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=c["lr"], total_steps=c["steps"], pct_start=0.1)
         P = min(c["players_per_episode"], len(players))
@@ -120,13 +121,14 @@ class PlayerEmbedding:
 
     def state_dict(self):
         return {"cfg": self.cfg, "mu": self.mu, "sd": self.sd, "net": {k: v.cpu() for k, v in self.net.state_dict().items()}, "history": self.history,
-                "players_trained": self.players_trained}
+                "players_trained": self.players_trained, "d_in": getattr(self, "d_in", DIM)}
 
     @classmethod
     def from_state(cls, st, device=None):
         m = cls(**st["cfg"], device=device)
         m.mu, m.sd, m.history, m.players_trained = st["mu"], st["sd"], st["history"], st["players_trained"]
-        m.net = EmbedNet(DIM, st["cfg"]["hidden"], st["cfg"]["d_out"], st["cfg"]["dropout"]).to(m.device)
+        m.d_in = int(st.get("d_in", DIM))
+        m.net = EmbedNet(m.d_in, st["cfg"]["hidden"], st["cfg"]["d_out"], st["cfg"]["dropout"]).to(m.device)
         m.net.load_state_dict(st["net"])
         m.net.eval()
         return m
@@ -140,3 +142,38 @@ def score_embed(model, cand_keys_by_player, question_keys, store):
         return np.zeros((0, len(players)))
     Q = np.stack([model.set_vector(np.stack([store[k] for k in keys])) for keys in question_keys])
     return model.scale * (Q @ C.T)
+
+
+def adapted(model, rows_by_player, steps=100, lr=1e-4, players_per_episode=256, query_sizes=(1, 2, 3, 5), seed=0):
+    """A copy of `model` fine-tuned on one pool's own candidates (METHOD_NOTES 2.33): the same two-way set loss as fit, every
+    episode drawing a query set and the remaining games as support from each sampled candidate. No question enters."""
+    import copy
+    m = PlayerEmbedding(**model.cfg, device=model.device)
+    m.mu, m.sd, m.history, m.players_trained = model.mu, model.sd, list(model.history), model.players_trained
+    m.net = copy.deepcopy(model.net)
+    m.d_in = getattr(model, "d_in", DIM)
+    rng = np.random.RandomState(seed)
+    torch.manual_seed(seed)
+    players = sorted(p for p, r in rows_by_player.items() if len(r) >= 2)
+    X = {p: m._x(rows_by_player[p]) for p in players}
+    P = min(players_per_episode, len(players))
+    opt = torch.optim.AdamW(m.net.parameters(), lr=lr, weight_decay=model.cfg["weight_decay"])
+    m.net.train()
+    for _ in range(steps):
+        rows, seg = [], []
+        for b, i in enumerate(rng.choice(len(players), P, replace=False)):
+            G = len(X[players[i]])
+            n = int(min(rng.choice(query_sizes), G - 1))
+            perm = rng.permutation(G)
+            rows.append(X[players[i]][torch.as_tensor(perm, device=m.device)])
+            seg.append(torch.as_tensor([2 * b] * n + [2 * b + 1] * (G - n), device=m.device))
+        z = m.net(torch.cat(rows))
+        sets = nn.functional.normalize(torch.zeros(2 * P, z.shape[1], device=m.device).index_add_(0, torch.cat(seg), z), dim=-1)
+        logits = m.net.log_scale.exp() * sets[0::2] @ sets[1::2].T
+        target = torch.arange(P, device=m.device)
+        loss = 0.5 * (nn.functional.cross_entropy(logits, target) + nn.functional.cross_entropy(logits.T, target))
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+    m.net.eval()
+    return m

@@ -159,9 +159,20 @@ def main(argv=None):
             feats = aggregate(g, l, pos, lens)
             if not np.isfinite(feats).all():
                 raise ValueError(f"part {k}: non-finite features")
+            # phase means of the target's plies (t < 60, 60 <= t < 150, t >= 150; 128 dims each, zeros when a phase is empty): the same
+            # definition as AI_CUP_2026-1 logs/nano4/m84_rows_extract.py side_rows (a pass keeps a zero played-point vector)
+            phase = np.zeros((len(lens), 384), np.float16)
+            X = np.hstack([g.astype(np.float32), l.astype(np.float32)])
+            start = 0
+            for i, (m_, n_) in enumerate(zip(sel, lens)):
+                t_ = np.flatnonzero(m_)
+                for j, pm in enumerate((t_ < 60, (t_ >= 60) & (t_ < 150), t_ >= 150)):
+                    if pm.any():
+                        phase[i, 128 * j:128 * (j + 1)] = X[start:start + n_][pm].mean(axis=0)
+                start += n_
             path = out / f"{a.tag}_s{shard:03d}_p{k:04d}.npz"
             tmp = path.with_name(path.name + ".tmp.npz")
-            np.savez(tmp, keys=np.array([d[0] for d in done]), feats=feats, n_target=np.array(lens, np.int16))
+            np.savez(tmp, keys=np.array([d[0] for d in done]), feats=feats, n_target=np.array(lens, np.int16), phase=phase)
             os.replace(tmp, path)
             games_done += len(part)
             plies_done += sum(len(d[3]) for d in done)
