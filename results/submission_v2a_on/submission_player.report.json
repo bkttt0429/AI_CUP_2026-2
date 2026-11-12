@@ -1,0 +1,220 @@
+{
+ "submission": "/home/u2507115/BK_AICUP_2026-2/results/submission_v2a_on/submission_player.csv",
+ "rows": 1600,
+ "rows_by_prefix": {
+  "pub": 400,
+  "priv": 400,
+  "pub2": 400,
+  "priv2": 400
+ },
+ "problems": [],
+ "fusion": {
+  "components": [
+   "opening",
+   "opening_raw",
+   "orient4",
+   "orient4_merged",
+   "local",
+   "style",
+   "hd",
+   "emb"
+  ],
+  "weights": [
+   0.36118332668562686,
+   0.351051470729288,
+   0.3368804773550008,
+   0.330051830588413,
+   0.23829703998584537,
+   0.2883803325068373,
+   0.5646792911405972,
+   2.6185996239083744
+  ],
+  "cfg": {
+   "depth": 12,
+   "alpha": 2.0,
+   "beta": 5.0,
+   "shrink": 0.1,
+   "local_alpha": 2.0,
+   "local_beta": 5.0,
+   "local_start": 12,
+   "orient_alpha": 2.0,
+   "orient_beta": 5.0,
+   "orient_depth": 12,
+   "orient_raw": 1,
+   "ref_alpha": 2.0,
+   "ref_beta": 5.0,
+   "ref_min_black": 30,
+   "ref_cap": 40,
+   "ref_orient_raw": 2,
+   "ref_seed": 0,
+   "trunk_feats": "all",
+   "trunk_shrink": 0.1
+  },
+  "emb_model": "results/embed/emb2_final.pt",
+  "geometry": {
+   "candidates": 600,
+   "candidate_games": 10,
+   "sizes": [
+    1,
+    2,
+    3,
+    5
+   ]
+  },
+  "fitted_on": [
+   {
+    "eligible": 2066,
+    "skipped_R": 3,
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 0,
+    "questions": 797,
+    "cand_black_games": 5.02
+   },
+   {
+    "eligible": 2066,
+    "skipped_R": 1,
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 1,
+    "questions": 799,
+    "cand_black_games": 4.921666666666667
+   },
+   {
+    "eligible": 2066,
+    "skipped_R": 1,
+    "folds": [
+     1,
+     2
+    ],
+    "seed": 2,
+    "questions": 799,
+    "cand_black_games": 4.991666666666666
+   },
+   {
+    "eligible": 2061,
+    "skipped_R": 0,
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 0,
+    "questions": 800,
+    "cand_black_games": 4.983333333333333
+   },
+   {
+    "eligible": 2061,
+    "skipped_R": 1,
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 1,
+    "questions": 799,
+    "cand_black_games": 4.985
+   },
+   {
+    "eligible": 2061,
+    "skipped_R": 0,
+    "folds": [
+     3,
+     4
+    ],
+    "seed": 2,
+    "questions": 800,
+    "cand_black_games": 5.025
+   }
+  ],
+  "questions": 4794,
+  "simulated_score": 0.6246366315514856,
+  "note": "v2 added pools (pub2_ / priv2_): both colours, per-view models (aicup_pid.v2); no official game enters any training"
+ },
+ "old_submission": "/home/u2507115/BK_AICUP_2026-2/results/submission_old_embt_assign/submission_player.csv",
+ "pools": [
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_candidates2_public.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_test2_public.csv",
+   "n_candidates": 600,
+   "n_questions": 400,
+   "left_out_games": [],
+   "fallback_questions": [],
+   "games_by_colour": {
+    "W": 3597,
+    "B": 3503
+   },
+   "assign": {
+    "mode": "on",
+    "applied": true,
+    "n_top1_changed": 90,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 600,
+     "distinct_top1": 321,
+     "expected_random": 292.12101037700313,
+     "by_n": {
+      "1": 94,
+      "2": 96,
+      "3": 98,
+      "5": 98
+     },
+     "one_to_one_likely": false,
+     "confident_distinct": 0.925,
+     "one_to_one_likely_v2": false
+    }
+   },
+   "median_top1_margin": 1.4826439810105736,
+   "margin_by_n": {
+    "1": 1.4203678014825005,
+    "2": 1.0923144154621491,
+    "3": 1.6481601578499934,
+    "5": 1.813053990161971
+   },
+   "distinct_top1": 321
+  },
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_candidates2_private.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_test2_private.csv",
+   "n_candidates": 600,
+   "n_questions": 400,
+   "left_out_games": [],
+   "fallback_questions": [],
+   "games_by_colour": {
+    "W": 3625,
+    "B": 3475
+   },
+   "assign": {
+    "mode": "on",
+    "applied": true,
+    "n_top1_changed": 92,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 600,
+     "distinct_top1": 321,
+     "expected_random": 292.12101037700313,
+     "by_n": {
+      "1": 90,
+      "2": 97,
+      "3": 96,
+      "5": 97
+     },
+     "one_to_one_likely": false,
+     "confident_distinct": 0.95,
+     "one_to_one_likely_v2": true
+    }
+   },
+   "median_top1_margin": 1.3175529264422634,
+   "margin_by_n": {
+    "1": 0.8205900732577698,
+    "2": 1.2095889680002099,
+    "3": 1.3506145215851255,
+    "5": 2.7409799310271517
+   },
+   "distinct_top1": 321
+  }
+ ],
+ "seconds": 89.37189841270447
+}

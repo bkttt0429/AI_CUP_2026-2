@@ -57,6 +57,22 @@ def official_tasks(tests_dir=T):
     return out
 
 
+def official2_tasks(tests_dir):
+    """{key: (sgf, colour)} of the 11-08 v2 release's ADDED pools (candidates2 / test2, public and private): both colours, the
+    colour column is the player's side. Keys as official_tasks: c:<row in its file>:<game_id>, q:<question_id>:<i>."""
+    out = {}
+    for tag in ("public", "private"):
+        cands = pd.read_csv(Path(tests_dir) / f"player_identification_candidates2_{tag}.csv", dtype=str, keep_default_na=False)
+        for i, r in enumerate(cands.itertuples()):
+            if check_game(r.sgf_content, r.color)[0]:
+                out[f"c:{i}:{r.game_id}"] = (r.sgf_content, r.color)
+        for q in pools.read_questions(Path(tests_dir) / f"player_identification_test2_{tag}.csv"):
+            for i, (sgf, colour) in enumerate(q["games"]):
+                if check_game(sgf, colour or "B")[0]:
+                    out[f"q:{q['question_id']}:{i}"] = (sgf, colour or "B")
+    return out
+
+
 def read_keys(path):
     p = Path(path)
     if p.suffix == ".csv":
@@ -83,6 +99,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--official", action="store_true")
+    src.add_argument("--official2", action="store_true", help="the v2 release's added pools (candidates2 / test2), both colours")
     ap.add_argument("--tests-dir", default=str(T), help="folder of the official CSVs for --official (a re-released set goes in its own folder)")
     src.add_argument("--keys", help="training game keys (text file or CSV with game_key)")
     ap.add_argument("--out", required=True)
@@ -101,8 +118,8 @@ def main(argv=None):
     shard, nshards = a.node * a.nshards + a.shard, a.nodes * a.nshards
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    if a.official:
-        tasks_all = official_tasks(a.tests_dir)
+    if a.official or a.official2:
+        tasks_all = official2_tasks(a.tests_dir) if a.official2 else official_tasks(a.tests_dir)
         keys = sorted(tasks_all)
     else:
         tasks_all, keys = None, sorted(set(read_keys(a.keys)))
