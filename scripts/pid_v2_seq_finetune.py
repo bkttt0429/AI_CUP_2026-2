@@ -118,6 +118,7 @@ def main(argv=None):
     ap.add_argument("--p-ep", type=int, default=256)
     ap.add_argument("--m-ep", type=int, default=8)
     ap.add_argument("--ckpt-dir", default=str(AICUP1 / "results/m88"))
+    ap.add_argument("--ckpt-suffix", default="", help="checkpoint file ckpt_<v><suffix>.pt")
     ap.add_argument("--ply-dir", default="/work/u2507115/pid_v2/ply_official")
     ap.add_argument("--tests-dir", default=str(R2 / "data" / "tests_1111"))
     ap.add_argument("--out", default="/work/u2507115/pid_v2/seq_ft")
@@ -151,7 +152,7 @@ def main(argv=None):
         A = {k: np.concatenate(x) for k, x in parts.items()}
         if set(A["key"].tolist()) != need:
             raise ValueError(f"{len(need) - len(set(A['key'].tolist()))} pool games without per-ply vectors")
-        tag, ckpt = f"sim_f{a.fold}_s{a.seed}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.fold}.pt"
+        tag, ckpt = f"sim_f{a.fold}_s{a.seed}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.fold}{a.ckpt_suffix}.pt"
     else:
         tagname = "public" if a.pool == "pub2" else "private"
         c = pd.read_csv(Path(a.tests_dir) / f"player_identification_candidates2_{tagname}.csv", dtype=str, keep_default_na=False)
@@ -169,7 +170,7 @@ def main(argv=None):
                 for name in parts:
                     parts[name].append(key[m] if name == "key" else z[name][m])
         A = {k: np.concatenate(x) for k, x in parts.items()}
-        tag, ckpt = f"official_{a.pool}_net{a.net}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.net}.pt"
+        tag, ckpt = f"official_{a.pool}_net{a.net}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.net}{a.ckpt_suffix}.pt"
     owner = np.array([own.get(k, -1) for k in A["key"]])
     log(f"{tag}: {len(owner)} games ({int((owner >= 0).sum())} candidate games of {len(players)} players, {int((owner < 0).sum())} question games); network {ckpt.name}")
     net = load_net(ckpt)

@@ -51,6 +51,8 @@ def main(argv=None):
     ap.add_argument("--nets", nargs="+", type=int, default=[-1], help="official stage: which networks")
     ap.add_argument("--tag", default="", help="suffix of the official output files (e.g. _m90)")
     ap.add_argument("--state", choices=("best", "last"), default="best")
+    ap.add_argument("--ckpt-suffix", default="", help="checkpoint file ckpt_<v><suffix>.pt (the rank session's further seeds: _s1, _s2)")
+    ap.add_argument("--name", default="", help="folds stage: output fold<v><name>.npz")
     a = ap.parse_args(argv)
     global STATE
     STATE = a.state
@@ -60,7 +62,7 @@ def main(argv=None):
     out.mkdir(parents=True, exist_ok=True)
     if a.stage == "official":  # no official player is in any net's training set, so every net is usable here
         for v in a.nets:
-            net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}.pt")
+            net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}{a.ckpt_suffix}.pt")
             keys, embs = [], []
             for f in sorted(glob.glob(f"{a.ply_dir}/ply_*.npz")):
                 if f.endswith(".tmp.npz"):
@@ -74,7 +76,7 @@ def main(argv=None):
             print(f"official: {len(keys)} games under net {v} (best {best}) -> {dest} ({time.time() - t0:.0f} s)", flush=True)
         return 0
     for v in a.folds:
-        net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}.pt")
+        net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}{a.ckpt_suffix}.pt")
         files = [f for d in m88.DIRS for f in sorted((d / f"fold{v}").glob("games_s*_p*.csv"))]
         keys, pids, embs = [], [], []
         with mp.get_context("fork").Pool(12) as pool:
@@ -84,7 +86,7 @@ def main(argv=None):
                     embs.append(embed(net, GL, POS, MOV, LEN, SUBJ))
                 print(f"  fold {v}: {min(i + 48, len(files))}/{len(files)} parts, {sum(len(k) for k in keys)} games ({time.time() - t0:.0f} s)", flush=True)
         keys, pids, embs = np.concatenate(keys), np.concatenate(pids), np.concatenate(embs)
-        np.savez(out / f"fold{v}{sfx}.npz", key=keys, pid=pids, emb=embs.astype(np.float16), best=np.array(str(best)))
+        np.savez(out / f"fold{v}{a.name}{sfx}.npz", key=keys, pid=pids, emb=embs.astype(np.float16), best=np.array(str(best)))
         print(f"fold {v}: {len(keys)} games of {len(set(pids.tolist()))} players under net {v} (never saw them; best {best}) -> {out / f'fold{v}.npz'}", flush=True)
     return 0
 
