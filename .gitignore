@@ -12,3 +12,4 @@ __pycache__/
 results/**/*.csv
 results/**/*.csv.gz
 !results/**/meta*.json
+upload/
