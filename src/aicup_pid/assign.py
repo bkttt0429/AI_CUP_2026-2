@@ -59,3 +59,24 @@ def assign_blocks(S, blocks, apply, k=5):
             rows = np.flatnonzero(blocks == b)
             out[rows] = assign_topk(S[rows], k)
     return out
+
+
+def assign_soft(S, lam, k=5, copies=3):
+    """Top-k with a penalty for sharing a candidate: the j-th question a candidate takes costs (j - 1) * lam of fused score
+    (assignment over `copies` penalised copies of every column). lam = 0 is the per-question Top-1 while collisions stay within
+    `copies`; a large lam is assign_topk. For pools where most players have one question but some have several (the v2 added
+    pools): a collision survives only when both questions prefer the candidate by more than lam over their next choice."""
+    S = np.asarray(S, dtype=float)
+    base = topk(S, k)
+    Q, C = S.shape
+    if Q == 0 or C == 0:
+        return base
+    big = np.concatenate([S - j * float(lam) for j in range(int(copies))], axis=1)
+    rows, cols = linear_sum_assignment(big, maximize=True)
+    cols = cols % C
+    out = base.copy()
+    width = base.shape[1]
+    for q, c in zip(rows, cols):
+        if out[q, 0] != c:
+            out[q] = np.array([c, *[x for x in base[q].tolist() if x != c]][:width])
+    return out

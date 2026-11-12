@@ -24,7 +24,7 @@ for d in (ROOT / "src", ROOT / "scripts"):
 import aicup_pid  # noqa: E402,F401
 from aicup.submission import check_game  # noqa: E402
 from aicup_pid import pools, v2  # noqa: E402
-from aicup_pid.assign import assign_topk  # noqa: E402
+from aicup_pid.assign import assign_soft, assign_topk  # noqa: E402
 from aicup_pid.checks import top1_collisions  # noqa: E402
 from aicup_pid.components import parse_all  # noqa: E402
 from aicup_pid.embed import PlayerEmbedding  # noqa: E402
@@ -32,11 +32,11 @@ from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.trunkstyle import load_store  # noqa: E402
 
 
-def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print):
+def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print, seq=None):
     cands, questions, qids, sgfs = v2.official_pool(cand_path, q_path)
     colour = {k: c for games in (*cands.values(), *questions) for k, c in games}
     need_rows = "emb" in doc["components"]
-    bad = sorted(k for k in sgfs if not check_game(sgfs[k], colour[k])[0] or (need_rows and k not in store))
+    bad = sorted(k for k in sgfs if not check_game(sgfs[k], colour[k])[0] or (need_rows and k not in store) or (seq is not None and k not in seq))
     if bad:
         log(f"  {len(bad)} games left out (do not replay or have no trunk row): {bad[:5]}", flush=True)
     cands = {p: [(k, c) for k, c in g if k not in bad] for p, g in cands.items()}
@@ -46,16 +46,16 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print)
     q_use = [[(k, c) for k, c in q if k not in bad] for q in questions]
     usable = [i for i, q in enumerate(q_use) if q]
     moves = parse_all({k: s for k, s in sgfs.items() if k not in bad}, workers)
-    S = v2.components(cands, [q_use[i] for i in usable], moves, sgfs, doc["cfg"], store, emb, which=doc["components"])
+    S = v2.components(cands, [q_use[i] for i in usable], moves, sgfs, doc["cfg"], store, emb, which=doc["components"], seq=seq)
     fus = Fusion()
     fus.w = np.asarray(doc["weights"], dtype=float)
     F = fus.scores([S[c] for c in doc["components"]])
     players = sorted(cands)
     n = np.array([len(q_use[i]) for i in usable])
     col = top1_collisions(F, n)
-    applied = assign == "on" or (assign == "auto" and bool(col["one_to_one_likely_v2"]))
+    applied = assign == "on" or (assign == "auto" and bool(col["one_to_one_likely_v2"])) or (assign == "soft" and doc.get("soft_lam") is not None)
     base = topk(F, pools.TOP_K)
-    idx = assign_topk(F, pools.TOP_K) if applied else base
+    idx = assign_soft(F, doc["soft_lam"], pools.TOP_K) if (applied and assign == "soft") else assign_topk(F, pools.TOP_K) if applied else base
     rows, j = [], 0
     for i, qid in enumerate(qids):
         if i in set(usable):
@@ -81,7 +81,7 @@ def main(argv=None):
     ap.add_argument("--fusion", required=True, help="scripts/pid_v2_sim.py --fusion-out")
     ap.add_argument("--trunk-store", nargs="*", default=[], help="pid_trunk_extract.py --official2 output (needed when the fusion names emb)")
     ap.add_argument("--old-submission", required=True, help="800 rows for the original pools (predict_pid.py on the 10-30 files)")
-    ap.add_argument("--assign", choices=["off", "auto", "on"], default="auto")
+    ap.add_argument("--assign", choices=["off", "auto", "on", "soft"], default="off", help="soft = aicup_pid.assign.assign_soft with the document's soft_lam (off when it has none)")
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -94,9 +94,14 @@ def main(argv=None):
         emb = PlayerEmbedding.from_state(torch.load(str(ROOT / doc["emb_model"]), map_location="cpu", weights_only=False))
         store = load_store(*a.trunk_store)
         print(f"embedding {doc['emb_model']} ({emb.players_trained} training players); {len(store)} trunk rows", flush=True)
+    seq = None
+    if "seq" in doc["components"]:
+        z = np.load(doc["seq_official"])
+        seq = dict(zip(z["key"].astype(str), z["emb"].astype(np.float32)))
+        print(f"sequence identity vectors {doc['seq_official']}: {len(seq)} games", flush=True)
     new, reports, cand_ids = {}, [], {}
     for tag, prefix in (("public", "pub2_"), ("private", "priv2_")):
-        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers)
+        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq)
         new.update({q: top for q, top in rows})
         reports.append(rep)
         cand_ids[prefix] = players

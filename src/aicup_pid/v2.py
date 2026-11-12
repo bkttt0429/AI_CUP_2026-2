@@ -17,7 +17,7 @@ from aicup_pid.style import StyleModel, game_features
 
 VIEWS = ("B", "W")
 SPLIT = ("opening", "opening_raw", "orient4", "orient1", "local_split", "hd")
-MERGED = ("local", "style", "orient4_merged", "emb")
+MERGED = ("local", "style", "orient4_merged", "emb", "seq")
 
 
 def swap(moves):
@@ -43,9 +43,10 @@ def _split(make, cand_items, q_items, players):
     return out
 
 
-def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=None):
+def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=None, seq=None):
     """{name: [Q, C]}. cands {player: [(key, colour)]}, questions [[(key, colour)]], moves {key: parsed moves as recorded},
-    sgfs {key: record}, rows {key: [256] trunk row of the player's side}, emb a fitted aicup_pid.embed.PlayerEmbedding."""
+    sgfs {key: record}, rows {key: [256] trunk row of the player's side}, emb a fitted aicup_pid.embed.PlayerEmbedding,
+    seq {key: [128] unit vector of the player's side from the sequence identity model (scripts/pid_v2_seq_embed.py)}."""
     which = set(which or (*SPLIT, *MERGED))
     players = sorted(cands)
     vm = {k: view(moves[k], c) for games in (*cands.values(), *questions) for k, c in games}
@@ -83,6 +84,11 @@ def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=No
         C = np.stack([emb.set_vector(np.stack([rows[k] for k, _ in cands[p]])) for p in players])
         Q = np.stack([emb.set_vector(np.stack([rows[k] for k, _ in q])) for q in questions])
         S["emb"] = emb.scale * (Q @ C.T)
+    if "seq" in which and seq is not None:  # prototype = normalised sum of the game vectors, as the model was trained
+        unit = lambda X: X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-12)  # noqa: E731
+        C = unit(np.stack([np.sum([seq[k] for k, _ in cands[p]], axis=0) for p in players]).astype(np.float64))
+        Q = unit(np.stack([np.sum([seq[k] for k, _ in q], axis=0) for q in questions]).astype(np.float64))
+        S["seq"] = Q @ C.T
     return S
 
 

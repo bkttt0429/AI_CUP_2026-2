@@ -50,3 +50,14 @@ def test_assign_blocks_assigns_inside_each_block_only():
     assert (out[:C] == assign_topk(S[:C], 5)).all() and (out[C:] == topk(S[C:], 5)).all()
     both = assign_blocks(S, blocks, {"old": True, "new": True})
     assert len(set(both[:C, 0].tolist())) == C and len(set(both[C:, 0].tolist())) == C
+
+
+def test_assign_soft_between_argmax_and_assignment():
+    from aicup_pid.assign import assign_soft, assign_topk
+    from aicup_pid.fusion import topk
+    rng = np.random.RandomState(2)
+    S = rng.randn(40, 60)
+    assert (assign_soft(S, 0.0, copies=40)[:, 0] == topk(S, 5)[:, 0]).all()
+    assert (assign_soft(S, 1e6)[:, 0] == assign_topk(S, 5)[:, 0]).all()
+    S2 = np.array([[5.0, 0.0, 0.0], [4.0, 0.0, 0.1]])  # both prefer candidate 0 by about 4: they share it unless the penalty exceeds that
+    assert assign_soft(S2, 1.0)[:, 0].tolist() == [0, 0] and assign_soft(S2, 10.0)[:, 0].tolist() == [0, 2]
