@@ -94,8 +94,9 @@ def main(argv=None):
         names = doc["emb_model"] if isinstance(doc["emb_model"], list) else [doc["emb_model"]]
         embs = [PlayerEmbedding.from_state(torch.load(str(ROOT / m), map_location="cpu", weights_only=False)) for m in names]
         emb = embs[0] if len(embs) == 1 else embs
-        store = load_store(*a.trunk_store)
-        print(f"embedding {names} ({embs[0].players_trained} training players); {len(store)} trunk rows", flush=True)
+        wide = getattr(embs[0], "d_in", 256) == 640  # emb3: rows with the phase means (pid_trunk_extract.py parts that carry `phase`)
+        store = v2.load_store_phase(*a.trunk_store) if wide else load_store(*a.trunk_store)
+        print(f"embedding {names} ({embs[0].players_trained} training players, {640 if wide else 256}-dim rows); {len(store)} trunk rows", flush=True)
     seq = None
     if "seq" in doc["components"]:
         paths = doc["seq_official"] if isinstance(doc["seq_official"], list) else [doc["seq_official"]]

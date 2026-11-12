@@ -1,0 +1,241 @@
+{
+ "submission": "/home/u2507115/BK_AICUP_2026-2/results/submission_v2f/submission_player.csv",
+ "rows": 1600,
+ "rows_by_prefix": {
+  "pub": 400,
+  "priv": 400,
+  "pub2": 400,
+  "priv2": 400
+ },
+ "problems": [],
+ "fusion": {
+  "components": [
+   "opening",
+   "opening_raw",
+   "orient4",
+   "orient4_merged",
+   "local",
+   "style",
+   "hd",
+   "emb",
+   "seq"
+  ],
+  "weights": [
+   0.2381655449309361,
+   0.21963272543177942,
+   0.3538219170023716,
+   0.007094310940794734,
+   0.16123819728872282,
+   0.05660756125171228,
+   0.4883013753599961,
+   1.6353062099356883,
+   3.16750441443475
+  ],
+  "cfg": {
+   "depth": 12,
+   "alpha": 2.0,
+   "beta": 5.0,
+   "shrink": 0.1,
+   "local_alpha": 2.0,
+   "local_beta": 5.0,
+   "local_start": 12,
+   "orient_alpha": 2.0,
+   "orient_beta": 5.0,
+   "orient_depth": 12,
+   "orient_raw": 1,
+   "ref_alpha": 2.0,
+   "ref_beta": 5.0,
+   "ref_min_black": 30,
+   "ref_cap": 40,
+   "ref_orient_raw": 2,
+   "ref_seed": 0,
+   "trunk_feats": "all",
+   "trunk_shrink": 0.1
+  },
+  "emb_model": [
+   "results/embed/emb3_final.pt",
+   "results/embed/emb3_final_s1.pt",
+   "results/embed/emb3_final_s2.pt"
+  ],
+  "seq_official": [
+   [
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_t50.npz",
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_t50.npz"
+   ],
+   [
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_t50.npz",
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_t50.npz"
+   ],
+   [
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_t50.npz",
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_t50.npz"
+   ],
+   [
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_t50.npz",
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_t50.npz"
+   ],
+   [
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_t50.npz",
+    "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_t50.npz"
+   ]
+  ],
+  "soft_lam": null,
+  "geometry": {
+   "candidates": 600,
+   "candidate_games": 10,
+   "sizes": [
+    1,
+    2,
+    3,
+    5
+   ]
+  },
+  "fitted_on": [
+   {
+    "eligible": 1033,
+    "skipped_R": 0,
+    "fold": 1,
+    "seed": 0,
+    "questions": 800
+   },
+   {
+    "eligible": 1033,
+    "skipped_R": 1,
+    "fold": 1,
+    "seed": 1,
+    "questions": 799
+   },
+   {
+    "eligible": 1033,
+    "skipped_R": 0,
+    "fold": 2,
+    "seed": 0,
+    "questions": 800
+   },
+   {
+    "eligible": 1033,
+    "skipped_R": 2,
+    "fold": 2,
+    "seed": 1,
+    "questions": 798
+   },
+   {
+    "eligible": 1031,
+    "skipped_R": 5,
+    "fold": 3,
+    "seed": 0,
+    "questions": 795
+   },
+   {
+    "eligible": 1031,
+    "skipped_R": 1,
+    "fold": 3,
+    "seed": 1,
+    "questions": 799
+   },
+   {
+    "eligible": 1030,
+    "skipped_R": 1,
+    "fold": 4,
+    "seed": 0,
+    "questions": 799
+   },
+   {
+    "eligible": 1030,
+    "skipped_R": 3,
+    "fold": 4,
+    "seed": 1,
+    "questions": 797
+   }
+  ],
+  "questions": 6387,
+  "simulated_score": 0.7244513461045367,
+  "note": "v2 added pools; weights from scripts/pid_v2_sim10.py (8 single-fold pools, one fine-tuned network); emb3 = rows with phase means (640 dims), three seeds; no question game and no other pool enters a pool's fine-tune",
+  "seq_model": "AI_CUP_2026-1 results/m88/ckpt_{-1,1,2,3,4}.pt, each fine-tuned 50 steps (lr 1e-4, warmup 50, cosine horizon 1000) on the pool's own candidates; five networks averaged",
+  "arm": "both (50-step fine-tune + emb3 x3)"
+ },
+ "old_submission": "/home/u2507115/BK_AICUP_2026-2/results/submission_old_embt_assign/submission_player.csv",
+ "pools": [
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_candidates2_public.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_test2_public.csv",
+   "n_candidates": 600,
+   "n_questions": 400,
+   "left_out_games": [],
+   "fallback_questions": [],
+   "games_by_colour": {
+    "W": 3597,
+    "B": 3503
+   },
+   "assign": {
+    "mode": "off",
+    "applied": false,
+    "n_top1_changed": 0,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 600,
+     "distinct_top1": 325,
+     "expected_random": 292.12101037700313,
+     "by_n": {
+      "1": 93,
+      "2": 95,
+      "3": 98,
+      "5": 99
+     },
+     "one_to_one_likely": false,
+     "confident_distinct": 0.925,
+     "one_to_one_likely_v2": false
+    }
+   },
+   "median_top1_margin": 1.927377074610967,
+   "margin_by_n": {
+    "1": 1.2637997926279976,
+    "2": 1.802170365438724,
+    "3": 2.8048781756488372,
+    "5": 2.9928823751057214
+   },
+   "distinct_top1": 325
+  },
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_candidates2_private.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests_1111/player_identification_test2_private.csv",
+   "n_candidates": 600,
+   "n_questions": 400,
+   "left_out_games": [],
+   "fallback_questions": [],
+   "games_by_colour": {
+    "W": 3625,
+    "B": 3475
+   },
+   "assign": {
+    "mode": "off",
+    "applied": false,
+    "n_top1_changed": 0,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 600,
+     "distinct_top1": 329,
+     "expected_random": 292.12101037700313,
+     "by_n": {
+      "1": 94,
+      "2": 98,
+      "3": 97,
+      "5": 99
+     },
+     "one_to_one_likely": false,
+     "confident_distinct": 0.97,
+     "one_to_one_likely_v2": true
+    }
+   },
+   "median_top1_margin": 2.044768794720005,
+   "margin_by_n": {
+    "1": 1.103527460148979,
+    "2": 1.6314497955334888,
+    "3": 2.173411204910826,
+    "5": 3.5921105819854517
+   },
+   "distinct_top1": 329
+  }
+ ],
+ "seconds": 87.61937880516052
+}
