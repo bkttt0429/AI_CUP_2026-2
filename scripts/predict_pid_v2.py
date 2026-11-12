@@ -32,7 +32,7 @@ from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.trunkstyle import load_store  # noqa: E402
 
 
-def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print, seq=None):
+def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print, seq=None, big_lam=None):
     cands, questions, qids, sgfs = v2.official_pool(cand_path, q_path)
     colour = {k: c for games in (*cands.values(), *questions) for k, c in games}
     need_rows = "emb" in doc["components"]
@@ -53,9 +53,13 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
     players = sorted(cands)
     n = np.array([len(q_use[i]) for i in usable])
     col = top1_collisions(F, n)
-    applied = assign == "on" or (assign == "auto" and bool(col["one_to_one_likely_v2"])) or (assign == "soft" and doc.get("soft_lam") is not None)
+    applied = assign in ("on", "big") or (assign == "auto" and bool(col["one_to_one_likely_v2"])) or (assign == "soft" and doc.get("soft_lam") is not None)
     base = topk(F, pools.TOP_K)
-    idx = assign_soft(F, doc["soft_lam"], pools.TOP_K) if (applied and assign == "soft") else assign_topk(F, pools.TOP_K) if applied else base
+    if assign == "big":  # METHOD_NOTES 2.37: the questions of two or more games are one one-to-one set; the one-game questions stay per question
+        idx, rows_big = base.copy(), np.flatnonzero(n > 1)
+        idx[rows_big] = assign_topk(F[rows_big], pools.TOP_K) if big_lam is None else assign_soft(F[rows_big], big_lam, pools.TOP_K)
+    else:
+        idx = assign_soft(F, doc["soft_lam"], pools.TOP_K) if (applied and assign == "soft") else assign_topk(F, pools.TOP_K) if applied else base
     rows, j = [], 0
     for i, qid in enumerate(qids):
         if i in set(usable):
@@ -66,7 +70,8 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
     top = np.sort(F, axis=1)
     rep = {"candidates": str(cand_path), "questions": str(q_path), "n_candidates": len(players), "n_questions": len(qids), "left_out_games": bad,
            "fallback_questions": [qids[i] for i in range(len(qids)) if i not in set(usable)], "games_by_colour": pd.Series(list(colour.values())).value_counts().to_dict(),
-           "assign": {"mode": assign, "applied": applied, "n_top1_changed": int((idx[:, 0] != base[:, 0]).sum()), "top1_collisions": col},
+           "assign": {"mode": assign, "applied": applied, "big_lam": big_lam, "n_top1_changed": int((idx[:, 0] != base[:, 0]).sum()),
+                      "top1_changed_by_n": {str(m): int((idx[:, 0] != base[:, 0])[n == m].sum()) for m in sorted(set(n.tolist()))}, "top1_collisions": col},
            "median_top1_margin": float(np.median(top[:, -1] - top[:, -2])), "margin_by_n": {str(m): float(np.median((top[:, -1] - top[:, -2])[n == m])) for m in sorted(set(n.tolist()))},
            "distinct_top1": int(len(set(base[:, 0].tolist())))}
     log(f"{Path(q_path).name}: {len(players)} candidates, {len(qids)} questions ({len(rep['fallback_questions'])} fallback); distinct Top-1 {rep['distinct_top1']}; "
@@ -81,7 +86,9 @@ def main(argv=None):
     ap.add_argument("--fusion", required=True, help="scripts/pid_v2_sim.py --fusion-out")
     ap.add_argument("--trunk-store", nargs="*", default=[], help="pid_trunk_extract.py --official2 output (needed when the fusion names emb)")
     ap.add_argument("--old-submission", required=True, help="800 rows for the original pools (predict_pid.py on the 10-30 files)")
-    ap.add_argument("--assign", choices=["off", "auto", "on", "soft"], default="off", help="soft = aicup_pid.assign.assign_soft with the document's soft_lam (off when it has none)")
+    ap.add_argument("--assign", choices=["off", "auto", "on", "soft", "big"], default="off",
+                    help="soft = aicup_pid.assign.assign_soft with the document's soft_lam (off when it has none); big = one-to-one over the questions of two or more games only (2.37)")
+    ap.add_argument("--big-lam", type=float, default=None, help="--assign big: soft assignment with this penalty instead of the hard one")
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -111,7 +118,7 @@ def main(argv=None):
         print(f"sequence identity vectors: {len(paths)} network(s), {len(seqs[0])} games", flush=True)
     new, reports, cand_ids = {}, [], {}
     for tag, prefix in (("public", "pub2_"), ("private", "priv2_")):
-        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq)
+        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq, big_lam=a.big_lam)
         new.update({q: top for q, top in rows})
         reports.append(rep)
         cand_ids[prefix] = players

@@ -53,6 +53,7 @@ def main(argv=None):
     ap.add_argument("--state", choices=("best", "last"), default="best")
     ap.add_argument("--ckpt-suffix", default="", help="checkpoint file ckpt_<v><suffix>.pt (the rank session's further seeds: _s1, _s2)")
     ap.add_argument("--name", default="", help="folds stage: output fold<v><name>.npz")
+    ap.add_argument("--flip", action="store_true", help="vectors of the OTHER side of every game (the subject's opponent; METHOD_NOTES 2.38); give --name / --tag a suffix such as _opp")
     a = ap.parse_args(argv)
     global STATE
     STATE = a.state
@@ -69,7 +70,7 @@ def main(argv=None):
                     continue
                 z = np.load(f)
                 keys.append(z["key"].astype(str))
-                embs.append(embed(net, z["GL"], z["POS"], z["MOV"], z["LEN"], z["SUBJ"]))
+                embs.append(embed(net, z["GL"], z["POS"], z["MOV"], z["LEN"], 1 - z["SUBJ"] if a.flip else z["SUBJ"]))
             keys, embs = np.concatenate(keys), np.concatenate(embs)
             dest = out / ("official.npz" if v == -1 and a.tag == "" and not sfx else f"official{a.tag}_net{v}{sfx}.npz")
             np.savez(dest, key=keys, emb=embs.astype(np.float16), net=np.array(v), best=np.array(str(best)))
@@ -83,7 +84,7 @@ def main(argv=None):
             for i in range(0, len(files), 48):
                 for key, pid, GL, POS, MOV, LEN, SUBJ in pool.map(m88.read_part, files[i:i + 48], chunksize=2):
                     keys.append(key); pids.append(pid)
-                    embs.append(embed(net, GL, POS, MOV, LEN, SUBJ))
+                    embs.append(embed(net, GL, POS, MOV, LEN, 1 - SUBJ if a.flip else SUBJ))
                 print(f"  fold {v}: {min(i + 48, len(files))}/{len(files)} parts, {sum(len(k) for k in keys)} games ({time.time() - t0:.0f} s)", flush=True)
         keys, pids, embs = np.concatenate(keys), np.concatenate(pids), np.concatenate(embs)
         np.savez(out / f"fold{v}{a.name}{sfx}.npz", key=keys, pid=pids, emb=embs.astype(np.float16), best=np.array(str(best)))
