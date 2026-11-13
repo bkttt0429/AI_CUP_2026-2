@@ -11,7 +11,10 @@ training players keep being learnt; the official players are all unseen. Changes
   --ema                 decay of an exponential moving average of the weights, saved next to the raw state
 Folds: net v trains on the players of folds 1-4 other than v; net -1 on folds 1-4. Fold 0 is not read into training or
 evaluation (this repository never uses it); players without a fold train in every net, as in M90. The rank competition's
-test games are not read. Held-out own games (results/m82/held_keys.json) are never trained on; for net v the ones of fold v
+test games are not read.
+  --all-folds           fold 0 is read and trained on as well: net -1 then sees every training player, as the rank session's
+                        net -1 (METHOD_NOTES 2.40). ONLY WITH THE USER'S CONSENT for fold 0; for official files only (no
+                        simulation can score such a network). Held-out own games (results/m82/held_keys.json) are never trained on; for net v the ones of fold v
 (unseen players) and of the training folds (seen players) are scored every --eval-every steps, as a log only: nothing is
 selected on them (fixed step).
 Outputs in --out: ckpt_<v>_<tag>.pt (raw state at the last step) and ckpt_<v>_<tag>e.pt (EMA state), both with the state
@@ -39,13 +42,13 @@ T = M.T_MAX
 PROTO_GAMES = 16  # evaluation prototypes: at most this many training games per player (fixed choice)
 
 
-def load_games(smoke, log):
+def load_games(smoke, log, all_folds=False):
     """M90's training games as padded arrays (m88_seqid.load_games without the test part). The worker pool starts before any
     large array exists and every part is written straight into preallocated arrays: the compute nodes run with strict
     overcommit, and a pool forked from a large parent exhausted the node's commit limit in the rank session's first run."""
     files, folds = [], []
     for d in M.DIRS:
-        for f in range(1, 5):  # the stored parts of fold 0 are not opened
+        for f in range(0 if all_folds else 1, 5):  # the stored parts of fold 0 are not opened unless --all-folds
             fs = sorted((d / f"fold{f}").glob("games_s*_p*.csv"))
             fs = fs[:12] if smoke else fs
             files += fs
@@ -80,7 +83,7 @@ def load_games(smoke, log):
     p2 = np.array([own[k] for k in key[n_old:]])
     pid = np.concatenate([pid, p2])
     fold = np.concatenate([fold, np.array([int(tab.get(p, -9)) for p in p2], np.int8)])
-    log(f"games loaded: {N} ({n_old} stored of folds 1-4 + {N - n_old} extracted; {GL.nbytes / 1e9:.1f} GB); extracted games of fold 0: {int((fold == 0).sum())}, left out everywhere")
+    log(f"games loaded: {N} ({n_old} stored of folds {'0-4' if all_folds else '1-4'} + {N - n_old} extracted; {GL.nbytes / 1e9:.1f} GB); games of fold 0: {int((fold == 0).sum())}, {'TRAINED ON (--all-folds)' if all_folds else 'left out everywhere'}")
     return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold)
 
 
@@ -97,6 +100,7 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--eval-every", type=int, default=5000)
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
     import torch
     import torch.nn.functional as F
@@ -110,12 +114,13 @@ def main(argv=None):
     name = f"{v}_{a.tag}{'_smoke' if a.smoke else ''}"
     dev = "cuda"
     log(f"net {name}: steps {steps} (cosine horizon {horizon}), dropout {a.drop}, ply mask up to {a.mask}, EMA {a.ema}, seed {a.seed}; GPU {torch.cuda.get_device_name(0)}")
-    G = load_games(a.smoke, log)
+    G = load_games(a.smoke, log, a.all_folds)
     held = set(json.load(open(M.M82 / "held_keys.json")))
     players, owner = np.unique(G["pid"], return_inverse=True)
     C, fold = len(players), G["fold"]
     is_held = np.array([k in held for k in G["key"]])
-    use = ~is_held & (fold != 0) & (fold != v)
+    allowed = np.ones(len(fold), bool) if a.all_folds else fold != 0
+    use = ~is_held & allowed & (fold != v)
     cnt = np.bincount(owner[use], minlength=C)
     tp = np.flatnonzero(cnt >= M.MIN_GAMES)
     W = int(cnt.max())
@@ -160,13 +165,13 @@ def main(argv=None):
         return res
 
     # evaluation set: held-out own games of fold v (unseen) and of the training folds (seen); prototypes from non-held games, folds != 0
-    ev_ok = ~is_held & (fold != 0)
+    ev_ok = ~is_held & allowed
     e_idx = np.flatnonzero(ev_ok)
     e_o = owner[e_idx]
     e_order = np.argsort(e_o, kind="stable")
     e_idx, e_o = e_idx[e_order], e_o[e_order]
     proto_rows = e_idx[(np.arange(len(e_o)) - np.searchsorted(e_o, e_o, side="left")) < PROTO_GAMES]
-    hk = np.flatnonzero(is_held & (fold != 0) & (np.bincount(owner[ev_ok], minlength=C)[owner] > 0))
+    hk = np.flatnonzero(is_held & allowed & (np.bincount(owner[ev_ok], minlength=C)[owner] > 0))
     unseen = fold[hk] == v
 
     def evaluate(model, step, label):
@@ -225,7 +230,7 @@ def main(argv=None):
             torch.save({"net": net.state_dict(), "ema": ema.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(), "step": step + 1, "hist": hist}, state_file)
             t_last = time.time()
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum())}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds)}
     for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
         torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "state": label}, "step": steps}, out / f"ckpt_{v}_{a.tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
     (out / f"train_{name}.json").write_text(json.dumps({**meta, "history": hist}, indent=1) + "\n")
