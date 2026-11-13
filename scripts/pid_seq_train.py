@@ -85,7 +85,7 @@ PRELOADED = None  # set by main_fork in every forked trainer: the games read onc
 _KEEP = []
 
 
-def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None):
+def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None, ext_second=None):
     """M90's training games as padded arrays (m88_seqid.load_games without the test part). The worker pool starts before any
     large array exists and every part is written straight into preallocated arrays: the compute nodes run with strict
     overcommit, and a pool forked from a large parent exhausted the node's commit limit in the rank session's first run."""
@@ -133,12 +133,19 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
         for sel in ext_select:
             with open(sel, newline="") as fh:
                 ext_own.update((r["game_key"], "x:" + r["account"]) for r in csv.DictReader(fh))
+    sec = {}  # METHOD_NOTES 2.73: the OTHER player of an external game, when that account trains too: game key -> (player, colour 0 / 1)
+    if ext_ply and ext_second:
+        for f in ext_second:
+            with open(f, newline="") as fh:
+                sec.update((r["game_key"], ("x:" + r["account"], 0 if r["color"] == "B" else 1)) for r in csv.DictReader(fh))
+        sec = {k: v for k, v in sec.items() if k in ext_own}
     with mp.get_context("fork").Pool(12) as pool:
         n1 = pool.map(M.count_part, files, chunksize=8)
         n2 = pool.map(M.count_m90, files2, chunksize=8)
         n_old, N = int(sum(n1)), int(sum(n1)) + int(sum(n2))
-        GL, POS, MOV = alloc("GL", (N, T, 128), np.float16), alloc("POS", (N, T), np.int16, 362), alloc("MOV", (N, T), np.int8)
-        LEN, SUBJ, keys, pids, a = alloc("LEN", (N,), np.int16), alloc("SUBJ", (N,), np.int8), [], [], 0
+        NA = N + len(sec)  # room for the second-side copies (an upper bound; the arrays are cut to what is used)
+        GL, POS, MOV = alloc("GL", (NA, T, 128), np.float16), alloc("POS", (NA, T), np.int16, 362), alloc("MOV", (NA, T), np.int8)
+        LEN, SUBJ, keys, pids, a = alloc("LEN", (NA,), np.int16), alloc("SUBJ", (NA,), np.int8), [], [], 0
         for x in _windows(pool, M.read_part, files, 12):
             b = a + len(x[0])
             keys.append(x[0]); pids.append(x[1])
@@ -163,6 +170,25 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
     p2 = np.array([own[k] for k in key[n_old:]])
     pid = np.concatenate([pid, p2])
     fold = np.concatenate([fold, np.array([int(tab.get(p, -9)) for p in p2], np.int8)])
+    second = np.zeros(N, bool)
+    if sec:  # the same stored game once more, read from the other player's side (flipped subject colour, that player's id)
+        src = np.array([i for i in range(n_old, N) if key[i] in sec], np.int64)
+        n2_ = len(src)
+        want = np.array([sec[k][1] for k in key[src]], np.int8)
+        bad = int((want != 1 - SUBJ[src]).sum())
+        if bad:
+            raise ValueError(f"{bad} second-side rows whose colour is not the other side of the stored subject")
+        for j in range(0, n2_, 20000):
+            r = src[j:j + 20000]
+            GL[N + j:N + j + len(r)], POS[N + j:N + j + len(r)], MOV[N + j:N + j + len(r)], LEN[N + j:N + j + len(r)] = GL[r], POS[r], MOV[r], LEN[r]
+        SUBJ[N:N + n2_] = want
+        key = np.concatenate([key, key[src]])
+        pid = np.concatenate([pid, np.array([sec[k][0] for k in key[src]])])
+        fold = np.concatenate([fold, np.full(n2_, -9, np.int8)])
+        second = np.concatenate([second, np.ones(n2_, bool)])
+        log(f"second side: {n2_} external games are read once more from the other player's side ({len(set(pid[N:].tolist()))} players)")
+        N += n2_
+    GL, POS, MOV, LEN, SUBJ = GL[:N], POS[:N], MOV[:N], LEN[:N], SUBJ[:N]
     log(f"games loaded: {N} ({n_old} stored of folds {'0-4' if all_folds else '1-4'} + {N - n_old} extracted; {GL.nbytes / 1e9:.1f} GB; process memory {_rss_gb():.1f} GB); "
         f"games of fold 0: {int((fold == 0).sum())}, {'TRAINED ON (--all-folds)' if all_folds else 'left out everywhere'}")
     if share is not None:
@@ -171,7 +197,7 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
         np.save(share / "key.npy", key); np.save(share / "pid.npy", pid); np.save(share / "fold.npy", fold)
         (share / "DONE").write_text("ok\n")
         log(f"arrays shared in {share}")
-    return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold)
+    return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold, second=second)
 
 
 def main(argv=None):
@@ -189,6 +215,8 @@ def main(argv=None):
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--ext-ply", nargs="*", default=None, help="one or more directories of external per-ply parts")
     ap.add_argument("--ext-select", nargs="*", default=None, help="the select.csv files that name their accounts")
+    ap.add_argument("--ext-second", nargs="*", default=None, help="second.csv files of scripts/ext_fox_census.py: external games are also read from the other player's side")
+    ap.add_argument("--no-second", action="store_true", help="leave the second-side rows out (a control arm inside a job that loaded them)")
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
     ap.add_argument("--arch", default=None, help="D,LAYERS,HEADS,FFN of the transformer (M90: 384,8,8,1536); stored in the checkpoint, the loaders rebuild the same network")
     ap.add_argument("--sym-aug", action="store_true")
@@ -246,7 +274,7 @@ def main(argv=None):
     name = f"{v}_{a.tag}{'_smoke' if a.smoke else ''}"
     dev = "cuda"
     log(f"net {name}: steps {steps} (cosine horizon {horizon}), dropout {a.drop}, ply mask up to {a.mask}, EMA {a.ema}, seed {a.seed}; GPU {torch.cuda.get_device_name(0)}")
-    G = PRELOADED if PRELOADED is not None else load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir)
+    G = PRELOADED if PRELOADED is not None else load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir, a.ext_second)
     if PRELOADED is not None:
         log(f"games shared by the job: {len(G['key'])} ({G['GL'].nbytes / 1e9:.1f} GB, read once; this process holds {_rss_gb():.1f} GB)")
     if a.prepare_only:
@@ -258,6 +286,9 @@ def main(argv=None):
     allowed = np.ones(len(fold), bool) if a.all_folds else fold != 0
     is_ext = np.char.startswith(players.astype(str), "x:")  # per player
     use = ~is_held & allowed & (fold != v)
+    sec_row = G.get("second", np.zeros(len(fold), bool))
+    if a.no_second:
+        use &= ~sec_row
     if a.m_ep:
         M.M_EP = a.m_ep
     if a.ext_cap or a.ext_accounts:  # fewer external accounts and / or fewer games of each (METHOD_NOTES 2.69)
@@ -268,7 +299,8 @@ def main(argv=None):
         rk = np.arange(len(eo)) - np.searchsorted(eo, eo, side="left")  # position of a game among its account's usable games
         out_ = np.zeros(len(eo), bool)
         if a.ext_accounts:
-            full = np.unique(eo[rk == M.MIN_GAMES - 1])  # accounts with at least 8 usable games, in the order of their names
+            n1_ = np.bincount(owner[use & is_ext[owner] & ~sec_row], minlength=C)  # own (first-side) games only: the subset is the same with and without second sides
+            full = np.flatnonzero(n1_ >= M.MIN_GAMES)  # accounts with at least 8 usable games of their own, in the order of their names
             out_ |= ~np.isin(eo, np.random.default_rng(20261114).permutation(full)[:a.ext_accounts])
         if a.ext_cap:
             out_ |= rk >= a.ext_cap
@@ -528,15 +560,16 @@ def main_fork(argv):
     ap.add_argument("--all-folds", action="store_true")
     ap.add_argument("--ext-ply", nargs="*", default=None)
     ap.add_argument("--ext-select", nargs="*", default=None)
+    ap.add_argument("--ext-second", nargs="*", default=None)
     a = ap.parse_args(argv)
     t0 = time.time()
     log = lambda s_: print(f"{s_} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
     specs = [shlex.split(line) for line in Path(a.fork).read_text().splitlines() if line.strip() and not line.startswith("#")]
     SHARED_ANON = True
-    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select)
+    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, None, a.ext_second)
     for k in SHARED:
         G[k].flags.writeable = False  # the trainers only read; a stray write would be seen by all of them
-    data = (["--smoke"] if a.smoke else []) + (["--all-folds"] if a.all_folds else []) + (["--ext-ply", *a.ext_ply] if a.ext_ply else []) + (["--ext-select", *a.ext_select] if a.ext_select else [])
+    data = (["--smoke"] if a.smoke else []) + (["--all-folds"] if a.all_folds else []) + (["--ext-ply", *a.ext_ply] if a.ext_ply else []) + (["--ext-select", *a.ext_select] if a.ext_select else []) + (["--ext-second", *a.ext_second] if a.ext_second else [])
     pids = {}
     for gpu, logfile, *rest in specs:
         sys.stdout.flush()

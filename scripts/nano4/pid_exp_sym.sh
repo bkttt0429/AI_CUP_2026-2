@@ -21,6 +21,9 @@
 #                           (the episode shape alone); compared with the depth test's d0 / d2 / d3 (run after it)
 #   pid_exp_sym.sh noise    held-out test of noise on the per-ply vectors (ja 0.1, jb 0.25, jc 0.5 standard deviations) and of
 #                           label smoothing 0.1 (ls), on top of the augmentation; comparison with yse (METHOD_NOTES 2.72)
+#   pid_exp_sym.sh both     held-out test of reading every external game from BOTH players' sides (METHOD_NOTES 2.73; the second
+#                           sides come from scripts/ext_fox_census.py): t0 all accounts, own games only; t1 + second sides;
+#                           t2 39,683 accounts, own games only; t3 the same + second sides
 #   pid_exp_sym.sh stack    held-out test (x2 data, folds 1 and 2) of what stacks on the augmentation:
 #                           zs + the bigger network, zr + half of the episodes from one rank band, zg every game its own
 #                           symmetry (instead of one per episode), zm + ply masking up to 0.3; then the comparison with yse
@@ -122,6 +125,17 @@ case $1 in
       python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
     done
     python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e jae=_njae jbe=_njbe jce=_njce lse=_nlse --ref yse --folds 1 2 --out $R2/results/final/v2_sim14j.json ;;
+  both)
+    specs=()
+    for v in 1 2; do
+      specs+=("$v t0 $C --no-second" "$v t1 $C" "$v t2 $C --ext-accounts 39683 --no-second" "$v t3 $C --ext-accounts 39683")
+    done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF --ext-second $X/census/second.csv" "${specs[@]}"
+    for t in t0e t1e t2e t3e; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    python -I $R2/scripts/pid_v2_sim14.py --names t0e=_nt0e yse=_nyse t1e=_nt1e t2e=_nt2e t3e=_nt3e --ref t0e --folds 1 2 --out $R2/results/final/v2_sim14t.json
+    python -I $R2/scripts/pid_v2_sim14.py --names t2e=_nt2e t3e=_nt3e --ref t2e --folds 1 2 --out $R2/results/final/v2_sim14t2.json ;;
   stack)
     specs=()
     for v in 1 2; do
