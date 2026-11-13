@@ -124,6 +124,7 @@ def main(argv=None):
     ap.add_argument("--ext-ply", nargs="*", default=None, help="one or more directories of external per-ply parts")
     ap.add_argument("--ext-select", nargs="*", default=None, help="the select.csv files that name their accounts")
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
+    ap.add_argument("--arch", default=None, help="D,LAYERS,HEADS,FFN of the transformer (M90: 384,8,8,1536); stored in the checkpoint, the loaders rebuild the same network")
     ap.add_argument("--sym-aug", action="store_true")
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
@@ -167,6 +168,9 @@ def main(argv=None):
     rng = np.random.default_rng(990 + v + 1000 * a.seed)
     torch.manual_seed(990 + v + 1000 * a.seed)
     M.DROP = a.drop
+    if a.arch:
+        M.D, M.LAYERS, M.HEADS, M.FFN = (int(x) for x in a.arch.split(","))
+    arch = [int(M.D), int(M.LAYERS), int(M.HEADS), int(M.FFN)]
     net = M.build_model().to(dev)
     sample = G["GL"][rng.choice(idx, min(4000, len(idx)), replace=False)].astype(np.float32).reshape(-1, 128)
     sample = sample[np.abs(sample).sum(1) > 0]
@@ -275,7 +279,7 @@ def main(argv=None):
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
     meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P)}
     for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
-        torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "state": label}, "step": steps}, out / f"ckpt_{v}_{a.tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
+        torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "state": label}, "step": steps, "arch": arch}, out / f"ckpt_{v}_{a.tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
     (out / f"train_{name}.json").write_text(json.dumps({**meta, "history": hist}, indent=1) + "\n")
     state_file.unlink(missing_ok=True)
     log(f"net {name}: wrote ckpt_{v}_{a.tag}.pt and ckpt_{v}_{a.tag}e.pt in {out}")

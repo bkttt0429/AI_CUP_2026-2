@@ -100,9 +100,15 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
             save(step + 1, embed(net, A, everything))
 
 
+ARCH0 = (m88.D, m88.LAYERS, m88.HEADS, m88.FFN)
+
+
 def load_net(ckpt, state="best"):
+    st = torch.load(ckpt, map_location="cpu", weights_only=False)
+    m88.D, m88.LAYERS, m88.HEADS, m88.FFN = st.get("arch", ARCH0)  # a network trained with pid_seq_train.py --arch is rebuilt at its own size
     net = m88.build_model()
-    net.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=False)["best_state" if state == "best" else "net"])
+    m88.D, m88.LAYERS, m88.HEADS, m88.FFN = ARCH0
+    net.load_state_dict(st["best_state" if state == "best" else "net"])
     return net.cuda()
 
 

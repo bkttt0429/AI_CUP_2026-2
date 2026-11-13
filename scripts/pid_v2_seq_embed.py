@@ -24,9 +24,14 @@ import m88_seqid as m88  # noqa: E402
 STATE = "best"  # --state last: the state after the final step instead of the one with the best held-out top-1
 
 
+ARCH0 = (m88.D, m88.LAYERS, m88.HEADS, m88.FFN)
+
+
 def load_net(ckpt):
-    net = m88.build_model()
     st = torch.load(ckpt, map_location="cpu", weights_only=False)
+    m88.D, m88.LAYERS, m88.HEADS, m88.FFN = st.get("arch", ARCH0)  # a network trained with pid_seq_train.py --arch is rebuilt at its own size
+    net = m88.build_model()
+    m88.D, m88.LAYERS, m88.HEADS, m88.FFN = ARCH0
     net.load_state_dict(st["best_state"] if STATE == "best" else st["net"])
     return net.cuda().eval(), (st["best"] if STATE == "best" else {"step": st["step"], "state": "last"})
 
