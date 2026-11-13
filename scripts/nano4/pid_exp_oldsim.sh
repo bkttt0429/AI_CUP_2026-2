@@ -22,6 +22,8 @@ for f in $fams; do
     m101x) for v in -1 1 2 3 4; do runs+=("$v _m101x --ckpt-dir $A1/results/m101 --ckpt-suffix _s3 --state last"); done ;;
     px)    runs+=("1 _xe --ckpt-dir $S --ckpt-suffix _xe" "2 _xe --ckpt-dir $S --ckpt-suffix _xe" "1 _xue --ckpt-dir $S --ckpt-suffix _xue") ;;
     px2)   runs+=("1 _x2e --ckpt-dir $S --ckpt-suffix _x2e" "2 _x2e --ckpt-dir $S --ckpt-suffix _x2e") ;;
+    py)    runs+=("1 _yse --ckpt-dir $S --ckpt-suffix _yse" "2 _yse --ckpt-dir $S --ckpt-suffix _yse") ;;
+    pb)    runs+=("1 _ybe --ckpt-dir $S --ckpt-suffix _ybe" "2 _ybe --ckpt-dir $S --ckpt-suffix _ybe") ;;
     *)     for k in 0 1 2 3 4 5 6 7; do [ -s $S/ckpt_-1_${f}s${k}e.pt ] && runs+=("-1 _${f}s${k}e --ckpt-dir $S --ckpt-suffix _${f}s${k}e"); done ;;
   esac
 done

@@ -17,7 +17,7 @@ C="--steps 20000 --horizon 60000 --ext-ply $X/pilot/ply $X/scale1/ply_a $X/scale
 DATA4="--ext-ply $X/pilot/ply $X/scale1/ply_a $X/scale1/ply_b $R2/data/ext_ply/scale1_c $R2/data/ext_ply/scale2_top $R2/data/ext_ply/scale2_5d $X/scale3/ply --ext-select $X/pilot/select.csv $X/scale1/select.csv $X/scale2_top/select.csv $X/scale2_5d/select.csv $X/scale3/select.csv"
 C4="--steps 20000 --horizon 60000 --ext-share 0.5 --no-state"
 case $1 in
-  c) bash $R2/scripts/nano4/pid_seq_train_fork.sh "$DATA4" "-1 o4s0 $C4 --seed 0" "-1 o4s1 $C4 --seed 1" "-1 o4s2 $C4 --seed 2" "-1 o4s3 $C4 --seed 3" ;;  # + scale3: 182,167 external accounts; one shared copy of the games (177 GB)
+  c) bash $R2/scripts/nano4/pid_seq_train_fork.sh "$DATA4" "-1 o4Ss0 $C4 --sym-aug --seed 0" "-1 o4Ss1 $C4 --sym-aug --seed 1" "-1 o4Ss2 $C4 --sym-aug --seed 2" "-1 o4Ss3 $C4 --sym-aug --seed 3" ;;  # + scale3: 182,167 external accounts; one shared copy of the games (177 GB)
   a) bash $R2/scripts/nano4/pid_seq_train_multi.sh "-1 o3s0 $C --seed 0" "-1 o3s1 $C --seed 1" "-1 o3s2 $C --seed 2" "-1 o3s3 $C --seed 3" ;;
   b) bash $R2/scripts/nano4/pid_seq_train_multi.sh "-1 o3hms0 $C --seed 0 --rank-ep class --rank-ep-share 0.5" "-1 o3hms1 $C --seed 1 --rank-ep class --rank-ep-share 0.5" \
        "-1 o3hbs0 $C --seed 0 --rank-ep band" "-1 o3hbs1 $C --seed 1 --rank-ep band" ;;

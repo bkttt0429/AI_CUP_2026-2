@@ -191,6 +191,7 @@ def main(argv=None):
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
     ap.add_argument("--arch", default=None, help="D,LAYERS,HEADS,FFN of the transformer (M90: 384,8,8,1536); stored in the checkpoint, the loaders rebuild the same network")
     ap.add_argument("--sym-aug", action="store_true")
+    ap.add_argument("--sym-game", action="store_true", help="with --sym-aug: every GAME gets its own random board symmetry (orientation carries no identity then) instead of one per episode")
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
     ap.add_argument("--no-state", action="store_true")
@@ -351,7 +352,7 @@ def main(argv=None):
         maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
         sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "sym_game": bool(a.sym_game), "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
 
     def write_ckpt(tag, at):
         for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
@@ -376,7 +377,7 @@ def main(argv=None):
         with torch.autocast("cuda", dtype=torch.bfloat16):
             pos_np = G["POS"][rows].astype(np.int64)
             if sym_tab is not None:
-                pos_np = sym_tab[rng.integers(8)][pos_np]
+                pos_np = sym_tab[rng.integers(8, size=len(rows))[:, None], pos_np] if a.sym_game else sym_tab[rng.integers(8)][pos_np]
             z = net(gl, tb(pos_np), tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64)))
         z = z.float().reshape(P, M.M_EP, M.D_OUT)
         tot, sc = z.sum(1), net.log_scale.exp()
