@@ -44,12 +44,14 @@ def main():
     ap.add_argument("--part", type=int, default=200)
     ap.add_argument("--batch", type=int, default=256)
     ap.add_argument("--limit", type=int, default=0, help="smoke run: only this many games")
+    ap.add_argument("--start", type=int, default=0, help="rows [start, stop) of the selection (applied before the shards), for a selection extracted in stages")
+    ap.add_argument("--stop", type=int, default=0)
     a = ap.parse_args()
     t0 = time.time()
     csv.field_size_limit(10 ** 9)
     with open(a.select, newline="") as fh:
         tasks = [(r["game_key"], r["sgf_content"], r["color"]) for r in csv.DictReader(fh)]
-    tasks = tasks[a.shard::a.nshards]
+    tasks = tasks[a.start:(a.stop or len(tasks))][a.shard::a.nshards]
     tasks = tasks[:a.limit] if a.limit else tasks
     st = np.load(STATS)
     mu, sd = st["mu"], st["sd"]

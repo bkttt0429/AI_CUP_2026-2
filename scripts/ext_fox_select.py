@@ -48,6 +48,7 @@ def main(argv=None):
     ap.add_argument("--min-moves", type=int, default=80)
     ap.add_argument("--cap-pct", type=float, default=0.5)
     ap.add_argument("--joint", action="store_true", help="count an account's games over ALL folders and choose once: an account met in two folders (its rank changed) stays one player")
+    ap.add_argument("--by-account", action="store_true", help="write the rows account by account (accounts in random order): any prefix of the file holds whole accounts")
     ap.add_argument("--skip", nargs="*", default=[], help="select.csv files of earlier selections: their accounts and their games are left out")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
@@ -94,7 +95,7 @@ def main(argv=None):
             chosen = rng.choice(pool, min(a.accounts, len(pool)), replace=False)
             need = dict.fromkeys(chosen.tolist(), a.games)
             got = dict.fromkeys(chosen.tolist(), 0)
-            rows, ranks, years, left = 0, [], [], len(chosen) * a.games
+            rows, ranks, years, left, held = 0, [], [], len(chosen) * a.games, []
             for g in rng.permutation(idx):
                 if left <= 0:
                     break
@@ -116,9 +117,18 @@ def main(argv=None):
                 text = sgf_of(codes)
                 if rows < 200:  # the written record reads back as the same moves (the overlap gate and the replay parse this form)
                     assert [c * 512 + q for c, q in moves_of(text.encode())] == codes, "record does not read back"
-                w.writerow([key, f"{who:016x}", "BW"[side], text])
+                if a.by_account:
+                    held.append((who, key, "BW"[side], text))
+                else:
+                    w.writerow([key, f"{who:016x}", "BW"[side], text])
                 rows += 1
                 ranks.append(int(br[g] if side == 0 else wr[g])); years.append(int(year[g]))
+            if held:
+                order = {int(k): i for i, k in enumerate(rng.permutation(chosen))}
+                held.sort(key=lambda r: order[r[0]])
+                for who, key, col, text in held:
+                    w.writerow([key, f"{who:016x}", col, text])
+                del held
             g_ = np.array(list(got.values()))
             summary["folders"][name] = {"games_in_parts": int(len(ok)), "eligible_games": int(len(idx)), "accounts_with_eligible_games": int(len(acc)), "accounts_meeting_need": int(len(pool)),
                                         "busiest_cut_at_games": float(cap), "accounts_chosen": int(len(chosen)), "games_written": rows, "accounts_with_8_or_more": int((g_ >= 8).sum()),

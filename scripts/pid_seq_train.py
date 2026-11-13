@@ -61,12 +61,13 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
     files2 = files2[:20] if smoke else files2
     ext_own = {}
     if ext_ply:  # the same part layout as M90's (key, LEN, SUBJ, POS, MOV, GLQ; the same quantisation statistics)
-        fx = sorted(f for f in Path(ext_ply).glob("ply_x_*.npz") if not f.name.endswith(".tmp.npz"))
+        fx = sorted(f for d in ext_ply for f in Path(d).glob("ply_x_*.npz") if not f.name.endswith(".tmp.npz"))
         files2 += fx[:5] if smoke else fx
         import csv
         csv.field_size_limit(10 ** 9)
-        with open(ext_select, newline="") as fh:
-            ext_own = {r["game_key"]: "x:" + r["account"] for r in csv.DictReader(fh)}
+        for sel in ext_select:
+            with open(sel, newline="") as fh:
+                ext_own.update((r["game_key"], "x:" + r["account"]) for r in csv.DictReader(fh))
     with mp.get_context("fork").Pool(12) as pool:
         n1 = pool.map(M.count_part, files, chunksize=8)
         n2 = pool.map(M.count_m90, files2, chunksize=8)
@@ -113,8 +114,8 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--eval-every", type=int, default=5000)
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--ext-ply", default=None)
-    ap.add_argument("--ext-select", default=None)
+    ap.add_argument("--ext-ply", nargs="*", default=None, help="one or more directories of external per-ply parts")
+    ap.add_argument("--ext-select", nargs="*", default=None, help="the select.csv files that name their accounts")
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
