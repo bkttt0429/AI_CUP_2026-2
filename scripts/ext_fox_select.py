@@ -30,14 +30,25 @@ def sgf_of(codes):
     return "(;SZ[19]HD[0]" + "".join(f";{'BW'[c // 512]}[{ABC[(c % 512) // 19]}{ABC[(c % 512) % 19]}]" for c in codes) + ")"
 
 
+def load(d):
+    """One folder's parts as arrays in memory (an .npz re-reads an array at every access)."""
+    Z = []
+    for f in sorted(Path(d).glob("games_*.npz")):
+        with np.load(f) as z:
+            Z.append({k: z[k] for k in ("pb", "pw", "ha", "len", "br", "wr", "year", "moves", "off", "key")})
+    return Z
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--parts", nargs="+", required=True, help="name=dir of one rank folder's parts, e.g. 6d=/work/.../parts_6d")
-    ap.add_argument("--accounts", type=int, default=7500, help="per folder")
+    ap.add_argument("--accounts", type=int, default=7500, help="per folder; with --joint: in total")
     ap.add_argument("--games", type=int, default=20)
     ap.add_argument("--need", type=int, default=30)
     ap.add_argument("--min-moves", type=int, default=80)
     ap.add_argument("--cap-pct", type=float, default=0.5)
+    ap.add_argument("--joint", action="store_true", help="count an account's games over ALL folders and choose once: an account met in two folders (its rank changed) stays one player")
+    ap.add_argument("--skip", nargs="*", default=[], help="select.csv files of earlier selections: their accounts and their games are left out")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -45,16 +56,25 @@ def main(argv=None):
     rng = np.random.default_rng(a.seed)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    summary, n_rows = {"args": vars(a), "folders": {}}, 0
+    skip_acc, skip_games = set(), set()
+    csv.field_size_limit(10 ** 9)
+    for f in a.skip:
+        with open(f, newline="") as fh:
+            for r in csv.DictReader(fh):
+                skip_acc.add(int(r["account"], 16)); skip_games.add(r["game_key"])
+    summary, n_rows = {"args": vars(a), "folders": {}, "skipped_accounts": len(skip_acc), "skipped_games": len(skip_games)}, 0
+    names = [x.split("=", 1)[0] for x in a.parts]
+    dirs = dict(x.split("=", 1) for x in a.parts)
+    groups = [names] if a.joint else [[n] for n in names]
     with open(out / "select.csv", "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["game_key", "account", "color", "sgf_content"])
-        for spec in a.parts:
-            name, d = spec.split("=", 1)
-            Z = []
-            for f in sorted(Path(d).glob("games_*.npz")):  # the arrays in memory: an .npz re-reads an array at every access
-                with np.load(f) as z:
-                    Z.append({k: z[k] for k in ("pb", "pw", "ha", "len", "br", "wr", "year", "moves", "off", "key")})
+        for grp in groups:
+            name = "+".join(grp)
+            Z, zname = [], []
+            for n in grp:
+                zz = load(dirs[n])
+                Z += zz; zname += [n] * len(zz)
             pb, pw = np.concatenate([z["pb"] for z in Z]), np.concatenate([z["pw"] for z in Z])
             ha, ln = np.concatenate([z["ha"] for z in Z]), np.concatenate([z["len"] for z in Z])
             br, wr, year = np.concatenate([z["br"] for z in Z]), np.concatenate([z["wr"] for z in Z]), np.concatenate([z["year"] for z in Z])
@@ -62,36 +82,41 @@ def main(argv=None):
             local = np.concatenate([np.arange(len(z["len"])) for z in Z])
             ok = (ha <= 0) & (ln >= a.min_moves)
             for i, z in enumerate(Z):  # no pass inside the plies that are used
-                mv, off = z["moves"], z["off"]
-                is_pass = (mv % 512) == 361
+                is_pass = (z["moves"] % 512) == 361
                 cs = np.concatenate([[0], np.cumsum(is_pass)])
-                m = part == i
-                end = off + np.minimum(z["len"], T_MAX)
-                ok[m] &= (cs[end] - cs[off]) == 0
+                end = z["off"] + np.minimum(z["len"], T_MAX)
+                ok[part == i] &= (cs[end] - cs[z["off"]]) == 0
             idx = np.flatnonzero(ok)
             acc, cnt = np.unique(np.concatenate([pb[idx], pw[idx]]), return_counts=True)
             cap = np.percentile(cnt, 100 - a.cap_pct)
             pool = acc[(cnt >= a.need) & (cnt <= cap)]
+            pool = pool[~np.isin(pool, np.fromiter(skip_acc, np.uint64, len(skip_acc)))] if skip_acc else pool
             chosen = rng.choice(pool, min(a.accounts, len(pool)), replace=False)
             need = dict.fromkeys(chosen.tolist(), a.games)
             got = dict.fromkeys(chosen.tolist(), 0)
-            rows, ranks, years = 0, [], []
+            rows, ranks, years, left = 0, [], [], len(chosen) * a.games
             for g in rng.permutation(idx):
+                if left <= 0:
+                    break
                 b, wkey = int(pb[g]), int(pw[g])
                 nb, nw = need.get(b, 0), need.get(wkey, 0)
                 if nb <= 0 and nw <= 0:
+                    continue
+                z = Z[part[g]]
+                key = f"x:{zname[part[g]]}:{Path(str(z['key'][local[g]])).stem}"
+                if key in skip_games:
                     continue
                 side = 0 if nb >= nw else 1
                 who = b if side == 0 else wkey
                 need[who] -= 1
                 got[who] += 1
-                z = Z[part[g]]
+                left -= 1
                 o = int(z["off"][local[g]])
                 codes = z["moves"][o:o + min(int(ln[g]), T_MAX)].tolist()
                 text = sgf_of(codes)
                 if rows < 200:  # the written record reads back as the same moves (the overlap gate and the replay parse this form)
                     assert [c * 512 + q for c, q in moves_of(text.encode())] == codes, "record does not read back"
-                w.writerow([f"x:{name}:{Path(str(z['key'][local[g]])).stem}", f"{who:016x}", "BW"[side], text])
+                w.writerow([key, f"{who:016x}", "BW"[side], text])
                 rows += 1
                 ranks.append(int(br[g] if side == 0 else wr[g])); years.append(int(year[g]))
             g_ = np.array(list(got.values()))
@@ -100,9 +125,10 @@ def main(argv=None):
                                         "accounts_with_all_games": int((g_ >= a.games).sum()), "subject_rank_counts": {str(k): int(v) for k, v in zip(*np.unique(ranks, return_counts=True))},
                                         "year_counts": {str(k): int(v) for k, v in zip(*np.unique(years, return_counts=True))}}
             n_rows += rows
-            s = summary["folders"][name]
-            print(f"{name}: {s['games_in_parts']} games, {s['eligible_games']} eligible; accounts {s['accounts_with_eligible_games']}, with >= {a.need} games {s['accounts_meeting_need']}; chosen {s['accounts_chosen']} "
-                  f"-> {rows} games ({s['accounts_with_all_games']} accounts with all {a.games}, {s['accounts_with_8_or_more']} with >= 8); subject ranks {s['subject_rank_counts']} ({time.time() - t0:.0f} s)", flush=True)
+            s_ = summary["folders"][name]
+            print(f"{name}: {s_['games_in_parts']} games, {s_['eligible_games']} eligible; accounts {s_['accounts_with_eligible_games']}, with >= {a.need} games (earlier selections left out) {s_['accounts_meeting_need']}; "
+                  f"chosen {s_['accounts_chosen']} -> {rows} games ({s_['accounts_with_all_games']} accounts with all {a.games}, {s_['accounts_with_8_or_more']} with >= 8); subject ranks {s_['subject_rank_counts']} ({time.time() - t0:.0f} s)", flush=True)
+            del Z
     summary["games_written"] = n_rows
     (out / "select.json").write_text(json.dumps(summary, indent=1, default=str) + "\n")
     print(f"wrote {out / 'select.csv'}: {n_rows} games ({time.time() - t0:.0f} s)")

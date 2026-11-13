@@ -1,0 +1,50 @@
+{
+ "prefix_moves": 60,
+ "external_games": 6141073,
+ "external_distinct_prefixes": 5975147,
+ "by_file": {
+  "train_1D.csv": {
+   "games_with_prefix": 79336,
+   "matches": 0
+  },
+  "train_2D.csv": {
+   "games_with_prefix": 79465,
+   "matches": 0
+  },
+  "train_3D.csv": {
+   "games_with_prefix": 79290,
+   "matches": 0
+  },
+  "train_4D.csv": {
+   "games_with_prefix": 79148,
+   "matches": 0
+  },
+  "train_5D.csv": {
+   "games_with_prefix": 79453,
+   "matches": 0
+  },
+  "train_6D.csv": {
+   "games_with_prefix": 79321,
+   "matches": 0
+  },
+  "train_A.csv": {
+   "games_with_prefix": 79492,
+   "matches": 0
+  },
+  "train_B.csv": {
+   "games_with_prefix": 79710,
+   "matches": 0
+  },
+  "train_C.csv": {
+   "games_with_prefix": 79237,
+   "matches": 0
+  },
+  "train_D.csv": {
+   "games_with_prefix": 79598,
+   "matches": 0
+  }
+ },
+ "note": "counts only; fold 0 excluded; test sets not read; no account read for a match",
+ "competition_games": 794050,
+ "matches": 0
+}
