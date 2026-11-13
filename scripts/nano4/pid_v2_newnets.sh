@@ -42,3 +42,5 @@ for c in "$@"; do
 done
 for r in ${refs//,/ }; do bash $R2/scripts/nano4/pid_v2_offsim_many.sh "$r" "${names[@]}"; done
 for n in "${names[@]}"; do bash $R2/scripts/nano4/pid_v2_make_file.sh "$n" "pid_${n}s.csv"; done
+# second instrument (METHOD_NOTES 2.55, item 7): simulated pools cut from the ORIGINAL pools' candidates, 10-game sets and 5-game questions
+bash $R2/scripts/nano4/pid_exp_oldsim.sh "$grp" "$first ${names[*]}" "$grp" || echo "old-pool simulation failed"
