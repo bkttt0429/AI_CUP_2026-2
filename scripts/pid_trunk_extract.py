@@ -219,7 +219,7 @@ def main(argv=None):
                 start += n_
             path = out / f"{a.tag}_s{shard:03d}_p{k:04d}.npz"
             tmp = path.with_name(path.name + ".tmp.npz")
-            extra = {} if full is None else {"full": full}
+            extra = {} if full is None else {"full": full.astype(np.float16)}  # 3 KB per game
             np.savez(tmp, keys=np.array([d[0] for d in done]), feats=feats, n_target=np.array(lens, np.int16), phase=phase, **extra)
             os.replace(tmp, path)
             games_done += len(part)
