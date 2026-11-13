@@ -11,6 +11,8 @@
 #                           more dropout (zd), all on top of the augmentation; comparison with yse
 #   pid_exp_sym.sh bank     held-out test of cross-batch memory negatives (kb; kg and kt with one symmetry per game, kt only the
 #                           2,048 hardest) and of a cosine margin (km); comparison with yse
+#   pid_exp_sym.sh window   held-out test of random ply windows (wa half of the games, wb all, wc half + ply masking) and of the
+#                           reworked cross-batch memory (kc); comparison with yse
 #   pid_exp_sym.sh stack    held-out test (x2 data, folds 1 and 2) of what stacks on the augmentation:
 #                           zs + the bigger network, zr + half of the episodes from one rank band, zg every game its own
 #                           symmetry (instead of one per episode), zm + ply masking up to 0.3; then the comparison with yse
@@ -62,6 +64,16 @@ case $1 in
       python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
     done
     python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e kbe=_nkbe kge=_nkge kte=_nkte kme=_nkme kb=_nkb kg=_nkg kt=_nkt km=_nkm --ref yse --folds 1 2 --out $R2/results/final/v2_sim14k.json ;;
+  window)  # METHOD_NOTES 2.66: random ply windows (the rank session's idea) and the reworked cross-batch memory, on top of the augmentation
+    specs=()
+    for v in 1 2; do
+      specs+=("$v wa $C --win 0.5" "$v wb $C --win 1.0" "$v wc $C --win 0.5 --mask 0.2" "$v kc $C --bank --bank-ema --bank-start 8000 --bank-age 1500 --bank-ramp 2000")
+    done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$X2" "${specs[@]}"
+    for t in wae wbe wce kce wa wb wc kc; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e wae=_nwae wbe=_nwbe wce=_nwce kce=_nkce wa=_nwa wb=_nwb wc=_nwc kc=_nkc --ref yse --folds 1 2 --out $R2/results/final/v2_sim14w.json ;;
   stack)
     specs=()
     for v in 1 2; do

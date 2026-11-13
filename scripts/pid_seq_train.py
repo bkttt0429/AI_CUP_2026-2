@@ -202,6 +202,12 @@ def main(argv=None):
     ap.add_argument("--bank", action="store_true", help="cross-batch memory (METHOD_NOTES 2.64): every training player's prototype from its last visit is a negative "
                                                         "for the games of later episodes, so the most similar players are present at every step, not only the 255 of the episode")
     ap.add_argument("--bank-start", type=int, default=1000, help="first step that uses the memory")
+    ap.add_argument("--bank-ema", action="store_true", help="the memory holds prototypes computed by the EMA network (slowly moving, as a momentum encoder) instead of the online one")
+    ap.add_argument("--bank-age", type=int, default=0, help="only memory entries written in the last this many steps count (0: all)")
+    ap.add_argument("--bank-ramp", type=int, default=0, help="steps over which the memory's share of the loss rises from 0 to 1 after --bank-start")
+    ap.add_argument("--win", type=float, default=0.0, help="share of the games of a batch shown only through a random window of plies (true ply positions kept; the rest hidden); "
+                                                           "evaluation always reads whole games (METHOD_NOTES 2.66; the rank session's idea)")
+    ap.add_argument("--win-len", type=int, nargs="+", default=[64, 128])
     ap.add_argument("--bank-topk", type=int, default=0, help="only the k highest memory negatives of each game (0: all)")
     ap.add_argument("--margin", type=float, default=0.0, help="cosine margin taken off a game's score against its own player")
     ap.add_argument("--cls-loss", choices=("none", "cosface"), default="none",
@@ -307,9 +313,11 @@ def main(argv=None):
     if a.bank:  # no parameters: the prototypes are copied from the network's own outputs
         bank = torch.zeros(len(tp), M.D_OUT, device=dev)
         bank_ok = torch.zeros(len(tp), dtype=torch.bool, device=dev)
+        bank_step = torch.full((len(tp),), -10 ** 9, dtype=torch.long, device=dev)
         bcol = torch.full((C,), -1, dtype=torch.long, device=dev)
         bcol[torch.as_tensor(tp, device=dev)] = torch.arange(len(tp), device=dev)
-        log(f"cross-batch memory: {len(tp)} slots, used from step {a.bank_start}{f', top {a.bank_topk} per game' if a.bank_topk else ''}; margin {a.margin}")
+        log(f"cross-batch memory: {len(tp)} slots, used from step {a.bank_start}{f', top {a.bank_topk} per game' if a.bank_topk else ''}"
+            f"{', entries from the EMA network' if a.bank_ema else ''}{f', entries up to {a.bank_age} steps old' if a.bank_age else ''}{f', ramp over {a.bank_ramp} steps' if a.bank_ramp else ''}; margin {a.margin}")
     centres = col = None
     if a.cls_loss != "none":  # one centre per training player; the centres are not part of the saved network
         centres = torch.nn.Parameter(torch.randn(len(tp), M.D_OUT, device=dev) * 0.01)
@@ -368,7 +376,7 @@ def main(argv=None):
         maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
         sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "sym_game": bool(a.sym_game), "drop_open": a.drop_open, "drop_open_max": a.drop_open_max, "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "bank": bool(a.bank), "bank_start": a.bank_start, "bank_topk": a.bank_topk, "margin": a.margin, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "sym_game": bool(a.sym_game), "drop_open": a.drop_open, "drop_open_max": a.drop_open_max, "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "bank": bool(a.bank), "bank_start": a.bank_start, "bank_topk": a.bank_topk, "bank_ema": bool(a.bank_ema), "bank_age": a.bank_age, "bank_ramp": a.bank_ramp, "win": a.win, "win_len": list(a.win_len), "margin": a.margin, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
 
     def write_ckpt(tag, at):
         for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
@@ -395,6 +403,14 @@ def main(argv=None):
             cut = torch.where(torch.rand(len(rows), device=dev) < a.drop_open, torch.randint(20, a.drop_open_max + 1, (len(rows),), device=dev), torch.zeros(len(rows), dtype=torch.long, device=dev))
             hide = torch.arange(T, device=dev)[None] < cut[:, None]
             gl = torch.where(hide[..., None], net.mu.to(gl.dtype)[None, None], gl)
+        if a.win > 0:
+            len_w = tb(G["LEN"][rows].astype(np.int64))
+            w_len = torch.as_tensor(a.win_len, device=dev)[torch.randint(len(a.win_len), (len(rows),), device=dev)]
+            w_start = (torch.rand(len(rows), device=dev) * (len_w - w_len).clamp(min=0).float()).long()
+            t_idx = torch.arange(T, device=dev)[None]
+            outside = ((t_idx < w_start[:, None]) | (t_idx >= (w_start + w_len)[:, None])) & (torch.rand(len(rows), device=dev) < a.win)[:, None]
+            gl = torch.where(outside[..., None], net.mu.to(gl.dtype)[None, None], gl)
+            hide = outside if hide is None else (hide | outside)
         with torch.autocast("cuda", dtype=torch.bfloat16):
             pos_np = G["POS"][rows].astype(np.int64)
             if sym_tab is not None:
@@ -402,24 +418,25 @@ def main(argv=None):
             pos_t = tb(pos_np)
             if hide is not None:
                 pos_t = torch.where(hide, torch.full_like(pos_t, 362), pos_t)  # 362 = the padding point: no move, no displacement
-            z = net(gl, pos_t, tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64)))
+            mov_t, len_t, subj_t = tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64))
+            z = net(gl, pos_t, mov_t, len_t, subj_t)
         z = z.float().reshape(P, M.M_EP, M.D_OUT)
         tot, sc = z.sum(1), net.log_scale.exp()
         logits = sc * z.reshape(-1, M.D_OUT) @ F.normalize(tot, dim=-1).T
         own_ = sc * (z * F.normalize(tot[:, None] - z, dim=-1)).sum(-1).reshape(-1)  # a game against its own player's prototype without itself
         tgt = tb(np.repeat(ar, M.M_EP))
         logits = logits.scatter(1, tgt[:, None], (own_ - sc * a.margin)[:, None])
-        if bank is not None and step >= a.bank_start and bool(bank_ok.any()):
+        loss = F.cross_entropy(logits, tgt)
+        if bank is not None and step >= a.bank_start:
             bslots = bcol[tb(pl)]
-            lb = sc * (z.reshape(-1, M.D_OUT) @ bank.T)
-            off = ~bank_ok
-            off[bslots] = True  # players never visited, and this episode's own players (their fresh prototypes are already in `logits`)
-            lb = lb.masked_fill(off[None], -1e4)
-            if a.bank_topk:
-                lb = lb.topk(min(a.bank_topk, lb.shape[1]), dim=1).values
-            loss = F.cross_entropy(torch.cat([logits, lb], 1), tgt)
-        else:
-            loss = F.cross_entropy(logits, tgt)
+            off = ~bank_ok if not a.bank_age else ~(bank_ok & (step - bank_step <= a.bank_age))
+            off[bslots] = True  # players without a usable entry, and this episode's own players (their fresh prototypes are already in `logits`)
+            if not bool(off.all()):
+                lb = (sc * (z.reshape(-1, M.D_OUT) @ bank.T)).masked_fill(off[None], -1e4)
+                if a.bank_topk:
+                    lb = lb.topk(min(a.bank_topk, lb.shape[1]), dim=1).values
+                lam = min(1.0, (step - a.bank_start + 1) / a.bank_ramp) if a.bank_ramp else 1.0
+                loss = (1 - lam) * loss + lam * F.cross_entropy(torch.cat([logits, lb], 1), tgt)
         if centres is not None:
             ct = col[tb(np.repeat(pl, M.M_EP))]
             cos = z.reshape(-1, M.D_OUT) @ F.normalize(centres, dim=-1).T
@@ -437,8 +454,15 @@ def main(argv=None):
                 pe.lerp_(pn, 1 - d)
             if bank is not None:
                 bslots = bcol[tb(pl)]
-                bank[bslots] = F.normalize(z.detach().sum(1), dim=-1)
+                if a.bank_ema:
+                    with torch.autocast("cuda", dtype=torch.bfloat16):
+                        zb = ema(gl, pos_t, mov_t, len_t, subj_t)
+                    zb = zb.float().reshape(P, M.M_EP, M.D_OUT)
+                else:
+                    zb = z.detach()
+                bank[bslots] = F.normalize(zb.sum(1), dim=-1)
                 bank_ok[bslots] = True
+                bank_step[bslots] = step
         tl += float(loss.detach())
         ta += float((logits.argmax(1) == tgt).float().mean())
         if (step + 1) % every == 0:
