@@ -13,6 +13,7 @@ Folds: net v trains on the players of folds 1-4 other than v; net -1 on folds 1-
 evaluation (this repository never uses it); players without a fold train in every net, as in M90. The rank competition's
 test games are not read.
   --fork <spec file>         several networks of one job on one shared copy of the games (see main_fork)
+  --bank / --margin          cross-batch memory negatives, cosine margin (METHOD_NOTES 2.64)
   --cls-loss cosface         classification over all training players with a cosine margin (METHOD_NOTES 2.56)
   --rank-ep / --rank-ep-share   episodes of players of one rank class or band: hard negatives (METHOD_NOTES 2.55)
   --snap                     further checkpoints at given steps of one long run (METHOD_NOTES 2.51)
@@ -198,6 +199,11 @@ def main(argv=None):
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
     ap.add_argument("--no-state", action="store_true")
+    ap.add_argument("--bank", action="store_true", help="cross-batch memory (METHOD_NOTES 2.64): every training player's prototype from its last visit is a negative "
+                                                        "for the games of later episodes, so the most similar players are present at every step, not only the 255 of the episode")
+    ap.add_argument("--bank-start", type=int, default=1000, help="first step that uses the memory")
+    ap.add_argument("--bank-topk", type=int, default=0, help="only the k highest memory negatives of each game (0: all)")
+    ap.add_argument("--margin", type=float, default=0.0, help="cosine margin taken off a game's score against its own player")
     ap.add_argument("--cls-loss", choices=("none", "cosface"), default="none",
                     help="classification over ALL training players with an additive cosine margin (face / speaker recognition; METHOD_NOTES 2.56): "
                          "every step each game is told apart from every player's centre, not only from the 255 others of its episode")
@@ -297,6 +303,13 @@ def main(argv=None):
     ema = copy.deepcopy(net).eval()
     for p_ in ema.parameters():
         p_.requires_grad_(False)
+    bank = bank_ok = bcol = None
+    if a.bank:  # no parameters: the prototypes are copied from the network's own outputs
+        bank = torch.zeros(len(tp), M.D_OUT, device=dev)
+        bank_ok = torch.zeros(len(tp), dtype=torch.bool, device=dev)
+        bcol = torch.full((C,), -1, dtype=torch.long, device=dev)
+        bcol[torch.as_tensor(tp, device=dev)] = torch.arange(len(tp), device=dev)
+        log(f"cross-batch memory: {len(tp)} slots, used from step {a.bank_start}{f', top {a.bank_topk} per game' if a.bank_topk else ''}; margin {a.margin}")
     centres = col = None
     if a.cls_loss != "none":  # one centre per training player; the centres are not part of the saved network
         centres = torch.nn.Parameter(torch.randn(len(tp), M.D_OUT, device=dev) * 0.01)
@@ -355,7 +368,7 @@ def main(argv=None):
         maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
         sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "sym_game": bool(a.sym_game), "drop_open": a.drop_open, "drop_open_max": a.drop_open_max, "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "sym_game": bool(a.sym_game), "drop_open": a.drop_open, "drop_open_max": a.drop_open_max, "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "bank": bool(a.bank), "bank_start": a.bank_start, "bank_topk": a.bank_topk, "margin": a.margin, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
 
     def write_ckpt(tag, at):
         for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
@@ -395,8 +408,18 @@ def main(argv=None):
         logits = sc * z.reshape(-1, M.D_OUT) @ F.normalize(tot, dim=-1).T
         own_ = sc * (z * F.normalize(tot[:, None] - z, dim=-1)).sum(-1).reshape(-1)  # a game against its own player's prototype without itself
         tgt = tb(np.repeat(ar, M.M_EP))
-        logits = logits.scatter(1, tgt[:, None], own_[:, None])
-        loss = F.cross_entropy(logits, tgt)
+        logits = logits.scatter(1, tgt[:, None], (own_ - sc * a.margin)[:, None])
+        if bank is not None and step >= a.bank_start and bool(bank_ok.any()):
+            bslots = bcol[tb(pl)]
+            lb = sc * (z.reshape(-1, M.D_OUT) @ bank.T)
+            off = ~bank_ok
+            off[bslots] = True  # players never visited, and this episode's own players (their fresh prototypes are already in `logits`)
+            lb = lb.masked_fill(off[None], -1e4)
+            if a.bank_topk:
+                lb = lb.topk(min(a.bank_topk, lb.shape[1]), dim=1).values
+            loss = F.cross_entropy(torch.cat([logits, lb], 1), tgt)
+        else:
+            loss = F.cross_entropy(logits, tgt)
         if centres is not None:
             ct = col[tb(np.repeat(pl, M.M_EP))]
             cos = z.reshape(-1, M.D_OUT) @ F.normalize(centres, dim=-1).T
@@ -412,6 +435,10 @@ def main(argv=None):
             d = min(a.ema, (1 + step) / (10 + step))
             for pe, pn in zip(ema.parameters(), net.parameters()):
                 pe.lerp_(pn, 1 - d)
+            if bank is not None:
+                bslots = bcol[tb(pl)]
+                bank[bslots] = F.normalize(z.detach().sum(1), dim=-1)
+                bank_ok[bslots] = True
         tl += float(loss.detach())
         ta += float((logits.argmax(1) == tgt).float().mean())
         if (step + 1) % every == 0:

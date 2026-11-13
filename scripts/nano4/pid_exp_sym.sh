@@ -9,6 +9,8 @@
 #   pid_exp_sym.sh big      four official networks, 512 wide x 10 layers, with it          -> ckpt_-1_o3BSs<k>[e].pt
 #   pid_exp_sym.sh open     held-out test of hiding the opening in training (zo 30 %, zp 50 %, zq up to ply 160) and of
 #                           more dropout (zd), all on top of the augmentation; comparison with yse
+#   pid_exp_sym.sh bank     held-out test of cross-batch memory negatives (kb; kg and kt with one symmetry per game, kt only the
+#                           2,048 hardest) and of a cosine margin (km); comparison with yse
 #   pid_exp_sym.sh stack    held-out test (x2 data, folds 1 and 2) of what stacks on the augmentation:
 #                           zs + the bigger network, zr + half of the episodes from one rank band, zg every game its own
 #                           symmetry (instead of one per episode), zm + ply masking up to 0.3; then the comparison with yse
@@ -50,6 +52,16 @@ case $1 in
       python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
     done
     python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e zoe=_nzoe zpe=_nzpe zqe=_nzqe zde=_nzde zo=_nzo zp=_nzp zq=_nzq zd=_nzd --ref yse --folds 1 2 --out $R2/results/final/v2_sim14o.json ;;
+  bank)  # METHOD_NOTES 2.64: cross-batch memory negatives (and a plain cosine margin), all on top of the augmentation
+    specs=()
+    for v in 1 2; do
+      specs+=("$v kb $C --bank" "$v kg $C --sym-game --bank" "$v kt $C --sym-game --bank --bank-topk 2048" "$v km $C --margin 0.1")
+    done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$X2" "${specs[@]}"
+    for t in kbe kge kte kme kb kg kt km; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e kbe=_nkbe kge=_nkge kte=_nkte kme=_nkme kb=_nkb kg=_nkg kt=_nkt km=_nkm --ref yse --folds 1 2 --out $R2/results/final/v2_sim14k.json ;;
   stack)
     specs=()
     for v in 1 2; do
