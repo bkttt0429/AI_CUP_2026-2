@@ -24,7 +24,7 @@ for f in $fams; do
     px2)   runs+=("1 _x2e --ckpt-dir $S --ckpt-suffix _x2e" "2 _x2e --ckpt-dir $S --ckpt-suffix _x2e") ;;
     py)    runs+=("1 _yse --ckpt-dir $S --ckpt-suffix _yse" "2 _yse --ckpt-dir $S --ckpt-suffix _yse") ;;
     pb)    runs+=("1 _ybe --ckpt-dir $S --ckpt-suffix _ybe" "2 _ybe --ckpt-dir $S --ckpt-suffix _ybe") ;;
-    *)     for k in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do [ -s $S/ckpt_-1_${f}s${k}e.pt ] && runs+=("-1 _${f}s${k}e --ckpt-dir $S --ckpt-suffix _${f}s${k}e"); done ;;
+    *)     for k in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23; do [ -s $S/ckpt_-1_${f}s${k}e.pt ] && runs+=("-1 _${f}s${k}e --ckpt-dir $S --ckpt-suffix _${f}s${k}e"); done ;;
   esac
 done
 echo "${#runs[@]} networks to fine-tune on the simulated pools"

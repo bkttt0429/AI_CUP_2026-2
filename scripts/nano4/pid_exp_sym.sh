@@ -3,6 +3,9 @@
 # 0.510 -> 0.560). All networks of a job share one copy of the games (scripts/nano4/pid_seq_train_fork.sh).
 #   pid_exp_sym.sh base     four official networks, usual size, with the augmentation      -> ckpt_-1_o3Ss<k>[e].pt
 #   pid_exp_sym.sh base8    eight more seeds of the same (o3Ss4-11)
+#   pid_exp_sym.sh long     eight official networks trained twice as long (o3SLs12-19; snapshots at 20k and 30k steps)
+#   pid_exp_sym.sh longheld the same on the held-out folds, compared with yse on the simulated pools
+#   pid_exp_sym.sh band     four official networks with the augmentation and rank-band episodes -> ckpt_-1_o3SRs<k>[e].pt
 #   pid_exp_sym.sh big      four official networks, 512 wide x 10 layers, with it          -> ckpt_-1_o3BSs<k>[e].pt
 #   pid_exp_sym.sh open     held-out test of hiding the opening in training (zo 30 %, zp 50 %, zq up to ply 160) and of
 #                           more dropout (zd), all on top of the augmentation; comparison with yse
@@ -21,6 +24,20 @@ case $1 in
   base) bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "-1 o3Ss0 $C --seed 0" "-1 o3Ss1 $C --seed 1" "-1 o3Ss2 $C --seed 2" "-1 o3Ss3 $C --seed 3" ;;
   base8) specs=(); for k in 4 5 6 7 8 9 10 11; do specs+=("-1 o3Ss$k $C --seed $k"); done  # eight more seeds of the usual size
         bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "${specs[@]}" ;;
+  long)  # METHOD_NOTES 2.62: with the augmentation the held-out curves still rise at 20,000 steps -> eight official networks
+         # trained to 40,000 steps (same schedule), new seeds 12-19, snapshots at 20,000 (= further o3S seeds) and 30,000
+    L="--steps 40000 --horizon 60000 --ext-share 0.5 --no-state --sym-aug --snap 20000 30000"
+    specs=(); for k in 12 13 14 15 16 17 18 19; do specs+=("-1 o3SLs$k $L --seed $k"); done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "${specs[@]}" ;;
+  longheld)  # the same on the x2 data, folds 1 and 2, and the simulated-pool comparison of the 20k / 30k / 40k states with yse
+    L="--steps 40000 --horizon 60000 --ext-share 0.5 --no-state --sym-aug --snap 20000 30000"
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$X2" "1 ysl $L" "2 ysl $L"
+    for t in yslk20e yslk30e ysle; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse yslk20e=_nyslk20e yslk30e=_nyslk30e ysle=_nysle --ref yse --folds 1 2 --out $R2/results/final/v2_sim14l.json ;;
+  band) R="$C --rank-ep band --rank-ep-share 0.5"  # four official networks with the augmentation AND half of the episodes from one rank band (ahead of the stack test's verdict)
+        bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "-1 o3SRs0 $R --seed 0" "-1 o3SRs1 $R --seed 1" "-1 o3SRs2 $R --seed 2" "-1 o3SRs3 $R --seed 3" ;;
   big)  B="$C --arch 512,10,8,2048"
         bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "-1 o3BSs0 $B --seed 0" "-1 o3BSs1 $B --seed 1" "-1 o3BSs2 $B --seed 2" "-1 o3BSs3 $B --seed 3" ;;
   open)  # METHOD_NOTES 2.60: the other shortcut. Half of the 1-game score sits in the first 30 plies; hide the opening in training
