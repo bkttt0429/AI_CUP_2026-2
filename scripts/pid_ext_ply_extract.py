@@ -46,11 +46,23 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="smoke run: only this many games")
     ap.add_argument("--start", type=int, default=0, help="rows [start, stop) of the selection (applied before the shards), for a selection extracted in stages")
     ap.add_argument("--stop", type=int, default=0)
+    ap.add_argument("--max-plies", type=int, default=T_MAX, help="store (and run the trunk on) only the first this many plies of a game (METHOD_NOTES 2.70; default 256)")
+    ap.add_argument("--account-games", type=int, nargs=2, default=None, metavar=("FROM", "TO"),
+                    help="only the games number FROM .. TO-1 of every account, in the selection's order (0 4: the first four of each; a later run with 4 8 adds the rest)")
     a = ap.parse_args()
     t0 = time.time()
     csv.field_size_limit(10 ** 9)
+    assert 1 <= a.max_plies <= T_MAX
     with open(a.select, newline="") as fh:
-        tasks = [(r["game_key"], r["sgf_content"], r["color"]) for r in csv.DictReader(fh)]
+        if a.account_games:
+            seen, tasks = {}, []
+            for r in csv.DictReader(fh):
+                i = seen.get(r["account"], 0)
+                seen[r["account"]] = i + 1
+                if a.account_games[0] <= i < a.account_games[1]:
+                    tasks.append((r["game_key"], r["sgf_content"], r["color"]))
+        else:
+            tasks = [(r["game_key"], r["sgf_content"], r["color"]) for r in csv.DictReader(fh)]
     tasks = tasks[a.start:(a.stop or len(tasks))][a.shard::a.nshards]
     tasks = tasks[:a.limit] if a.limit else tasks
     st = np.load(STATS)
@@ -80,12 +92,15 @@ def main():
             lens = np.array([len(d[3]) for d in done])
             bins, globs = np.concatenate([d[1] for d in done]), np.concatenate([d[2] for d in done])
             pos, mover = np.concatenate([d[3] for d in done]), np.concatenate([d[4] for d in done])
+            keep = np.concatenate([np.arange(n) for n in lens]) < a.max_plies
+            if a.max_plies < T_MAX:  # the trunk only sees the plies that are stored (every position is computed on its own)
+                bins, globs, pos, mover = bins[keep], globs[keep], pos[keep], mover[keep]
+                keep = np.ones(len(pos), bool)
             g, l = te.vectors(model, bins, globs, pos, mover, proj[0], proj[1], nrows, a.batch)
-            keep = np.concatenate([np.arange(n) for n in lens]) < T_MAX
             q = np.clip(np.rint((np.hstack([g, l])[keep].astype(np.float32) - mu) / sd * Q), -127, 127).astype(np.int8)
             subj = np.array([int(d[4][d[5]][0]) if d[5].any() else 0 for d in done], np.int8)
             tmp = path.with_name(path.name + ".tmp.npz")
-            np.savez(tmp, key=np.array([d[0] for d in done]), LEN=np.minimum(lens, T_MAX).astype(np.int16), SUBJ=subj, POS=pos[keep].astype(np.int16), MOV=mover[keep].astype(np.int8), GLQ=q)
+            np.savez(tmp, key=np.array([d[0] for d in done]), LEN=np.minimum(lens, a.max_plies).astype(np.int16), SUBJ=subj, POS=pos[keep].astype(np.int16), MOV=mover[keep].astype(np.int8), GLQ=q)
             os.replace(tmp, path)
             plies += int(lens.sum())
             if k % 20 == 0:

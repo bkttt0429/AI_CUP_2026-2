@@ -226,6 +226,9 @@ def main(argv=None):
     ap.add_argument("--snap", nargs="*", type=int, default=[], help="also write the checkpoints at these steps, as ckpt_<net>_<tag>k<step/1000>[e].pt (snapshots of one long run)")
     ap.add_argument("--m-ep", type=int, default=None, help="games per player in an episode (default 8; METHOD_NOTES 2.69)")
     ap.add_argument("--min-games", type=int, default=None, help="an EXTERNAL account trains with at least this many usable games (default 8); competition players always need 8")
+    ap.add_argument("--jitter", type=float, default=0.0, help="Gaussian noise on the per-ply trunk vectors in training, in units of each dimension's standard deviation (METHOD_NOTES 2.72)")
+    ap.add_argument("--smooth", type=float, default=0.0, help="label smoothing of the episode loss")
+    ap.add_argument("--ext-max-plies", type=int, default=0, help="external games are shown only up to this ply (0: all; as if they had been stored that short; METHOD_NOTES 2.70)")
     ap.add_argument("--ext-cap", type=int, default=0, help="use only the first this many games of every external account (0: all)")
     ap.add_argument("--ext-accounts", type=int, default=0, help="use only this many external accounts: the first N of one fixed random order of the accounts with 8 or more usable games, "
                                                                "so the subsets of different N are nested (0: all)")
@@ -415,6 +418,8 @@ def main(argv=None):
         u[np.arange(W)[None] >= cnt[pl][:, None]] = 2.0
         rows = tab[pl[:, None], np.argsort(u, axis=1)[:, :M.M_EP]].reshape(-1)
         gl = tb(G["GL"][rows])
+        if a.jitter > 0:  # the same game never looks exactly the same twice
+            gl = gl + (a.jitter * net.sd.to(gl.dtype))[None, None] * torch.randn_like(gl)
         if a.mask > 0:
             hit = torch.rand(len(rows), T, device=dev) < torch.rand(len(rows), 1, device=dev) * a.mask
             gl = torch.where(hit[..., None], net.mu.to(gl.dtype)[None, None], gl)
@@ -438,7 +443,10 @@ def main(argv=None):
             pos_t = tb(pos_np)
             if hide is not None:
                 pos_t = torch.where(hide, torch.full_like(pos_t, 362), pos_t)  # 362 = the padding point: no move, no displacement
-            mov_t, len_t, subj_t = tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64))
+            len_np = G["LEN"][rows].astype(np.int64)
+            if a.ext_max_plies:
+                len_np = np.where(is_ext[owner[rows]], np.minimum(len_np, a.ext_max_plies), len_np)
+            mov_t, len_t, subj_t = tb(G["MOV"][rows].astype(np.int64)), tb(len_np), tb(G["SUBJ"][rows].astype(np.int64))
             z = net(gl, pos_t, mov_t, len_t, subj_t)
         z = z.float().reshape(P, M.M_EP, M.D_OUT)
         tot, sc = z.sum(1), net.log_scale.exp()
@@ -446,7 +454,7 @@ def main(argv=None):
         own_ = sc * (z * F.normalize(tot[:, None] - z, dim=-1)).sum(-1).reshape(-1)  # a game against its own player's prototype without itself
         tgt = tb(np.repeat(ar, M.M_EP))
         logits = logits.scatter(1, tgt[:, None], (own_ - sc * a.margin)[:, None])
-        loss = F.cross_entropy(logits, tgt)
+        loss = F.cross_entropy(logits, tgt, label_smoothing=a.smooth)
         if bank is not None and step >= a.bank_start:
             bslots = bcol[tb(pl)]
             off = ~bank_ok if not a.bank_age else ~(bank_ok & (step - bank_step <= a.bank_age))

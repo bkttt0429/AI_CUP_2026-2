@@ -16,6 +16,11 @@
 #   pid_exp_sym.sh depth    held-out test of how to spend the disk on external accounts (METHOD_NOTES 2.69): d0 39,683 accounts
 #                           x 8 games (episodes 256 x 8), d1 the same accounts x 4 games (512 x 4), d2 79,366 accounts x 4
 #                           games (the same number of games as d0), d3 all 116,420 x 4; comparisons d1 / d2 with d0, d3 with d2
+#   pid_exp_sym.sh plies    the same question for the plies kept per external game (METHOD_NOTES 2.70): e1 = d0 with the external
+#                           games cut at ply 128, e2 = d2 cut at 128, e3 = d3 cut at 128, e4 = d0's data in episodes of 512 x 4
+#                           (the episode shape alone); compared with the depth test's d0 / d2 / d3 (run after it)
+#   pid_exp_sym.sh noise    held-out test of noise on the per-ply vectors (ja 0.1, jb 0.25, jc 0.5 standard deviations) and of
+#                           label smoothing 0.1 (ls), on top of the augmentation; comparison with yse (METHOD_NOTES 2.72)
 #   pid_exp_sym.sh stack    held-out test (x2 data, folds 1 and 2) of what stacks on the augmentation:
 #                           zs + the bigger network, zr + half of the episodes from one rank band, zg every game its own
 #                           symmetry (instead of one per episode), zm + ply masking up to 0.3; then the comparison with yse
@@ -89,6 +94,34 @@ case $1 in
     done
     python -I $R2/scripts/pid_v2_sim14.py --names d0e=_nd0e yse=_nyse d1e=_nd1e d2e=_nd2e d3e=_nd3e --ref d0e --folds 1 2 --out $R2/results/final/v2_sim14d.json
     python -I $R2/scripts/pid_v2_sim14.py --names d2e=_nd2e d3e=_nd3e d1e=_nd1e --ref d2e --folds 1 2 --out $R2/results/final/v2_sim14d2.json ;;
+  plies)
+    D4="--m-ep 4 --p-ep 512 --ext-cap 4 --min-games 4"
+    specs=()
+    for v in 1 2; do
+      specs+=("$v e1 $C --ext-accounts 39683 --ext-max-plies 128" "$v e2 $C --ext-accounts 79366 $D4 --ext-max-plies 128" "$v e3 $C $D4 --ext-max-plies 128" "$v e4 $C --ext-accounts 39683 --m-ep 4 --p-ep 512")
+    done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "${specs[@]}"
+    for t in e1e e2e e3e e4e; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    names=(yse=_nyse e1e=_ne1e e2e=_ne2e e3e=_ne3e e4e=_ne4e)
+    for t in d0e d1e d2e d3e; do [ -s $R2/data/seq/fold1_n$t.npz ] && names+=("$t=_n$t"); done
+    python -I $R2/scripts/pid_v2_sim14.py --names "${names[@]}" --ref yse --folds 1 2 --out $R2/results/final/v2_sim14e.json
+    if [ -s $R2/data/seq/fold1_nd0e.npz ]; then
+      python -I $R2/scripts/pid_v2_sim14.py --names d0e=_nd0e e1e=_ne1e e4e=_ne4e --ref d0e --folds 1 2 --out $R2/results/final/v2_sim14e0.json
+      python -I $R2/scripts/pid_v2_sim14.py --names d2e=_nd2e e2e=_ne2e --ref d2e --folds 1 2 --out $R2/results/final/v2_sim14e2.json
+      python -I $R2/scripts/pid_v2_sim14.py --names d3e=_nd3e e3e=_ne3e --ref d3e --folds 1 2 --out $R2/results/final/v2_sim14e3.json
+    fi ;;
+  noise)
+    specs=()
+    for v in 1 2; do
+      specs+=("$v ja $C --jitter 0.1" "$v jb $C --jitter 0.25" "$v jc $C --jitter 0.5" "$v ls $C --smooth 0.1")
+    done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$X2" "${specs[@]}"
+    for t in jae jbe jce lse; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e jae=_njae jbe=_njbe jce=_njce lse=_nlse --ref yse --folds 1 2 --out $R2/results/final/v2_sim14j.json ;;
   stack)
     specs=()
     for v in 1 2; do
