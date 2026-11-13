@@ -191,6 +191,9 @@ def main(argv=None):
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
     ap.add_argument("--arch", default=None, help="D,LAYERS,HEADS,FFN of the transformer (M90: 384,8,8,1536); stored in the checkpoint, the loaders rebuild the same network")
     ap.add_argument("--sym-aug", action="store_true")
+    ap.add_argument("--drop-open", type=float, default=0.0, help="share of the games of a batch whose opening is hidden (board vectors and played points of the first K plies, "
+                                                                 "K drawn in 20 .. --drop-open-max): the network must also tell players apart from the middle game (METHOD_NOTES 2.60)")
+    ap.add_argument("--drop-open-max", type=int, default=100)
     ap.add_argument("--sym-game", action="store_true", help="with --sym-aug: every GAME gets its own random board symmetry (orientation carries no identity then) instead of one per episode")
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
@@ -352,7 +355,7 @@ def main(argv=None):
         maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
         sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "sym_game": bool(a.sym_game), "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "sym_game": bool(a.sym_game), "drop_open": a.drop_open, "drop_open_max": a.drop_open_max, "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
 
     def write_ckpt(tag, at):
         for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
@@ -374,11 +377,19 @@ def main(argv=None):
         if a.mask > 0:
             hit = torch.rand(len(rows), T, device=dev) < torch.rand(len(rows), 1, device=dev) * a.mask
             gl = torch.where(hit[..., None], net.mu.to(gl.dtype)[None, None], gl)
+        hide = None
+        if a.drop_open > 0:
+            cut = torch.where(torch.rand(len(rows), device=dev) < a.drop_open, torch.randint(20, a.drop_open_max + 1, (len(rows),), device=dev), torch.zeros(len(rows), dtype=torch.long, device=dev))
+            hide = torch.arange(T, device=dev)[None] < cut[:, None]
+            gl = torch.where(hide[..., None], net.mu.to(gl.dtype)[None, None], gl)
         with torch.autocast("cuda", dtype=torch.bfloat16):
             pos_np = G["POS"][rows].astype(np.int64)
             if sym_tab is not None:
                 pos_np = sym_tab[rng.integers(8, size=len(rows))[:, None], pos_np] if a.sym_game else sym_tab[rng.integers(8)][pos_np]
-            z = net(gl, tb(pos_np), tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64)))
+            pos_t = tb(pos_np)
+            if hide is not None:
+                pos_t = torch.where(hide, torch.full_like(pos_t, 362), pos_t)  # 362 = the padding point: no move, no displacement
+            z = net(gl, pos_t, tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64)))
         z = z.float().reshape(P, M.M_EP, M.D_OUT)
         tot, sc = z.sum(1), net.log_scale.exp()
         logits = sc * z.reshape(-1, M.D_OUT) @ F.normalize(tot, dim=-1).T

@@ -4,6 +4,8 @@
 #   pid_exp_sym.sh base     four official networks, usual size, with the augmentation      -> ckpt_-1_o3Ss<k>[e].pt
 #   pid_exp_sym.sh base8    eight more seeds of the same (o3Ss4-11)
 #   pid_exp_sym.sh big      four official networks, 512 wide x 10 layers, with it          -> ckpt_-1_o3BSs<k>[e].pt
+#   pid_exp_sym.sh open     held-out test of hiding the opening in training (zo 30 %, zp 50 %, zq up to ply 160) and of
+#                           more dropout (zd), all on top of the augmentation; comparison with yse
 #   pid_exp_sym.sh stack    held-out test (x2 data, folds 1 and 2) of what stacks on the augmentation:
 #                           zs + the bigger network, zr + half of the episodes from one rank band, zg every game its own
 #                           symmetry (instead of one per episode), zm + ply masking up to 0.3; then the comparison with yse
@@ -21,6 +23,16 @@ case $1 in
         bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "${specs[@]}" ;;
   big)  B="$C --arch 512,10,8,2048"
         bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "-1 o3BSs0 $B --seed 0" "-1 o3BSs1 $B --seed 1" "-1 o3BSs2 $B --seed 2" "-1 o3BSs3 $B --seed 3" ;;
+  open)  # METHOD_NOTES 2.60: the other shortcut. Half of the 1-game score sits in the first 30 plies; hide the opening in training
+    specs=()
+    for v in 1 2; do
+      specs+=("$v zo $C --drop-open 0.3" "$v zp $C --drop-open 0.5" "$v zq $C --drop-open 0.3 --drop-open-max 160" "$v zd $C --drop 0.2")
+    done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$X2" "${specs[@]}"
+    for t in zoe zpe zqe zde zo zp zq zd; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e zoe=_nzoe zpe=_nzpe zqe=_nzqe zde=_nzde zo=_nzo zp=_nzp zq=_nzq zd=_nzd --ref yse --folds 1 2 --out $R2/results/final/v2_sim14o.json ;;
   stack)
     specs=()
     for v in 1 2; do
