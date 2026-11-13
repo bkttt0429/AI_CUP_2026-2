@@ -2,6 +2,7 @@
 # METHOD_NOTES 2.58: board-symmetry augmentation passed the held-out test (fused +0.0295 per network, 1-game questions
 # 0.510 -> 0.560). All networks of a job share one copy of the games (scripts/nano4/pid_seq_train_fork.sh).
 #   pid_exp_sym.sh base     four official networks, usual size, with the augmentation      -> ckpt_-1_o3Ss<k>[e].pt
+#   pid_exp_sym.sh base8    eight more seeds of the same (o3Ss4-11)
 #   pid_exp_sym.sh big      four official networks, 512 wide x 10 layers, with it          -> ckpt_-1_o3BSs<k>[e].pt
 #   pid_exp_sym.sh stack    held-out test (x2 data, folds 1 and 2) of what stacks on the augmentation:
 #                           zs + the bigger network, zr + half of the episodes from one rank band, zg every game its own
@@ -16,6 +17,8 @@ OFF="--ext-ply $X/pilot/ply $X/scale1/ply_a $X/scale1/ply_b $R2/data/ext_ply/sca
 X2="--ext-ply $X/pilot/ply $X/scale1/ply_a --ext-select $X/pilot/select.csv $X/scale1/select.csv"
 case $1 in
   base) bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "-1 o3Ss0 $C --seed 0" "-1 o3Ss1 $C --seed 1" "-1 o3Ss2 $C --seed 2" "-1 o3Ss3 $C --seed 3" ;;
+  base8) specs=(); for k in 4 5 6 7 8 9 10 11; do specs+=("-1 o3Ss$k $C --seed $k"); done  # eight more seeds of the usual size
+        bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "${specs[@]}" ;;
   big)  B="$C --arch 512,10,8,2048"
         bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "-1 o3BSs0 $B --seed 0" "-1 o3BSs1 $B --seed 1" "-1 o3BSs2 $B --seed 2" "-1 o3BSs3 $B --seed 3" ;;
   stack)

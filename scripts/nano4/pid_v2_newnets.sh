@@ -14,7 +14,7 @@ S=$R2/data/seq_ft
 grp=$1; refs=$2
 shift 2
 nets=(); seeds=()
-for k in 0 1 2 3 4 5 6 7; do
+for k in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
   if [ -s /work/u2507115/pid_v2/seqnet/ckpt_-1_${grp}s${k}e.pt ]; then nets+=("-1 _${grp}s${k}e"); seeds+=("$k"); fi
 done
 echo "group $grp: ${#nets[@]} network(s), seeds ${seeds[*]}"
@@ -23,7 +23,7 @@ bash $R2/scripts/nano4/pid_v2_ft_many.sh real "${nets[@]}"
 bash $R2/scripts/nano4/pid_v2_ft_many.sh offsim "${nets[@]}"
 list() {  # brace list of the seeds of a group that have official vectors
   local g=$1 out=() k
-  for k in 0 1 2 3 4 5 6 7; do [ -s $S/official_pub2_net-1_${g}s${k}e_t0.npz ] && out+=("$k"); done
+  for k in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do [ -s $S/official_pub2_net-1_${g}s${k}e_t0.npz ] && out+=("$k"); done
   (IFS='|'; echo "${out[*]}")
 }
 groups=("m90=$S/official_{pool}_net{-1|1|2|3|4}_m90s{0|1|2}e_t0.npz" "m101x=$S/official_{pool}_net{-1|1|2|3|4}_m101x_t0.npz"
