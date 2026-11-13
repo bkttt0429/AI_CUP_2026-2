@@ -6,7 +6,7 @@
 #      stops the job here (nothing is selected, the parts stay for inspection)
 #   -> selection (per folder: <accounts> accounts x <games> games, accounts with at least <need> eligible games; accounts and
 #      games of the earlier selections are left out) -> the compact parts are removed.
-# usage: ext_fox_batch.sh <name> <accounts> <games> <need> <seed> <folder> [<folder> ...]
+# usage: [JOINT=1] ext_fox_batch.sh <name> <accounts> <games> <need> <seed> <folder> [<folder> ...]
 # Output: /work/u2507115/ext_fox/<name>/select.csv, select.json; results/final/ext_fox_overlap_<name>.json (and ext_fox_match_<name>.json).
 set -euo pipefail
 X=/work/u2507115/ext_fox
@@ -35,7 +35,8 @@ print(sum(1 for x in d if x['whole_record_equal'] or x['moves_equal_from_start']
   if [ "$same" != 0 ]; then echo "OVERLAP: stopped before the selection; tell the user"; exit 1; fi
 fi
 skip=()
-for s in $X/pilot/select.csv $X/scale1/select.csv $X/scale2_top/select.csv $X/scale2_5d/select.csv; do [ -s "$s" ] && skip+=("$s"); done
-$PY $R2/scripts/ext_fox_select.py --by-account --parts "${named[@]}" --skip "${skip[@]}" --accounts "$accounts" --games "$games" --need "$need" --seed "$seed" --out $X/$name
+for s in $X/*/select.csv; do [ -s "$s" ] && [ "$s" != "$X/$name/select.csv" ] && skip+=("$s"); done  # every earlier selection: their accounts and games are left out
+joint=(); [ "${JOINT:-0}" = 1 ] && joint=(--joint)  # JOINT=1: count an account's games over all the folders of the batch
+$PY $R2/scripts/ext_fox_select.py --by-account "${joint[@]}" --parts "${named[@]}" --skip "${skip[@]}" --accounts "$accounts" --games "$games" --need "$need" --seed "$seed" --out $X/$name
 rm -rf "${parts[@]}"
 df -h /work/u2507115 | awk 'NR==2{print "work free:", $4}'

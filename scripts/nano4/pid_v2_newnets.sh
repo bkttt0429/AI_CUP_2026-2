@@ -19,6 +19,7 @@ for k in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23; do
 done
 echo "group $grp: ${#nets[@]} network(s), seeds ${seeds[*]}"
 [ "${#nets[@]}" -gt 0 ] || { echo "no checkpoint of group $grp"; exit 1; }
+rm -f /work/u2507115/pid_v2/seqnet/ckpt_-1_${grp}s[0-9].pt /work/u2507115/pid_v2/seqnet/ckpt_-1_${grp}s[0-9][0-9].pt  # the non-EMA states are never used in a file (disk)
 bash $R2/scripts/nano4/pid_v2_ft_many.sh real "${nets[@]}"
 bash $R2/scripts/nano4/pid_v2_ft_many.sh offsim "${nets[@]}"
 list() {  # brace list of the seeds of a group that have official vectors
