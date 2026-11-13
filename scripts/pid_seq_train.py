@@ -12,6 +12,7 @@ training players keep being learnt; the official players are all unseen. Changes
 Folds: net v trains on the players of folds 1-4 other than v; net -1 on folds 1-4. Fold 0 is not read into training or
 evaluation (this repository never uses it); players without a fold train in every net, as in M90. The rank competition's
 test games are not read.
+  --cls-loss cosface         classification over all training players with a cosine margin (METHOD_NOTES 2.56)
   --rank-ep / --rank-ep-share   episodes of players of one rank class or band: hard negatives (METHOD_NOTES 2.55)
   --snap                     further checkpoints at given steps of one long run (METHOD_NOTES 2.51)
   --ext-ply / --ext-select   external players (METHOD_NOTES 2.46): per-ply parts of scripts/pid_ext_ply_extract.py and the
@@ -180,6 +181,13 @@ def main(argv=None):
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
     ap.add_argument("--no-state", action="store_true")
+    ap.add_argument("--cls-loss", choices=("none", "cosface"), default="none",
+                    help="classification over ALL training players with an additive cosine margin (face / speaker recognition; METHOD_NOTES 2.56): "
+                         "every step each game is told apart from every player's centre, not only from the 255 others of its episode")
+    ap.add_argument("--cls-margin", type=float, default=0.2)
+    ap.add_argument("--cls-scale", type=float, default=30.0)
+    ap.add_argument("--cls-weight", type=float, default=1.0)
+    ap.add_argument("--no-episode-loss", action="store_true", help="train with the classification loss alone")
     ap.add_argument("--share-dir", default=None, help="a directory in shared memory (/dev/shm/...): the game arrays are built there once and mapped by every network of the job")
     ap.add_argument("--prepare-only", action="store_true", help="build the shared arrays and stop")
     ap.add_argument("--rank-ep", choices=("class", "band"), default=None,
@@ -270,7 +278,13 @@ def main(argv=None):
     ema = copy.deepcopy(net).eval()
     for p_ in ema.parameters():
         p_.requires_grad_(False)
-    opt = torch.optim.AdamW(net.parameters(), lr=M.LR, weight_decay=M.WD)
+    centres = col = None
+    if a.cls_loss != "none":  # one centre per training player; the centres are not part of the saved network
+        centres = torch.nn.Parameter(torch.randn(len(tp), M.D_OUT, device=dev) * 0.01)
+        col = torch.full((C,), -1, dtype=torch.long, device=dev)
+        col[torch.as_tensor(tp, device=dev)] = torch.arange(len(tp), device=dev)
+        log(f"classification loss {a.cls_loss}: {len(tp)} centres, margin {a.cls_margin}, scale {a.cls_scale}, weight {a.cls_weight}{', episode loss off' if a.no_episode_loss else ''}")
+    opt = torch.optim.AdamW([{"params": net.parameters(), "weight_decay": M.WD}] + ([{"params": [centres], "weight_decay": 0.0}] if centres is not None else []), lr=M.LR)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / M.WARM) * 0.5 * (1 + math.cos(math.pi * min(s, horizon) / horizon)))
     state_file, start, hist = out / f"state_{name}.pt", 0, []
     if state_file.exists():
@@ -322,14 +336,14 @@ def main(argv=None):
         maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
         sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share, "cls_loss": a.cls_loss, "cls_margin": a.cls_margin, "cls_scale": a.cls_scale, "cls_weight": a.cls_weight, "episode_loss": not a.no_episode_loss}
 
     def write_ckpt(tag, at):
         for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
             torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "step": at, "state": label}, "step": at, "arch": arch}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
 
     net.train()
-    ar, tl, ta, t_last, every = np.arange(P), 0.0, 0.0, time.time(), (50 if a.smoke else 500)
+    ar, tl, ta, tc, t_last, every = np.arange(P), 0.0, 0.0, 0.0, time.time(), (50 if a.smoke else 500)
     for step in range(start, steps):
         if a.ext_share is not None and a.ext_share_end is not None:
             n_ext = min(int(round(P * (a.ext_share + (a.ext_share_end - a.ext_share) * step / max(steps - 1, 1)))), len(tp_ext))
@@ -356,6 +370,12 @@ def main(argv=None):
         tgt = tb(np.repeat(ar, M.M_EP))
         logits = logits.scatter(1, tgt[:, None], own_[:, None])
         loss = F.cross_entropy(logits, tgt)
+        if centres is not None:
+            ct = col[tb(np.repeat(pl, M.M_EP))]
+            cos = z.reshape(-1, M.D_OUT) @ F.normalize(centres, dim=-1).T
+            l_cls = F.cross_entropy(a.cls_scale * (cos - a.cls_margin * F.one_hot(ct, len(tp)).to(cos.dtype)), ct)
+            loss = a.cls_weight * l_cls if a.no_episode_loss else loss + a.cls_weight * l_cls
+            tc += float((cos.argmax(1) == ct).float().mean())
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(net.parameters(), 1.0)
@@ -368,8 +388,8 @@ def main(argv=None):
         tl += float(loss.detach())
         ta += float((logits.argmax(1) == tgt).float().mean())
         if (step + 1) % every == 0:
-            log(f"  step {step + 1}/{steps}: loss {tl / every:.4f}, episode top-1 {ta / every:.3f} of {P}, scale {float(sc.detach()):.1f}, {(time.time() - t_last) / every:.2f} s/step")
-            tl, ta, t_last = 0.0, 0.0, time.time()
+            log(f"  step {step + 1}/{steps}: loss {tl / every:.4f}, episode top-1 {ta / every:.3f} of {P}, scale {float(sc.detach()):.1f}, {(time.time() - t_last) / every:.2f} s/step" + (f", all-player top-1 {tc / every:.3f}" if centres is not None else ""))
+            tl, ta, tc, t_last = 0.0, 0.0, 0.0, time.time()
         if step + 1 in a.snap and step + 1 < steps:
             write_ckpt(f"{a.tag}k{(step + 1) // 1000}", step + 1)
             log(f"  snapshot at step {step + 1}: ckpt_{v}_{a.tag}k{(step + 1) // 1000}[e].pt")
