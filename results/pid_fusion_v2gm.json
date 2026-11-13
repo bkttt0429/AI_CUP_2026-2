@@ -1,0 +1,283 @@
+{
+ "components": [
+  "opening",
+  "opening_raw",
+  "orient4",
+  "orient4_merged",
+  "local",
+  "style",
+  "hd",
+  "emb",
+  "seq"
+ ],
+ "weights": [
+  0.17284272797100494,
+  0.13626989800647257,
+  0.3086588217152904,
+  -0.06531993190743826,
+  0.15162369930340563,
+  0.03358825192911055,
+  0.47320296918783433,
+  0.7286042519559668,
+  3.6589787381635026
+ ],
+ "cfg": {
+  "depth": 12,
+  "alpha": 2.0,
+  "beta": 5.0,
+  "shrink": 0.1,
+  "local_alpha": 2.0,
+  "local_beta": 5.0,
+  "local_start": 12,
+  "orient_alpha": 2.0,
+  "orient_beta": 5.0,
+  "orient_depth": 12,
+  "orient_raw": 1,
+  "ref_alpha": 2.0,
+  "ref_beta": 5.0,
+  "ref_min_black": 30,
+  "ref_cap": 40,
+  "ref_orient_raw": 2,
+  "ref_seed": 0,
+  "trunk_feats": "all",
+  "trunk_shrink": 0.1
+ },
+ "emb_model": "results/embed/emb2_final.pt",
+ "seq_official": [
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_m90s0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_m90s0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_m90s0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_m90s0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_m90s0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_m90s0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_m90s0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_m90s0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_m90s0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_m90s0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_m90s1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_m90s1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_m90s1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_m90s1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_m90s1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_m90s1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_m90s1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_m90s1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_m90s1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_m90s1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_m90s2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_m90s2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_m90s2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_m90s2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_m90s2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_m90s2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_m90s2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_m90s2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_m90s2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_m90s2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_m90s0e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_m90s0e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_m90s0e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_m90s0e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_m90s0e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_m90s0e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_m90s0e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_m90s0e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_m90s0e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_m90s0e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_m90s1e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_m90s1e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_m90s1e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_m90s1e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_m90s1e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_m90s1e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_m90s1e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_m90s1e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_m90s1e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_m90s1e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_m90s2e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_m90s2e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_m90s2e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_m90s2e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_m90s2e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_m90s2e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net3_m90s2e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net3_m90s2e_t100.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net4_m90s2e_t100.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net4_m90s2e_t100.npz"
+  ]
+ ],
+ "soft_lam": null,
+ "geometry": {
+  "candidates": 600,
+  "candidate_games": 10,
+  "sizes": [
+   1,
+   2,
+   3,
+   5
+  ]
+ },
+ "fitted_on": [
+  {
+   "eligible": 1033,
+   "skipped_R": 0,
+   "fold": 1,
+   "seed": 0,
+   "questions": 800
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 1,
+   "fold": 1,
+   "seed": 1,
+   "questions": 799
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 0,
+   "fold": 2,
+   "seed": 0,
+   "questions": 800
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 2,
+   "fold": 2,
+   "seed": 1,
+   "questions": 798
+  },
+  {
+   "eligible": 1031,
+   "skipped_R": 5,
+   "fold": 3,
+   "seed": 0,
+   "questions": 795
+  },
+  {
+   "eligible": 1031,
+   "skipped_R": 1,
+   "fold": 3,
+   "seed": 1,
+   "questions": 799
+  },
+  {
+   "eligible": 1030,
+   "skipped_R": 1,
+   "fold": 4,
+   "seed": 0,
+   "questions": 799
+  },
+  {
+   "eligible": 1030,
+   "skipped_R": 3,
+   "fold": 4,
+   "seed": 1,
+   "questions": 797
+  }
+ ],
+ "questions": 6387,
+ "simulated_score": 0.778317361687973,
+ "note": "v2 added pools; arm and weights from scripts/pid_v2_sim11.py (multi-network simulation: 4 networks per fold)",
+ "seq_model": "AI_CUP_2026-1 M88 (5 networks) + M90 (15 networks, three seeds), each with its vectors after 50 and after 100 steps of the pool fine-tune (40 matrices); mean of the row-standardised matrices",
+ "arm": "ft50_100",
+ "trunk_store": "data/trunk/tests_1111_v2"
+}

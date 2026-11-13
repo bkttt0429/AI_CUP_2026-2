@@ -67,6 +67,7 @@ def main(argv=None):
     ap.add_argument("--holdout", type=int, default=3)
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1])
     ap.add_argument("--steps", nargs="+", type=int, default=[0, 50, 100])
+    ap.add_argument("--mix", nargs="*", type=int, default=[], help="an extra arm 'mix': every network's vectors after each of these step counts, all averaged (e.g. 50 100)")
     ap.add_argument("--boot", type=int, default=2000)
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--out", required=True)
@@ -105,9 +106,12 @@ def main(argv=None):
             truth, primary, n = np.array(truth), np.array(primary), np.array([len(q) for q in questions])
             S = v2.components(ref, questions, moves, sgfs, doc["cfg"], store, emb, which=[c for c in comps if c != "seq"])
             Z = {c: standardise(S[c]) for c in S}
+            by_t = {}
             for t in a.steps:
-                seqs = [load(Path(a.ft_dir) / f"offsim_{pool}_h{a.holdout}s{s}_net{v}{tg}_t{t}.npz") for v, tg in nets]
-                Z[("seq", t)] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=seqs)["seq"])
+                by_t[t] = [load(Path(a.ft_dir) / f"offsim_{pool}_h{a.holdout}s{s}_net{v}{tg}_t{t}.npz") for v, tg in nets]
+                Z[("seq", t)] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=by_t[t])["seq"])
+            if a.mix:
+                Z[("seq", "mix")] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=[x for t in a.mix for x in by_t[t]])["seq"])
             runs.append({"pool": pool, "seed": s, "Z": Z, "truth": truth, "n": n, "primary": primary})
             alone = {t: mix(per_question(Z[("seq", t)], truth), n) for t in a.steps}
             print(f"{pool} split {s}: {len(questions)} questions of {len(players)} candidates ({len(bad)} games left out); sequence component alone (mix) "
@@ -118,17 +122,18 @@ def main(argv=None):
     out = {"document": Path(a.fusion).name, "holdout": a.holdout, "seeds": a.seeds, "steps": a.steps, "scores": {}, "steps_diff": {}, "calibration": {}}
     cat = lambda rs, f: np.concatenate([f(r) for r in rs])  # noqa: E731
     groups = {"pub2": [r for r in runs if r["pool"] == "pub2"], "priv2": [r for r in runs if r["pool"] == "priv2"], "both": runs}
-    sc = {(id(r), t): per_question(fus.scores(mats(r, t)), r["truth"]) for r in runs for t in a.steps}
+    arms = [*a.steps, *(["mix"] if a.mix else [])]
+    sc = {(id(r), t): per_question(fus.scores(mats(r, t)), r["truth"]) for r in runs for t in arms}
     for g, rs in groups.items():
         n = cat(rs, lambda r: r["n"])
         cluster = cat(rs, lambda r: np.char.add(r["pool"] + "|", r["truth"].astype(str)))
         out["scores"][g] = {}
-        for t in a.steps:
+        for t in arms:
             x = cat(rs, lambda r: sc[(id(r), t)])
             out["scores"][g][str(t)] = {"mix": mix(x, n), **{str(m): float(x[n == m].mean()) for m in SIZES}}
         print(f"{g}: document weights, by fine-tune steps: " + "  ".join(f"t{t} mix {v_['mix']:.4f} (n=1 {v_['1']:.4f}, n=2 {v_['2']:.4f}, n=3 {v_['3']:.4f})" for t, v_ in out["scores"][g].items()), flush=True)
-        for x_, y_ in ((50, 0), (100, 0), (100, 50)):
-            if x_ in a.steps and y_ in a.steps:
+        for x_, y_ in ((50, 0), (100, 0), (100, 50), *[("mix", t) for t in a.mix]):
+            if x_ in arms and y_ in arms:
                 d = cat(rs, lambda r: sc[(id(r), x_)] - sc[(id(r), y_)])
                 b = boot_mix(d, n, cluster, a.boot, rng)
                 b["by_n"] = {str(m): float(d[n == m].mean()) for m in SIZES}

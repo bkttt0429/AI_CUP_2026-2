@@ -12,6 +12,7 @@ Arms (fixed before the run), weights fitted on the other folds' pools:
   ft0 / ft50   all networks, no fine-tune / 50 steps, emb2
   e3 / e5      all networks, 100 steps, three emb3 seeds / five emb2 seeds
   ft50e3       all networks, 50 steps, three emb3 seeds
+  ft50_100     all networks, each with its 50-step AND its 100-step vectors (twice as many matrices averaged), emb2  (2.41)
 Rule: an arm replaces base when its gain has a player-bootstrap CI above 0 and at least 6 of the 8 pools gain; among passing
 arms the best by score. The chosen arm's weights (all pools) go to the next official file.
   --nets name=<fold file tag>:<fine-tune tag> ...   e.g. m88=:  m90s0=_m90s0:_m90s0
@@ -102,12 +103,13 @@ def main(argv=None):
             "ft50e3": (ALL, 50, "emb3x3")}
     if m90:
         arms["m90"] = (m90, 100, "emb2")
+    arms["ft50_100"] = (ALL, (50, 100), "emb2")
     nn = np.concatenate([r["n"] for r in runs])
     pid = np.concatenate([np.char.add(r["owner"].astype(str), f"|{i}") for i, r in enumerate(runs)])
 
     def mats(r, spec):
         names, t, e = spec
-        seq = standardise(np.mean([r["seq"][(n_, t)] for n_ in names], axis=0))
+        seq = standardise(np.mean([r["seq"][(n_, t_)] for n_ in names for t_ in (t if isinstance(t, tuple) else (t,))], axis=0))
         return [seq if c == "seq" else r["emb"][e] if c == "emb" else r["Z"][c] for c in COMPS]
 
     out, per_q, per_pool = {"arms": {}, "comparisons": {}, "nets": {k: list(x) for k, x in nets.items()}, "folds": a.folds}, {}, {}
@@ -134,6 +136,12 @@ def main(argv=None):
         if d["pass"] and arm not in ("one", "m90"):
             passing.append(arm)
         print(f"{arm} vs base: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}], pools up {d['pools_positive']}/{len(runs)} -> {'PASS' if d['pass'] else 'no'}", flush=True)
+    for x, y in (("ft50_100", "ft50"),):  # the mixed arm against the 50-step arm (2.41)
+        d = paired_player_bootstrap(per_q[x], per_q[y], pid, n=2000)
+        d["pools_positive"] = int(sum(p_ > q_ for p_, q_ in zip(per_pool[x], per_pool[y])))
+        d["by_n"] = {str(m): float(per_q[x][nn == m].mean() - per_q[y][nn == m].mean()) for m in SIZES}
+        out["comparisons"][f"{x} vs {y}"] = d
+        print(f"{x} vs {y}: {d['diff']:+.4f} [{d['ci95'][0]:+.4f}, {d['ci95'][1]:+.4f}], pools up {d['pools_positive']}/{len(runs)}; by n {({k_: round(v_, 4) for k_, v_ in d['by_n'].items()})}", flush=True)
     out["chosen"] = max(passing, key=lambda k_: out["arms"][k_]["score"]) if passing else "base"
     print(f"chosen: {out['chosen']}", flush=True)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
