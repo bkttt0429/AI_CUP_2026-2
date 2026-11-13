@@ -254,6 +254,11 @@ def main(argv=None):
     ap.add_argument("--snap", nargs="*", type=int, default=[], help="also write the checkpoints at these steps, as ckpt_<net>_<tag>k<step/1000>[e].pt (snapshots of one long run)")
     ap.add_argument("--m-ep", type=int, default=None, help="games per player in an episode (default 8; METHOD_NOTES 2.69)")
     ap.add_argument("--min-games", type=int, default=None, help="an EXTERNAL account trains with at least this many usable games (default 8); competition players always need 8")
+    ap.add_argument("--mask-pos", type=float, default=0.0, help="per game a random share up to this of the plies have their played POINT hidden (the board vectors stay): the complement of --mask (METHOD_NOTES 2.80)")
+    ap.add_argument("--mask-both", action="store_true", help="--mask hides the played point of the masked plies as well (whole plies dropped at random)")
+    ap.add_argument("--chan-drop", type=float, default=0.0, help="per game every one of the 128 input dimensions is replaced by its mean with this probability")
+    ap.add_argument("--drop-tail", type=float, default=0.0, help="share of the games of a batch whose plies from a random ply K on are hidden (K uniform in --drop-tail-min .. 220)")
+    ap.add_argument("--drop-tail-min", type=int, default=100)
     ap.add_argument("--jitter", type=float, default=0.0, help="Gaussian noise on the per-ply trunk vectors in training, in units of each dimension's standard deviation (METHOD_NOTES 2.72)")
     ap.add_argument("--smooth", type=float, default=0.0, help="label smoothing of the episode loss")
     ap.add_argument("--ext-max-plies", type=int, default=0, help="external games are shown only up to this ply (0: all; as if they had been stored that short; METHOD_NOTES 2.70)")
@@ -452,14 +457,28 @@ def main(argv=None):
         gl = tb(G["GL"][rows])
         if a.jitter > 0:  # the same game never looks exactly the same twice
             gl = gl + (a.jitter * net.sd.to(gl.dtype))[None, None] * torch.randn_like(gl)
+        hide = None
         if a.mask > 0:
             hit = torch.rand(len(rows), T, device=dev) < torch.rand(len(rows), 1, device=dev) * a.mask
             gl = torch.where(hit[..., None], net.mu.to(gl.dtype)[None, None], gl)
-        hide = None
+            if a.mask_both:
+                hide = hit
+        if a.chan_drop > 0:
+            cd = torch.rand(len(rows), 1, gl.shape[-1], device=dev) < a.chan_drop
+            gl = torch.where(cd, net.mu.to(gl.dtype)[None, None], gl)
+        if a.mask_pos > 0:  # only the played point is hidden
+            hp = torch.rand(len(rows), T, device=dev) < torch.rand(len(rows), 1, device=dev) * a.mask_pos
+            hide = hp if hide is None else (hide | hp)
+        if a.drop_tail > 0:
+            cut_t = torch.where(torch.rand(len(rows), device=dev) < a.drop_tail, torch.randint(a.drop_tail_min, 221, (len(rows),), device=dev), torch.full((len(rows),), T + 1, dtype=torch.long, device=dev))
+            tail = torch.arange(T, device=dev)[None] >= cut_t[:, None]
+            gl = torch.where(tail[..., None], net.mu.to(gl.dtype)[None, None], gl)
+            hide = tail if hide is None else (hide | tail)
         if a.drop_open > 0:
             cut = torch.where(torch.rand(len(rows), device=dev) < a.drop_open, torch.randint(20, a.drop_open_max + 1, (len(rows),), device=dev), torch.zeros(len(rows), dtype=torch.long, device=dev))
-            hide = torch.arange(T, device=dev)[None] < cut[:, None]
-            gl = torch.where(hide[..., None], net.mu.to(gl.dtype)[None, None], gl)
+            opening = torch.arange(T, device=dev)[None] < cut[:, None]
+            gl = torch.where(opening[..., None], net.mu.to(gl.dtype)[None, None], gl)
+            hide = opening if hide is None else (hide | opening)
         if a.win > 0:
             len_w = tb(G["LEN"][rows].astype(np.int64))
             w_len = torch.as_tensor(a.win_len, device=dev)[torch.randint(len(a.win_len), (len(rows),), device=dev)]
