@@ -12,6 +12,7 @@ training players keep being learnt; the official players are all unseen. Changes
 Folds: net v trains on the players of folds 1-4 other than v; net -1 on folds 1-4. Fold 0 is not read into training or
 evaluation (this repository never uses it); players without a fold train in every net, as in M90. The rank competition's
 test games are not read.
+  --snap                     further checkpoints at given steps of one long run (METHOD_NOTES 2.51)
   --ext-ply / --ext-select   external players (METHOD_NOTES 2.46): per-ply parts of scripts/pid_ext_ply_extract.py and the
                         select.csv of scripts/ext_fox_select.py (game_key -> account). They train in every net (no fold),
                         are never in the held-out log, and fill --ext-share of every episode's players (default: drawn
@@ -38,6 +39,7 @@ import copy
 import json
 import math
 import multiprocessing as mp
+import os
 import sys
 import time
 from pathlib import Path
@@ -51,6 +53,26 @@ import m88_seqid as M  # noqa: E402
 
 T = M.T_MAX
 PROTO_GAMES = 16  # evaluation prototypes: at most this many training games per player (fixed choice)
+
+
+def _windows(pool, fn, files, w):
+    """The parts in order, at most w of them waiting in this process at a time. With pool.imap the workers ran ahead of the copy
+    into the big arrays and the waiting parts piled up: the processes of 2026-11-13 held 2.3 times the size of their arrays."""
+    for i in range(0, len(files), w):
+        yield from pool.map(fn, files[i:i + w], chunksize=1)
+
+
+def _trim():
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)  # hand the freed part buffers back to the system
+    except OSError:
+        pass
+
+
+def _rss_gb():
+    with open("/proc/self/statm") as fh:
+        return int(fh.read().split()[1]) * os.sysconf("SC_PAGE_SIZE") / 1e9
 
 
 def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
@@ -81,18 +103,19 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
         n_old, N = int(sum(n1)), int(sum(n1)) + int(sum(n2))
         GL, POS, MOV = np.zeros((N, T, 128), np.float16), np.full((N, T), 362, np.int16), np.zeros((N, T), np.int8)
         LEN, SUBJ, keys, pids, a = np.zeros(N, np.int16), np.zeros(N, np.int8), [], [], 0
-        for x in pool.imap(M.read_part, files, chunksize=2):
+        for x in _windows(pool, M.read_part, files, 12):
             b = a + len(x[0])
             keys.append(x[0]); pids.append(x[1])
             GL[a:b], POS[a:b], MOV[a:b], LEN[a:b], SUBJ[a:b] = x[2], x[3], x[4], x[5], x[6]
             a = b
         assert a == n_old, (a, n_old)
-        for x in pool.imap(M.read_m90, files2, chunksize=2):
+        for x in _windows(pool, M.read_m90, files2, 48):
             b = a + len(x[0])
             keys.append(x[0])
             GL[a:b], POS[a:b], MOV[a:b], LEN[a:b], SUBJ[a:b] = x[1], x[2], x[3], x[4], x[5]
             a = b
         assert a == N, (a, N)
+    _trim()
     key, pid = np.concatenate(keys), np.concatenate(pids)
     fold = np.concatenate([np.full(n, f, np.int8) for n, f in zip(n1, folds)])
     tab = pd.read_csv(AICUP1 / "splits/player_folds.csv", dtype={"player_id": str}).set_index("player_id")["fold"]
@@ -104,7 +127,8 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
     p2 = np.array([own[k] for k in key[n_old:]])
     pid = np.concatenate([pid, p2])
     fold = np.concatenate([fold, np.array([int(tab.get(p, -9)) for p in p2], np.int8)])
-    log(f"games loaded: {N} ({n_old} stored of folds {'0-4' if all_folds else '1-4'} + {N - n_old} extracted; {GL.nbytes / 1e9:.1f} GB); games of fold 0: {int((fold == 0).sum())}, {'TRAINED ON (--all-folds)' if all_folds else 'left out everywhere'}")
+    log(f"games loaded: {N} ({n_old} stored of folds {'0-4' if all_folds else '1-4'} + {N - n_old} extracted; {GL.nbytes / 1e9:.1f} GB; process memory {_rss_gb():.1f} GB); "
+        f"games of fold 0: {int((fold == 0).sum())}, {'TRAINED ON (--all-folds)' if all_folds else 'left out everywhere'}")
     return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold)
 
 
@@ -129,6 +153,7 @@ def main(argv=None):
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
     ap.add_argument("--no-state", action="store_true")
+    ap.add_argument("--snap", nargs="*", type=int, default=[], help="also write the checkpoints at these steps, as ckpt_<net>_<tag>k<step/1000>[e].pt (snapshots of one long run)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
     import torch
@@ -231,6 +256,13 @@ def main(argv=None):
         yy, xx = np.divmod(np.arange(361), 19)
         maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
         sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
+    cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P)}
+
+    def write_ckpt(tag, at):
+        for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
+            torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "step": at, "state": label}, "step": at, "arch": arch}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
+
     net.train()
     ar, tl, ta, t_last, every = np.arange(P), 0.0, 0.0, time.time(), (50 if a.smoke else 500)
     for step in range(start, steps):
@@ -270,16 +302,16 @@ def main(argv=None):
         if (step + 1) % every == 0:
             log(f"  step {step + 1}/{steps}: loss {tl / every:.4f}, episode top-1 {ta / every:.3f} of {P}, scale {float(sc.detach()):.1f}, {(time.time() - t_last) / every:.2f} s/step")
             tl, ta, t_last = 0.0, 0.0, time.time()
+        if step + 1 in a.snap and step + 1 < steps:
+            write_ckpt(f"{a.tag}k{(step + 1) // 1000}", step + 1)
+            log(f"  snapshot at step {step + 1}: ckpt_{v}_{a.tag}k{(step + 1) // 1000}[e].pt")
         if (step + 1) % eval_every == 0 or step + 1 == steps:
             hist += [evaluate(net, step + 1, "raw"), evaluate(ema, step + 1, "ema")]
             net.train()
             if not a.no_state:
                 torch.save({"net": net.state_dict(), "ema": ema.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(), "step": step + 1, "hist": hist}, state_file)
             t_last = time.time()
-    cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P)}
-    for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
-        torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "state": label}, "step": steps, "arch": arch}, out / f"ckpt_{v}_{a.tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
+    write_ckpt(a.tag, steps)
     (out / f"train_{name}.json").write_text(json.dumps({**meta, "history": hist}, indent=1) + "\n")
     state_file.unlink(missing_ok=True)
     log(f"net {name}: wrote ckpt_{v}_{a.tag}.pt and ckpt_{v}_{a.tag}e.pt in {out}")
