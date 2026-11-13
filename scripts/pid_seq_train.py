@@ -76,10 +76,30 @@ def _rss_gb():
         return int(fh.read().split()[1]) * os.sysconf("SC_PAGE_SIZE") / 1e9
 
 
-def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
+SHARED = ("GL", "POS", "MOV", "LEN", "SUBJ")
+
+
+def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None):
     """M90's training games as padded arrays (m88_seqid.load_games without the test part). The worker pool starts before any
     large array exists and every part is written straight into preallocated arrays: the compute nodes run with strict
     overcommit, and a pool forked from a large parent exhausted the node's commit limit in the rank session's first run."""
+    share = Path(share_dir) if share_dir else None
+    if share is not None and (share / "DONE").exists():  # arrays prepared once per job in shared memory (scripts/nano4/pid_seq_train_shared.sh)
+        G = {k: np.load(share / f"{k}.npy", mmap_mode="r") for k in SHARED}
+        G.update({k: np.load(share / f"{k}.npy") for k in ("key", "pid", "fold")})
+        log(f"games attached from {share}: {len(G['key'])} ({G['GL'].nbytes / 1e9:.1f} GB shared; process memory {_rss_gb():.1f} GB); games of fold 0: {int((G['fold'] == 0).sum())}")
+        return G
+    if share is not None:
+        share.mkdir(parents=True, exist_ok=True)
+
+    def alloc(name, shape, dtype, fill=0):  # in shared memory when asked: every network of the job then maps the same pages
+        if share is None:
+            return np.zeros(shape, dtype) if fill == 0 else np.full(shape, fill, dtype)
+        arr = np.lib.format.open_memmap(share / f"{name}.npy", mode="w+", dtype=dtype, shape=shape)
+        if fill != 0:
+            arr[:] = fill
+        return arr
+
     files, folds = [], []
     for d in M.DIRS:
         for f in range(0 if all_folds else 1, 5):  # the stored parts of fold 0 are not opened unless --all-folds
@@ -102,8 +122,8 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
         n1 = pool.map(M.count_part, files, chunksize=8)
         n2 = pool.map(M.count_m90, files2, chunksize=8)
         n_old, N = int(sum(n1)), int(sum(n1)) + int(sum(n2))
-        GL, POS, MOV = np.zeros((N, T, 128), np.float16), np.full((N, T), 362, np.int16), np.zeros((N, T), np.int8)
-        LEN, SUBJ, keys, pids, a = np.zeros(N, np.int16), np.zeros(N, np.int8), [], [], 0
+        GL, POS, MOV = alloc("GL", (N, T, 128), np.float16), alloc("POS", (N, T), np.int16, 362), alloc("MOV", (N, T), np.int8)
+        LEN, SUBJ, keys, pids, a = alloc("LEN", (N,), np.int16), alloc("SUBJ", (N,), np.int8), [], [], 0
         for x in _windows(pool, M.read_part, files, 12):
             b = a + len(x[0])
             keys.append(x[0]); pids.append(x[1])
@@ -130,6 +150,12 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
     fold = np.concatenate([fold, np.array([int(tab.get(p, -9)) for p in p2], np.int8)])
     log(f"games loaded: {N} ({n_old} stored of folds {'0-4' if all_folds else '1-4'} + {N - n_old} extracted; {GL.nbytes / 1e9:.1f} GB; process memory {_rss_gb():.1f} GB); "
         f"games of fold 0: {int((fold == 0).sum())}, {'TRAINED ON (--all-folds)' if all_folds else 'left out everywhere'}")
+    if share is not None:
+        for arr in (GL, POS, MOV, LEN, SUBJ):
+            arr.flush()
+        np.save(share / "key.npy", key); np.save(share / "pid.npy", pid); np.save(share / "fold.npy", fold)
+        (share / "DONE").write_text("ok\n")
+        log(f"arrays shared in {share}")
     return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold)
 
 
@@ -154,6 +180,8 @@ def main(argv=None):
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
     ap.add_argument("--no-state", action="store_true")
+    ap.add_argument("--share-dir", default=None, help="a directory in shared memory (/dev/shm/...): the game arrays are built there once and mapped by every network of the job")
+    ap.add_argument("--prepare-only", action="store_true", help="build the shared arrays and stop")
     ap.add_argument("--rank-ep", choices=("class", "band"), default=None,
                     help="hard negatives (METHOD_NOTES 2.55): an episode's competition players come from ONE rank class (class) or from a class and its two neighbours (band), "
                          "its external accounts from one rank folder; classes and folders drawn in proportion to their players")
@@ -173,7 +201,9 @@ def main(argv=None):
     name = f"{v}_{a.tag}{'_smoke' if a.smoke else ''}"
     dev = "cuda"
     log(f"net {name}: steps {steps} (cosine horizon {horizon}), dropout {a.drop}, ply mask up to {a.mask}, EMA {a.ema}, seed {a.seed}; GPU {torch.cuda.get_device_name(0)}")
-    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select)
+    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir)
+    if a.prepare_only:
+        return 0
     held = set(json.load(open(M.M82 / "held_keys.json")))
     players, owner = np.unique(G["pid"], return_inverse=True)
     C, fold = len(players), G["fold"]

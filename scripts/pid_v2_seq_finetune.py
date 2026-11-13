@@ -114,7 +114,9 @@ def load_net(ckpt, state="best"):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--mode", required=True, choices=("sim", "official"))
+    ap.add_argument("--mode", required=True, choices=("sim", "official", "oldsim"))
+    ap.add_argument("--side", choices=("pub", "priv"), default="pub", help="oldsim: which ORIGINAL pool")
+    ap.add_argument("--ply-original", default="/work/u2507115/pid_v2/ply_original")
     ap.add_argument("--fold", type=int, default=1)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--pool", choices=("pub2", "priv2"), default="pub2")
@@ -168,6 +170,23 @@ def main(argv=None):
         if set(A["key"].tolist()) != need:
             raise ValueError(f"{len(need) - len(set(A['key'].tolist()))} pool games without per-ply vectors")
         tag, ckpt = f"sim_f{a.fold}_s{a.seed}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.fold}{a.ckpt_suffix}.pt"
+    elif a.mode == "oldsim":  # the simulated pool of aicup_pid.v2.original_sim: fine-tuned on its 10-game candidate sets only -> oldsim_<side>_s<seed>_net<v><tag>_t<step>.npz
+        from aicup_pid import v2
+        parts = {x: [] for x in ("key", "GL", "POS", "MOV", "LEN", "SUBJ")}
+        for f in sorted(glob.glob(f"{a.ply_original}/ply_*.npz")):
+            if f.endswith(".tmp.npz"):
+                continue
+            z = np.load(f)
+            key = z["key"].astype(str)
+            m = np.array([k.split(":")[2].startswith(a.side + "_g_") for k in key])
+            if m.any():
+                for name in parts:
+                    parts[name].append(key[m] if name == "key" else z[name][m])
+        A = {k: np.concatenate(x) for k, x in parts.items()}
+        cands, _q, _t, _s = v2.original_sim(Path(a.tests_dir) / f"player_identification_candidates_{'public' if a.side == 'pub' else 'private'}.csv", set(A["key"].tolist()), a.holdout_seed)
+        players = sorted(cands)
+        own = {k: i for i, p in enumerate(players) for k, _ in cands[p]}
+        tag, ckpt = f"oldsim_{a.side}_s{a.holdout_seed}_net{a.net}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.net}{a.ckpt_suffix}.pt"
     else:
         tagname = "public" if a.pool == "pub2" else "private"
         c = pd.read_csv(Path(a.tests_dir) / f"player_identification_candidates2_{tagname}.csv", dtype=str, keep_default_na=False)

@@ -137,6 +137,35 @@ def candidate_holdout(cands, h, seed):
     return {p: [cands[p][i] for i in rng.permutation(len(cands[p]))[:h]] for p in sorted(cands)}
 
 
+def original_sim(cand_csv, keys, seed, n_ref=10, sizes=(1, 1, 1, 2, 2, 3, 5)):
+    """A simulated pool cut from an ORIGINAL pool's candidates (METHOD_NOTES 2.55, item 7): official-population players no
+    network has seen, 10-game candidate sets, questions of 1 / 2 / 3 / 5 games. Per candidate (sorted ids), among its games
+    in `keys` (those with per-ply vectors), a random order by `seed`: the first n_ref are the candidate set, the next ones the
+    questions of the given sizes. Returns (cands {player: [(key, 'B')]}, questions [[(key, 'B')]], truth [player ids],
+    sgfs {key: record}). Keys c:<row in the file>:<game_id>. The original pools are Black only."""
+    import pandas as pd
+    c = pd.read_csv(cand_csv, dtype=str, keep_default_na=False)
+    rng = np.random.default_rng(5200 + seed)
+    by, rec = {}, {}
+    for i, r in enumerate(c.itertuples()):
+        k = f"c:{i}:{r.game_id}"
+        if k in keys:
+            by.setdefault(r.player_id, []).append(k)
+            rec[k] = r.sgf_content
+    cands, questions, truth = {}, [], []
+    for p in sorted(by):
+        g = [by[p][i] for i in rng.permutation(len(by[p]))]
+        if len(g) < n_ref + sum(sizes):
+            continue
+        cands[p] = [(k, "B") for k in g[:n_ref]]
+        at = n_ref
+        for m in sizes:
+            questions.append([(k, "B") for k in g[at:at + m]])
+            truth.append(p)
+            at += m
+    return cands, questions, truth, {k: rec[k] for games in (*cands.values(), *questions) for k, _ in games}
+
+
 RANK_ROWS = ("results/m82/rows_train.npz", "results/m84_rowsp")  # under AI_CUP_2026-1, written by the rank session (read-only here)
 _PERM = np.r_[0:64, 128:192, 64:128, 192:256]
 
