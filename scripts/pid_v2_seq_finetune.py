@@ -42,7 +42,7 @@ def embed(net, A, idx, batch=1024):
     return out
 
 
-def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None, mix=None):
+def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None, mix=None, warm=50):
     """A: arrays of every pool game; owner [n] candidate index or -1 (question game). Calls save(step, vectors) at steps_out."""
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
@@ -65,7 +65,7 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
         return
     opt = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=0.05)
     hz = horizon or last  # the cosine runs over `horizon` steps even when the fine-tune stops earlier (11-12: the first run's t = 100 came from a 1,000-step schedule)
-    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / 50) * 0.5 * (1 + math.cos(math.pi * min(s, hz) / hz)))
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(s, hz) / hz)))
     net.train()
     ar, tl, ta, t0 = np.arange(p_ep), 0.0, 0.0, time.time()
     for step in range(last):
@@ -134,6 +134,7 @@ def main(argv=None):
     ap.add_argument("--state", choices=("best", "last"), default="best", help="the checkpoint's state with the best held-out top-1 on seen players, or the one after its final step")
     ap.add_argument("--holdout", type=int, default=0, help="official mode: games per candidate kept out of the fine-tune (pseudo-pool; 0 = the real pool)")
     ap.add_argument("--holdout-seed", type=int, default=0)
+    ap.add_argument("--warm", type=int, default=50, help="steps of the linear learning-rate warm-up (50: a 50-step fine-tune never leaves the warm-up; METHOD_NOTES 2.55)")
     ap.add_argument("--mix-original", default=None, help="official mode: directory of scripts/pid_v2_ply_extract.py --original; the candidates of the ORIGINAL pool of the same side "
                                                            "(pub for pub2, priv for priv2; never the other side) fill half of every episode (METHOD_NOTES 2.54)")
     a = ap.parse_args(argv)
@@ -231,7 +232,7 @@ def main(argv=None):
         assert all(p.startswith(side + "_p_") for p in np.unique(mix["pid"]))
         mix["owner"] = np.unique(mix.pop("pid"), return_inverse=True)[1]
         log(f"original pool '{side}': {len(mix['owner'])} candidate games of {int(mix['owner'].max()) + 1} candidates in every episode's second half")
-    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon, mix)
+    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon, mix, a.warm)
     return 0
 
 

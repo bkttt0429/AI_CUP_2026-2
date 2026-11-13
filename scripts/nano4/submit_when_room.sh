@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Submit one job as soon as the shared queue has room (fewer than <limit> jobs of this user), then print its id.
+#   submit_when_room.sh <limit> <sbatch arguments...>          (run from the AI_CUP_2026-1 checkout; login node: submit/query only)
+set -uo pipefail
+limit=$1; shift
+out=""
+while [ -z "$out" ]; do
+  n=$(squeue -h -u u2507115 2>/dev/null | wc -l)
+  if [ "$n" -gt 0 ] && [ "$n" -lt "$limit" ]; then out=$(sbatch --parsable "$@" 2>/dev/null); fi
+  [ -z "$out" ] && sleep 30
+done
+echo "$out"

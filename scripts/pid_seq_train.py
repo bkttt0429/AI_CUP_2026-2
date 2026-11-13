@@ -12,6 +12,7 @@ training players keep being learnt; the official players are all unseen. Changes
 Folds: net v trains on the players of folds 1-4 other than v; net -1 on folds 1-4. Fold 0 is not read into training or
 evaluation (this repository never uses it); players without a fold train in every net, as in M90. The rank competition's
 test games are not read.
+  --rank-ep / --rank-ep-share   episodes of players of one rank class or band: hard negatives (METHOD_NOTES 2.55)
   --snap                     further checkpoints at given steps of one long run (METHOD_NOTES 2.51)
   --ext-ply / --ext-select   external players (METHOD_NOTES 2.46): per-ply parts of scripts/pid_ext_ply_extract.py and the
                         select.csv of scripts/ext_fox_select.py (game_key -> account). They train in every net (no fold),
@@ -153,6 +154,10 @@ def main(argv=None):
     ap.add_argument("--p-ep", type=int, default=None)
     ap.add_argument("--ext-share-end", type=float, default=None)
     ap.add_argument("--no-state", action="store_true")
+    ap.add_argument("--rank-ep", choices=("class", "band"), default=None,
+                    help="hard negatives (METHOD_NOTES 2.55): an episode's competition players come from ONE rank class (class) or from a class and its two neighbours (band), "
+                         "its external accounts from one rank folder; classes and folders drawn in proportion to their players")
+    ap.add_argument("--rank-ep-share", type=float, default=1.0, help="share of the steps drawn that way; the others are drawn as before")
     ap.add_argument("--snap", nargs="*", type=int, default=[], help="also write the checkpoints at these steps, as ckpt_<net>_<tag>k<step/1000>[e].pt (snapshots of one long run)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
@@ -190,6 +195,36 @@ def main(argv=None):
     n_ext = 0 if a.ext_share is None or not len(tp_ext) else min(int(round(P * a.ext_share)), len(tp_ext))
     log(f"training on {int(use.sum())} games of {len(tp)} players (folds {sorted(set(fold[use].tolist()))}; external players {len(tp_ext)} with {int((use & is_ext[owner]).sum())} games"
         f"{'' if a.ext_share is None else f', {n_ext} of every episode'}); episodes of {P} players x {M.M_EP} games")
+    strata = None
+    if a.rank_ep:
+        grp = np.array([k.rsplit(":", 1)[0] for k in G["key"]])  # the rank file of a competition game ('5D'), 'x:<folder>' of an external one
+        names, gi = np.unique(grp, return_inverse=True)
+        tally = np.zeros((C, len(names)), np.int32)
+        np.add.at(tally, (owner[use], gi[use]), 1)
+        pg = tally.argmax(1)  # a player's group: where most of its training games are filed
+
+        def level(nm):  # strength order inside each population
+            if nm.startswith("x:"):
+                return (-1 if nm.endswith("k") else 1) * int(nm[2:-1])
+            return ["D", "C", "B", "A", "1D", "2D", "3D", "4D", "5D", "6D"].index(nm)
+
+        strata = {}
+        for pop, ids in (("own", tp_own if a.ext_share is not None else tp), ("ext", tp_ext)):
+            if len(ids):
+                lv = np.array([level(names[g]) for g in pg[ids]])
+                lv = np.searchsorted(np.unique(lv), lv)  # 0 .. L-1, neighbours are adjacent levels that exist
+                strata[pop] = (ids, lv, np.bincount(lv) / len(lv))
+                log(f"rank episodes ({a.rank_ep}, share {a.rank_ep_share}): {pop} players by level " + ", ".join(f"{names[g]} {int((pg[ids] == g).sum())}" for g in sorted(set(pg[ids].tolist()), key=lambda g: level(names[g]))))
+
+    def rank_draw(pop, k):
+        """k players of one level (or band) of a population; widened to the nearest levels when the level is short."""
+        ids, lv, share = strata[pop]
+        c = rng.choice(len(share), p=share)
+        w = 0 if a.rank_ep == "class" else 1
+        while (np.abs(lv - c) <= w).sum() < k:
+            w += 1
+        return rng.choice(ids[np.abs(lv - c) <= w], k, replace=False)
+
     rng = np.random.default_rng(990 + v + 1000 * a.seed)
     torch.manual_seed(990 + v + 1000 * a.seed)
     M.DROP = a.drop
@@ -257,7 +292,7 @@ def main(argv=None):
         maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
         sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P)}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P), "rank_ep": a.rank_ep, "rank_ep_share": a.rank_ep_share}
 
     def write_ckpt(tag, at):
         for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
@@ -268,7 +303,10 @@ def main(argv=None):
     for step in range(start, steps):
         if a.ext_share is not None and a.ext_share_end is not None:
             n_ext = min(int(round(P * (a.ext_share + (a.ext_share_end - a.ext_share) * step / max(steps - 1, 1)))), len(tp_ext))
-        pl = rng.choice(tp, P, replace=False) if a.ext_share is None else np.concatenate([rng.choice(tp_ext, n_ext, replace=False), rng.choice(tp_own, P - n_ext, replace=False)])
+        if strata is not None and rng.random() < a.rank_ep_share:
+            pl = rank_draw("own", P) if a.ext_share is None or n_ext == 0 else np.concatenate([rank_draw("ext", n_ext), rank_draw("own", P - n_ext)])
+        else:
+            pl = rng.choice(tp, P, replace=False) if a.ext_share is None else np.concatenate([rng.choice(tp_ext, n_ext, replace=False), rng.choice(tp_own, P - n_ext, replace=False)])
         u = rng.random((P, W))
         u[np.arange(W)[None] >= cnt[pl][:, None]] = 2.0
         rows = tab[pl[:, None], np.argsort(u, axis=1)[:, :M.M_EP]].reshape(-1)
