@@ -12,6 +12,10 @@ training players keep being learnt; the official players are all unseen. Changes
 Folds: net v trains on the players of folds 1-4 other than v; net -1 on folds 1-4. Fold 0 is not read into training or
 evaluation (this repository never uses it); players without a fold train in every net, as in M90. The rank competition's
 test games are not read.
+  --ext-ply / --ext-select   external players (METHOD_NOTES 2.46): per-ply parts of scripts/pid_ext_ply_extract.py and the
+                        select.csv of scripts/ext_fox_select.py (game_key -> account). They train in every net (no fold),
+                        are never in the held-out log, and fill --ext-share of every episode's players (default: drawn
+                        like any other player).
   --all-folds           fold 0 is read and trained on as well: net -1 then sees every training player, as the rank session's
                         net -1 (METHOD_NOTES 2.40). ONLY WITH THE USER'S CONSENT for fold 0; for official files only (no
                         simulation can score such a network). Held-out own games (results/m82/held_keys.json) are never trained on; for net v the ones of fold v
@@ -42,7 +46,7 @@ T = M.T_MAX
 PROTO_GAMES = 16  # evaluation prototypes: at most this many training games per player (fixed choice)
 
 
-def load_games(smoke, log, all_folds=False):
+def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None):
     """M90's training games as padded arrays (m88_seqid.load_games without the test part). The worker pool starts before any
     large array exists and every part is written straight into preallocated arrays: the compute nodes run with strict
     overcommit, and a pool forked from a large parent exhausted the node's commit limit in the rank session's first run."""
@@ -55,6 +59,14 @@ def load_games(smoke, log, all_folds=False):
             folds += [f] * len(fs)
     files2 = [f for k in (0, 1, 2) for f in sorted((AICUP1 / f"results/m90_ply{k}").glob("ply_*.npz")) if not f.name.endswith(".tmp.npz")]
     files2 = files2[:20] if smoke else files2
+    ext_own = {}
+    if ext_ply:  # the same part layout as M90's (key, LEN, SUBJ, POS, MOV, GLQ; the same quantisation statistics)
+        fx = sorted(f for f in Path(ext_ply).glob("ply_x_*.npz") if not f.name.endswith(".tmp.npz"))
+        files2 += fx[:5] if smoke else fx
+        import csv
+        csv.field_size_limit(10 ** 9)
+        with open(ext_select, newline="") as fh:
+            ext_own = {r["game_key"]: "x:" + r["account"] for r in csv.DictReader(fh)}
     with mp.get_context("fork").Pool(12) as pool:
         n1 = pool.map(M.count_part, files, chunksize=8)
         n2 = pool.map(M.count_m90, files2, chunksize=8)
@@ -80,6 +92,7 @@ def load_games(smoke, log, all_folds=False):
     for f_ in sorted((AICUP1 / "data/training").glob("train_*.csv")):
         c = pd.read_csv(f_, usecols=["player_id", "game_id", "rank"], dtype=str)
         own.update(zip(c["rank"] + ":" + c["game_id"], c["player_id"]))
+    own.update(ext_own)
     p2 = np.array([own[k] for k in key[n_old:]])
     pid = np.concatenate([pid, p2])
     fold = np.concatenate([fold, np.array([int(tab.get(p, -9)) for p in p2], np.int8)])
@@ -100,6 +113,9 @@ def main(argv=None):
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--eval-every", type=int, default=5000)
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--ext-ply", default=None)
+    ap.add_argument("--ext-select", default=None)
+    ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
     import torch
@@ -114,12 +130,13 @@ def main(argv=None):
     name = f"{v}_{a.tag}{'_smoke' if a.smoke else ''}"
     dev = "cuda"
     log(f"net {name}: steps {steps} (cosine horizon {horizon}), dropout {a.drop}, ply mask up to {a.mask}, EMA {a.ema}, seed {a.seed}; GPU {torch.cuda.get_device_name(0)}")
-    G = load_games(a.smoke, log, a.all_folds)
+    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select)
     held = set(json.load(open(M.M82 / "held_keys.json")))
     players, owner = np.unique(G["pid"], return_inverse=True)
     C, fold = len(players), G["fold"]
     is_held = np.array([k in held for k in G["key"]])
     allowed = np.ones(len(fold), bool) if a.all_folds else fold != 0
+    is_ext = np.char.startswith(players.astype(str), "x:")  # per player
     use = ~is_held & allowed & (fold != v)
     cnt = np.bincount(owner[use], minlength=C)
     tp = np.flatnonzero(cnt >= M.MIN_GAMES)
@@ -131,7 +148,10 @@ def main(argv=None):
     tab = np.full((C, W), -1, np.int64)
     tab[o, np.arange(len(o)) - np.searchsorted(o, o, side="left")] = idx
     P = M.P_EP if not a.smoke else min(M.P_EP, len(tp))
-    log(f"training on {int(use.sum())} games of {len(tp)} players (folds {sorted(set(fold[use].tolist()))}); episodes of {P} players x {M.M_EP} games")
+    tp_ext, tp_own = tp[is_ext[tp]], tp[~is_ext[tp]]
+    n_ext = 0 if a.ext_share is None or not len(tp_ext) else min(int(round(P * a.ext_share)), len(tp_ext))
+    log(f"training on {int(use.sum())} games of {len(tp)} players (folds {sorted(set(fold[use].tolist()))}; external players {len(tp_ext)} with {int((use & is_ext[owner]).sum())} games"
+        f"{'' if a.ext_share is None else f', {n_ext} of every episode'}); episodes of {P} players x {M.M_EP} games")
     rng = np.random.default_rng(990 + v + 1000 * a.seed)
     torch.manual_seed(990 + v + 1000 * a.seed)
     M.DROP = a.drop
@@ -165,7 +185,7 @@ def main(argv=None):
         return res
 
     # evaluation set: held-out own games of fold v (unseen) and of the training folds (seen); prototypes from non-held games, folds != 0
-    ev_ok = ~is_held & allowed
+    ev_ok = ~is_held & allowed & ~is_ext[owner]  # the held-out log keeps the competition's players as its gallery
     e_idx = np.flatnonzero(ev_ok)
     e_o = owner[e_idx]
     e_order = np.argsort(e_o, kind="stable")
@@ -193,7 +213,7 @@ def main(argv=None):
     net.train()
     ar, tl, ta, t_last, every = np.arange(P), 0.0, 0.0, time.time(), (50 if a.smoke else 500)
     for step in range(start, steps):
-        pl = rng.choice(tp, P, replace=False)
+        pl = rng.choice(tp, P, replace=False) if a.ext_share is None else np.concatenate([rng.choice(tp_ext, n_ext, replace=False), rng.choice(tp_own, P - n_ext, replace=False)])
         u = rng.random((P, W))
         u[np.arange(W)[None] >= cnt[pl][:, None]] = 2.0
         rows = tab[pl[:, None], np.argsort(u, axis=1)[:, :M.M_EP]].reshape(-1)
@@ -230,7 +250,7 @@ def main(argv=None):
             torch.save({"net": net.state_dict(), "ema": ema.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(), "step": step + 1, "hist": hist}, state_file)
             t_last = time.time()
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds)}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share}
     for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
         torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "state": label}, "step": steps}, out / f"ckpt_{v}_{a.tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
     (out / f"train_{name}.json").write_text(json.dumps({**meta, "history": hist}, indent=1) + "\n")
