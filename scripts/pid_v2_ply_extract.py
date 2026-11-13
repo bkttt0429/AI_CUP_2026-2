@@ -22,9 +22,26 @@ import aicup_pid  # noqa: E402,F401
 import trunk_extract as te  # noqa: E402
 from aicup.humansl import load_humansl  # noqa: E402
 from aicup.l1b import neutral_rows, trunk_features  # noqa: E402
+from aicup.submission import check_game  # noqa: E402
 from pid_trunk_extract import official2_tasks  # noqa: E402
 
 T_MAX = 256
+
+
+def original_tasks(tests_dir, per_candidate):
+    """{key: (sgf, 'B')} of the ORIGINAL pools' candidate games (pub_ / priv_; Black only), the first `per_candidate` usable games
+    of every candidate in file order; keys c:<row in its file>:<game_id> as pid_trunk_extract.py --official. No question game."""
+    import pandas as pd
+    from collections import Counter
+    out = {}
+    for tag in ("public", "private"):
+        c = pd.read_csv(Path(tests_dir) / f"player_identification_candidates_{tag}.csv", dtype=str, keep_default_na=False)
+        seen = Counter()
+        for i, r in enumerate(c.itertuples()):
+            if seen[r.player_id] < per_candidate and check_game(r.sgf_content, "B")[0]:
+                out[f"c:{i}:{r.game_id}"] = (r.sgf_content, "B")
+                seen[r.player_id] += 1
+    return out
 
 
 def main(argv=None):
@@ -36,11 +53,12 @@ def main(argv=None):
     ap.add_argument("--nshards", type=int, default=1)
     ap.add_argument("--part-size", type=int, default=200)
     ap.add_argument("--batch", type=int, default=512)
+    ap.add_argument("--original", type=int, default=0, help="instead of the added pools: this many candidate games per candidate of the ORIGINAL pools (METHOD_NOTES 2.54)")
     a = ap.parse_args(argv)
     t0 = time.time()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    tasks = official2_tasks(a.tests_dir)
+    tasks = original_tasks(a.tests_dir, a.original) if a.original else official2_tasks(a.tests_dir)
     mine = sorted(tasks)[a.shard::a.nshards]
     parts = [mine[i:i + a.part_size] for i in range(0, len(mine), a.part_size)]
     todo = [(k, p) for k, p in enumerate(parts) if not (out / f"ply_s{a.shard:03d}_p{k:04d}.npz").exists()]

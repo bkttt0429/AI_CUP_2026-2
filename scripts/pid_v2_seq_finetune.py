@@ -134,6 +134,8 @@ def main(argv=None):
     ap.add_argument("--state", choices=("best", "last"), default="best", help="the checkpoint's state with the best held-out top-1 on seen players, or the one after its final step")
     ap.add_argument("--holdout", type=int, default=0, help="official mode: games per candidate kept out of the fine-tune (pseudo-pool; 0 = the real pool)")
     ap.add_argument("--holdout-seed", type=int, default=0)
+    ap.add_argument("--mix-original", default=None, help="official mode: directory of scripts/pid_v2_ply_extract.py --original; the candidates of the ORIGINAL pool of the same side "
+                                                           "(pub for pub2, priv for priv2; never the other side) fill half of every episode (METHOD_NOTES 2.54)")
     a = ap.parse_args(argv)
     t0 = time.time()
     log = lambda s: print(f"{s} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
@@ -209,6 +211,26 @@ def main(argv=None):
                         parts[name].append(arr)
         mix = {k: np.concatenate(x) for k, x in parts.items()}
         mix["owner"] = np.unique(mix.pop("pid"), return_inverse=True)[1]
+    if a.mix_original:
+        assert a.mode == "official" and mix is None
+        side = a.pool[:-1]  # pub2 -> pub, priv2 -> priv
+        c0 = pd.read_csv(Path(a.tests_dir) / f"player_identification_candidates_{'public' if side == 'pub' else 'private'}.csv", dtype=str, usecols=["game_id", "player_id"])
+        own0 = {f"c:{i}:{g}": p for i, (g, p) in enumerate(zip(c0.game_id, c0.player_id))}
+        parts = {x: [] for x in ("pid", "GL", "POS", "MOV", "LEN", "SUBJ")}
+        for f in sorted(glob.glob(f"{a.mix_original}/ply_*.npz")):
+            if f.endswith(".tmp.npz"):
+                continue
+            z = np.load(f)
+            key = z["key"].astype(str)
+            m = np.array([k.split(":")[2].startswith(side + "_g_") for k in key])
+            if m.any():
+                parts["pid"].append(np.array([own0[k] for k in key[m]]))
+                for name in ("GL", "POS", "MOV", "LEN", "SUBJ"):
+                    parts[name].append(z[name][m])
+        mix = {k: np.concatenate(x) for k, x in parts.items()}
+        assert all(p.startswith(side + "_p_") for p in np.unique(mix["pid"]))
+        mix["owner"] = np.unique(mix.pop("pid"), return_inverse=True)[1]
+        log(f"original pool '{side}': {len(mix['owner'])} candidate games of {int(mix['owner'].max()) + 1} candidates in every episode's second half")
     finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon, mix)
     return 0
 

@@ -142,7 +142,7 @@ def main(argv=None):
             x = cat(rs, lambda r: sc[(id(r), t)])
             out["scores"][g][str(t)] = {"mix": mix(x, n), **{str(m): float(x[n == m].mean()) for m in SIZES}}
         print(f"{g}: document weights, by fine-tune steps: " + "  ".join(f"t{t} mix {v_['mix']:.4f} (n=1 {v_['1']:.4f}, n=2 {v_['2']:.4f}, n=3 {v_['3']:.4f})" for t, v_ in out["scores"][g].items()), flush=True)
-        for x_, y_ in ((50, 0), (100, 0), (100, 50), *[("mix", t) for t in a.mix], ("alt", a.alt_step)):
+        for x_, y_ in ((50, 0), (100, 0), (100, 50), *[(t, 50) for t in a.steps if t not in (0, 50, 100)], *[("mix", t) for t in a.mix], ("alt", a.alt_step), *([("alt", 50)] if a.alt_step != 50 else [])):
             if x_ in arms and y_ in arms:
                 d = cat(rs, lambda r: sc[(id(r), x_)] - sc[(id(r), y_)])
                 b = boot_mix(d, n, cluster, a.boot, rng)
