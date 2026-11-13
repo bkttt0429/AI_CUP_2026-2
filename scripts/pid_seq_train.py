@@ -224,6 +224,11 @@ def main(argv=None):
                          "its external accounts from one rank folder; classes and folders drawn in proportion to their players")
     ap.add_argument("--rank-ep-share", type=float, default=1.0, help="share of the steps drawn that way; the others are drawn as before")
     ap.add_argument("--snap", nargs="*", type=int, default=[], help="also write the checkpoints at these steps, as ckpt_<net>_<tag>k<step/1000>[e].pt (snapshots of one long run)")
+    ap.add_argument("--m-ep", type=int, default=None, help="games per player in an episode (default 8; METHOD_NOTES 2.69)")
+    ap.add_argument("--min-games", type=int, default=None, help="an EXTERNAL account trains with at least this many usable games (default 8); competition players always need 8")
+    ap.add_argument("--ext-cap", type=int, default=0, help="use only the first this many games of every external account (0: all)")
+    ap.add_argument("--ext-accounts", type=int, default=0, help="use only this many external accounts: the first N of one fixed random order of the accounts with 8 or more usable games, "
+                                                               "so the subsets of different N are nested (0: all)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
     import torch
@@ -250,8 +255,23 @@ def main(argv=None):
     allowed = np.ones(len(fold), bool) if a.all_folds else fold != 0
     is_ext = np.char.startswith(players.astype(str), "x:")  # per player
     use = ~is_held & allowed & (fold != v)
+    if a.m_ep:
+        M.M_EP = a.m_ep
+    if a.ext_cap or a.ext_accounts:  # fewer external accounts and / or fewer games of each (METHOD_NOTES 2.69)
+        e_idx = np.flatnonzero(use & is_ext[owner])
+        eo = owner[e_idx]
+        od = np.argsort(eo, kind="stable")
+        e_idx, eo = e_idx[od], eo[od]
+        rk = np.arange(len(eo)) - np.searchsorted(eo, eo, side="left")  # position of a game among its account's usable games
+        out_ = np.zeros(len(eo), bool)
+        if a.ext_accounts:
+            full = np.unique(eo[rk == M.MIN_GAMES - 1])  # accounts with at least 8 usable games, in the order of their names
+            out_ |= ~np.isin(eo, np.random.default_rng(20261114).permutation(full)[:a.ext_accounts])
+        if a.ext_cap:
+            out_ |= rk >= a.ext_cap
+        use[e_idx[out_]] = False
     cnt = np.bincount(owner[use], minlength=C)
-    tp = np.flatnonzero(cnt >= M.MIN_GAMES)
+    tp = np.flatnonzero(np.where(is_ext, cnt >= max(a.min_games or M.MIN_GAMES, M.M_EP), cnt >= max(M.MIN_GAMES, M.M_EP)))
     W = int(cnt.max())
     idx = np.flatnonzero(use)
     o = owner[idx]

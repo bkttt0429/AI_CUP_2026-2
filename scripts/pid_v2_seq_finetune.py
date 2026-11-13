@@ -49,7 +49,7 @@ def sym_table():
     return np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int16)
 
 
-def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None, mix=None, warm=50, views=1):
+def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None, mix=None, warm=50, views=1, sym_aug=False):
     """A: arrays of every pool game; owner [n] candidate index or -1 (question game). Calls save(step, vectors) at steps_out."""
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
@@ -60,7 +60,8 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
     p_ep = min(p_ep, C)
     everything = np.arange(len(owner))
     save0 = save
-    SYM = sym_table() if views > 1 else None
+    SYM = sym_table() if views > 1 or sym_aug else None
+    rng_sym = np.random.default_rng(seed + 7919)  # its own stream: the episodes are the same with and without the augmentation
 
     def save(step, vec):  # with --views k: also the vectors of the pool seen under the board symmetries 1 .. k-1 (suffix v<i>)
         save0(step, vec, "")
@@ -92,6 +93,8 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
         if mix_by is not None:
             mrows = np.concatenate([rng.choice(mix_by[c], m_ep, replace=False) for c in rng.choice(len(mix_by), p_ep - n_pool, replace=False)])
             batch = {k: np.concatenate([batch[k], mix[k][mrows]]) for k in batch}
+        if sym_aug:  # one random board symmetry per step, on the played points (as scripts/pid_seq_train.py --sym-aug)
+            batch["POS"] = SYM[rng_sym.integers(8)][batch["POS"].astype(np.int64)]
         with torch.autocast("cuda", dtype=torch.bfloat16):
             z = net(torch.as_tensor(batch["GL"]).cuda(), torch.as_tensor(batch["POS"].astype(np.int64)).cuda(), torch.as_tensor(batch["MOV"].astype(np.int64)).cuda(),
                     torch.as_tensor(batch["LEN"].astype(np.int64)).cuda(), torch.as_tensor(batch["SUBJ"].astype(np.int64)).cuda())
@@ -154,6 +157,7 @@ def main(argv=None):
     ap.add_argument("--holdout-seed", type=int, default=0)
     ap.add_argument("--views", type=int, default=1, help="1-8: also write the vectors of the whole pool under that many board symmetries (test-time views of a network "
                                                          "trained with --sym-aug; the same symmetry for every game of the pool; METHOD_NOTES 2.59)")
+    ap.add_argument("--sym-aug", action="store_true", help="one random board symmetry per fine-tune step (for networks trained with --sym-aug; METHOD_NOTES 2.69)")
     ap.add_argument("--warm", type=int, default=50, help="steps of the linear learning-rate warm-up (50: a 50-step fine-tune never leaves the warm-up; METHOD_NOTES 2.55)")
     ap.add_argument("--mix-original", default=None, help="official mode: directory of scripts/pid_v2_ply_extract.py --original; the candidates of the ORIGINAL pool of the same side "
                                                            "(pub for pub2, priv for priv2; never the other side) fill half of every episode (METHOD_NOTES 2.54)")
@@ -269,7 +273,7 @@ def main(argv=None):
         assert all(p.startswith(side + "_p_") for p in np.unique(mix["pid"]))
         mix["owner"] = np.unique(mix.pop("pid"), return_inverse=True)[1]
         log(f"original pool '{side}': {len(mix['owner'])} candidate games of {int(mix['owner'].max()) + 1} candidates in every episode's second half")
-    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon, mix, a.warm, a.views)
+    finetune(net, A, owner, sorted(set(a.steps)), save, a.lr, a.p_ep, a.m_ep, 1000 + a.seed, log, a.horizon, mix, a.warm, a.views, a.sym_aug)
     return 0
 
 

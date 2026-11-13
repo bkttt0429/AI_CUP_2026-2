@@ -13,6 +13,9 @@
 #                           2,048 hardest) and of a cosine margin (km); comparison with yse
 #   pid_exp_sym.sh window   held-out test of random ply windows (wa half of the games, wb all, wc half + ply masking) and of the
 #                           reworked cross-batch memory (kc); comparison with yse
+#   pid_exp_sym.sh depth    held-out test of how to spend the disk on external accounts (METHOD_NOTES 2.69): d0 39,683 accounts
+#                           x 8 games (episodes 256 x 8), d1 the same accounts x 4 games (512 x 4), d2 79,366 accounts x 4
+#                           games (the same number of games as d0), d3 all 116,420 x 4; comparisons d1 / d2 with d0, d3 with d2
 #   pid_exp_sym.sh stack    held-out test (x2 data, folds 1 and 2) of what stacks on the augmentation:
 #                           zs + the bigger network, zr + half of the episodes from one rank band, zg every game its own
 #                           symmetry (instead of one per episode), zm + ply masking up to 0.3; then the comparison with yse
@@ -74,6 +77,18 @@ case $1 in
       python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
     done
     python -I $R2/scripts/pid_v2_sim14.py --names yse=_nyse x2e=_nx2e wae=_nwae wbe=_nwbe wce=_nwce kce=_nkce wa=_nwa wb=_nwb wc=_nwc kc=_nkc --ref yse --folds 1 2 --out $R2/results/final/v2_sim14w.json ;;
+  depth)  # nested account subsets of one fixed order; competition players as always (>= 8 games); only the external side changes
+    D4="--m-ep 4 --p-ep 512 --ext-cap 4 --min-games 4"
+    specs=()
+    for v in 1 2; do
+      specs+=("$v d0 $C --ext-accounts 39683" "$v d1 $C --ext-accounts 39683 $D4" "$v d2 $C --ext-accounts 79366 $D4" "$v d3 $C $D4")
+    done
+    bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF" "${specs[@]}"
+    for t in d0e d1e d2e d3e; do
+      python -I $R2/scripts/pid_v2_seq_embed.py --stage folds --folds 1 2 --ckpt-dir $S --ckpt-suffix _$t --name _n$t --out $R2/data/seq
+    done
+    python -I $R2/scripts/pid_v2_sim14.py --names d0e=_nd0e yse=_nyse d1e=_nd1e d2e=_nd2e d3e=_nd3e --ref d0e --folds 1 2 --out $R2/results/final/v2_sim14d.json
+    python -I $R2/scripts/pid_v2_sim14.py --names d2e=_nd2e d3e=_nd3e d1e=_nd1e --ref d2e --folds 1 2 --out $R2/results/final/v2_sim14d2.json ;;
   stack)
     specs=()
     for v in 1 2; do

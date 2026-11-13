@@ -95,6 +95,45 @@ def aggregate(g, l, pos, lens):
     return out
 
 
+def full_vectors(model, bins, globs, pos, mover, rows, batch):
+    """[n, C] float32 board-pooled and played-point trunk vectors WITHOUT the random projection (C = 384; a pass has a zero
+    played-point vector), computed as trunk_extract.vectors computes them before it projects (METHOD_NOTES 2.69, probe)."""
+    n = len(pos)
+    out_g = out_l = None
+    with torch.no_grad():
+        for i in range(0, n, batch):
+            j = min(n, i + batch)
+            b, g = torch.as_tensor(bins[i:j]).cuda(), torch.as_tensor(globs[i:j]).cuda()
+            c = torch.as_tensor(mover[i:j]).cuda().long()
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                trunk, _, _, _ = trunk_features(model, b, g, c, rows)
+            trunk = trunk.float()
+            p = torch.as_tensor(pos[i:j]).cuda().long()
+            on = p < te.PASS_POS
+            local = torch.zeros(j - i, trunk.shape[1], device=trunk.device)
+            local[on] = trunk[on.nonzero()[:, 0], :, p[on] // 19, p[on] % 19]
+            if out_g is None:
+                out_g, out_l = np.empty((n, trunk.shape[1]), np.float32), np.empty((n, trunk.shape[1]), np.float32)
+            out_g[i:j], out_l[i:j] = trunk.mean(dim=(2, 3)).cpu().numpy(), local.cpu().numpy()
+    return out_g, out_l
+
+
+def aggregate_full(g, l, pos, lens):
+    """[G, 4C]: per game mean / std of the unprojected pooled vectors and of the unprojected played-point vectors (as aggregate)."""
+    C = g.shape[1]
+    out = np.zeros((len(lens), 4 * C), np.float32)
+    start = 0
+    for i, n in enumerate(lens):
+        if n:
+            gi = g[start:start + n]
+            li = l[start:start + n][pos[start:start + n] < te.PASS_POS]
+            out[i, 0:C], out[i, C:2 * C] = gi.mean(axis=0), gi.std(axis=0)
+            if len(li):
+                out[i, 2 * C:3 * C], out[i, 3 * C:4 * C] = li.mean(axis=0), li.std(axis=0)
+        start += n
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     src = ap.add_mutually_exclusive_group(required=True)
@@ -112,6 +151,7 @@ def main(argv=None):
     ap.add_argument("--part-size", type=int, default=200)
     ap.add_argument("--batch", type=int, default=512)
     ap.add_argument("--max-games", type=int, default=0, help="smoke tests only")
+    ap.add_argument("--full", action="store_true", help="also store the per-game mean / std of the UNPROJECTED trunk vectors (array `full`, [G, 4 x 384]); the 256-dim rows are then computed from the same vectors")
     ap.add_argument("--sym-seed", type=int, default=None, help="rotate / mirror every game by aicup_pid.symmetry.game_sym(key, sgf, seed) before the replay (simulated re-release; HD >= 2 games stay as they are)")
     a = ap.parse_args(argv)
     t0 = time.time()
@@ -155,7 +195,14 @@ def main(argv=None):
                     trunk, _, _, _ = trunk_features(model, torch.as_tensor(bins[:1]).cuda(), torch.as_tensor(globs[:1]).cuda(),
                                                     torch.as_tensor(mover[:1]).cuda().long(), rows)
                 proj_g, proj_l = te.projections(trunk.shape[1], trunk.device)
-            g, l = te.vectors(model, bins, globs, pos, mover, proj_g, proj_l, rows, a.batch)
+            full = None
+            if a.full:  # one trunk pass: the unprojected vectors, and the usual projected ones from them
+                fg, fl = full_vectors(model, bins, globs, pos, mover, rows, a.batch)
+                full = aggregate_full(fg, fl, pos, lens)
+                g = (fg @ proj_g.float().cpu().numpy()).astype(np.float16)
+                l = (fl @ proj_l.float().cpu().numpy()).astype(np.float16)
+            else:
+                g, l = te.vectors(model, bins, globs, pos, mover, proj_g, proj_l, rows, a.batch)
             feats = aggregate(g, l, pos, lens)
             if not np.isfinite(feats).all():
                 raise ValueError(f"part {k}: non-finite features")
@@ -172,7 +219,8 @@ def main(argv=None):
                 start += n_
             path = out / f"{a.tag}_s{shard:03d}_p{k:04d}.npz"
             tmp = path.with_name(path.name + ".tmp.npz")
-            np.savez(tmp, keys=np.array([d[0] for d in done]), feats=feats, n_target=np.array(lens, np.int16), phase=phase)
+            extra = {} if full is None else {"full": full}
+            np.savez(tmp, keys=np.array([d[0] for d in done]), feats=feats, n_target=np.array(lens, np.int16), phase=phase, **extra)
             os.replace(tmp, path)
             games_done += len(part)
             plies_done += sum(len(d[3]) for d in done)
