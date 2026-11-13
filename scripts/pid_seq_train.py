@@ -12,6 +12,7 @@ training players keep being learnt; the official players are all unseen. Changes
 Folds: net v trains on the players of folds 1-4 other than v; net -1 on folds 1-4. Fold 0 is not read into training or
 evaluation (this repository never uses it); players without a fold train in every net, as in M90. The rank competition's
 test games are not read.
+  --fork <spec file>         several networks of one job on one shared copy of the games (see main_fork)
   --cls-loss cosface         classification over all training players with a cosine margin (METHOD_NOTES 2.56)
   --rank-ep / --rank-ep-share   episodes of players of one rank class or band: hard negatives (METHOD_NOTES 2.55)
   --snap                     further checkpoints at given steps of one long run (METHOD_NOTES 2.51)
@@ -78,6 +79,9 @@ def _rss_gb():
 
 
 SHARED = ("GL", "POS", "MOV", "LEN", "SUBJ")
+SHARED_ANON = False  # set by main_fork: the big arrays live in anonymous shared memory
+PRELOADED = None  # set by main_fork in every forked trainer: the games read once by the parent
+_KEEP = []
 
 
 def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None):
@@ -94,6 +98,15 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
         share.mkdir(parents=True, exist_ok=True)
 
     def alloc(name, shape, dtype, fill=0):  # in shared memory when asked: every network of the job then maps the same pages
+        if share is None and SHARED_ANON:  # anonymous shared mapping: forked trainers (main_fork) read the same pages, counted once
+            import mmap
+            nbytes = int(np.prod(shape)) * np.dtype(dtype).itemsize
+            mm = mmap.mmap(-1, max(nbytes, 1), flags=mmap.MAP_SHARED | mmap.MAP_ANONYMOUS, prot=mmap.PROT_READ | mmap.PROT_WRITE)
+            _KEEP.append(mm)
+            arr = np.frombuffer(mm, dtype=dtype, count=int(np.prod(shape))).reshape(shape)
+            if fill != 0:
+                arr[:] = fill
+            return arr
         if share is None:
             return np.zeros(shape, dtype) if fill == 0 else np.full(shape, fill, dtype)
         arr = np.lib.format.open_memmap(share / f"{name}.npy", mode="w+", dtype=dtype, shape=shape)
@@ -209,7 +222,9 @@ def main(argv=None):
     name = f"{v}_{a.tag}{'_smoke' if a.smoke else ''}"
     dev = "cuda"
     log(f"net {name}: steps {steps} (cosine horizon {horizon}), dropout {a.drop}, ply mask up to {a.mask}, EMA {a.ema}, seed {a.seed}; GPU {torch.cuda.get_device_name(0)}")
-    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir)
+    G = PRELOADED if PRELOADED is not None else load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir)
+    if PRELOADED is not None:
+        log(f"games shared by the job: {len(G['key'])} ({G['GL'].nbytes / 1e9:.1f} GB, read once; this process holds {_rss_gb():.1f} GB)")
     if a.prepare_only:
         return 0
     held = set(json.load(open(M.M82 / "held_keys.json")))
@@ -406,5 +421,59 @@ def main(argv=None):
     return 0
 
 
+def main_fork(argv):
+    """Several networks of one job on ONE copy of the games (METHOD_NOTES 2.57).
+        pid_seq_train.py --fork <spec file> [--smoke] [--all-folds] [--ext-ply ...] [--ext-select ...]
+    The games are read once into anonymous shared memory, then one trainer is forked per line of the spec file:
+        <GPU id> <log file> <arguments of a normal run: --net v --tag t ...>
+    A trainer sets its GPU before CUDA starts and writes to its log. Why: on the shared nodes every private copy (95-180 GB)
+    is slow to allocate when the page cache is full, and eight copies run into the node's commit limit; /dev/shm is not
+    reliable (it was full of another user's files on 25a-hgpn069)."""
+    global SHARED_ANON, PRELOADED
+    import shlex
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--fork", required=True)
+    ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--all-folds", action="store_true")
+    ap.add_argument("--ext-ply", nargs="*", default=None)
+    ap.add_argument("--ext-select", nargs="*", default=None)
+    a = ap.parse_args(argv)
+    t0 = time.time()
+    log = lambda s_: print(f"{s_} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
+    specs = [shlex.split(line) for line in Path(a.fork).read_text().splitlines() if line.strip() and not line.startswith("#")]
+    SHARED_ANON = True
+    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select)
+    for k in SHARED:
+        G[k].flags.writeable = False  # the trainers only read; a stray write would be seen by all of them
+    data = (["--smoke"] if a.smoke else []) + (["--all-folds"] if a.all_folds else []) + (["--ext-ply", *a.ext_ply] if a.ext_ply else []) + (["--ext-select", *a.ext_select] if a.ext_select else [])
+    pids = {}
+    for gpu, logfile, *rest in specs:
+        sys.stdout.flush()
+        pid = os.fork()
+        if pid == 0:
+            try:
+                os.environ["CUDA_VISIBLE_DEVICES"] = gpu
+                fd = os.open(logfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o640)
+                os.dup2(fd, 1); os.dup2(fd, 2)
+                sys.stdout = os.fdopen(1, "w", buffering=1); sys.stderr = os.fdopen(2, "w", buffering=1)
+                PRELOADED = G
+                rc = main(rest + data)
+            except BaseException:  # noqa: BLE001
+                import traceback
+                traceback.print_exc()
+                rc = 1
+            sys.stdout.flush(); sys.stderr.flush()
+            os._exit(int(rc or 0))
+        pids[pid] = logfile
+        log(f"trainer {pid} on GPU {gpu}: {' '.join(rest)} -> {logfile}")
+    failed = 0
+    while pids:
+        pid, status = os.wait()
+        ok = os.WIFEXITED(status) and os.WEXITSTATUS(status) == 0
+        log(f"trainer {pid} ({pids.pop(pid)}) {'done' if ok else 'FAILED'}")
+        failed |= not ok
+    return int(failed)
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main_fork(sys.argv[1:]) if "--fork" in sys.argv[1:] else main())

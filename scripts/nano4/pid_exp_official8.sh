@@ -11,12 +11,13 @@ R2=/home/u2507115/BK_AICUP_2026-2
 X=/work/u2507115/ext_fox
 free_kb=$(awk '/CommitLimit/{l=$2} /Committed_AS/{c=$2} END{print l-c}' /proc/meminfo)
 echo "node $(hostname): commit room $((free_kb / 1048576)) GB; /dev/shm $(df -h /dev/shm | awk 'NR==2{print $3" used of "$2}')"
-need=650; [ "$1" = c ] && need=800
+need=650; [ "$1" = c ] && need=250
 if [ "$free_kb" -lt $((need * 1048576)) ]; then echo "not enough commit room for four copies of the games on this node (need $need GB): resubmit excluding $(hostname)" >&2; exit 3; fi
 C="--steps 20000 --horizon 60000 --ext-ply $X/pilot/ply $X/scale1/ply_a $X/scale1/ply_b $R2/data/ext_ply/scale1_c $R2/data/ext_ply/scale2_top $R2/data/ext_ply/scale2_5d --ext-select $X/pilot/select.csv $X/scale1/select.csv $X/scale2_top/select.csv $X/scale2_5d/select.csv --ext-share 0.5 --no-state"
-C4="--steps 20000 --horizon 60000 --ext-ply $X/pilot/ply $X/scale1/ply_a $X/scale1/ply_b $R2/data/ext_ply/scale1_c $R2/data/ext_ply/scale2_top $R2/data/ext_ply/scale2_5d $X/scale3/ply --ext-select $X/pilot/select.csv $X/scale1/select.csv $X/scale2_top/select.csv $X/scale2_5d/select.csv $X/scale3/select.csv --ext-share 0.5 --no-state"
+DATA4="--ext-ply $X/pilot/ply $X/scale1/ply_a $X/scale1/ply_b $R2/data/ext_ply/scale1_c $R2/data/ext_ply/scale2_top $R2/data/ext_ply/scale2_5d $X/scale3/ply --ext-select $X/pilot/select.csv $X/scale1/select.csv $X/scale2_top/select.csv $X/scale2_5d/select.csv $X/scale3/select.csv"
+C4="--steps 20000 --horizon 60000 --ext-share 0.5 --no-state"
 case $1 in
-  c) bash $R2/scripts/nano4/pid_seq_train_multi.sh "-1 o4s0 $C4 --seed 0" "-1 o4s1 $C4 --seed 1" "-1 o4s2 $C4 --seed 2" "-1 o4s3 $C4 --seed 3" ;;  # + scale3: 182,167 external accounts
+  c) bash $R2/scripts/nano4/pid_seq_train_fork.sh "$DATA4" "-1 o4s0 $C4 --seed 0" "-1 o4s1 $C4 --seed 1" "-1 o4s2 $C4 --seed 2" "-1 o4s3 $C4 --seed 3" ;;  # + scale3: 182,167 external accounts; one shared copy of the games (177 GB)
   a) bash $R2/scripts/nano4/pid_seq_train_multi.sh "-1 o3s0 $C --seed 0" "-1 o3s1 $C --seed 1" "-1 o3s2 $C --seed 2" "-1 o3s3 $C --seed 3" ;;
   b) bash $R2/scripts/nano4/pid_seq_train_multi.sh "-1 o3hms0 $C --seed 0 --rank-ep class --rank-ep-share 0.5" "-1 o3hms1 $C --seed 1 --rank-ep class --rank-ep-share 0.5" \
        "-1 o3hbs0 $C --seed 0 --rank-ep band" "-1 o3hbs1 $C --seed 1 --rank-ep band" ;;
