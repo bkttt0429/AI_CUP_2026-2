@@ -16,6 +16,13 @@ test games are not read.
                         select.csv of scripts/ext_fox_select.py (game_key -> account). They train in every net (no fold),
                         are never in the held-out log, and fill --ext-share of every episode's players (default: drawn
                         like any other player).
+  --sym-aug             every episode is seen under one random board symmetry (the played points are remapped; the trunk
+                        vectors are kept): the network cannot tie a player to absolute corners, only to what is consistent
+                        between the games of one episode (METHOD_NOTES 2.48)
+  --p-ep                players per episode (M90: 256)
+  --ext-share-end       the external share falls linearly from --ext-share to this value over the run (finish on the
+                        competition's own players)
+  --no-state            no resume file (saves 0.5 GB per network while it trains)
   --all-folds           fold 0 is read and trained on as well: net -1 then sees every training player, as the rank session's
                         net -1 (METHOD_NOTES 2.40). ONLY WITH THE USER'S CONSENT for fold 0; for official files only (no
                         simulation can score such a network). Held-out own games (results/m82/held_keys.json) are never trained on; for net v the ones of fold v
@@ -117,6 +124,10 @@ def main(argv=None):
     ap.add_argument("--ext-ply", nargs="*", default=None, help="one or more directories of external per-ply parts")
     ap.add_argument("--ext-select", nargs="*", default=None, help="the select.csv files that name their accounts")
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
+    ap.add_argument("--sym-aug", action="store_true")
+    ap.add_argument("--p-ep", type=int, default=None)
+    ap.add_argument("--ext-share-end", type=float, default=None)
+    ap.add_argument("--no-state", action="store_true")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
     import torch
@@ -148,7 +159,7 @@ def main(argv=None):
     idx, o = idx[order], o[order]
     tab = np.full((C, W), -1, np.int64)
     tab[o, np.arange(len(o)) - np.searchsorted(o, o, side="left")] = idx
-    P = M.P_EP if not a.smoke else min(M.P_EP, len(tp))
+    P = (a.p_ep or M.P_EP) if not a.smoke else min(M.P_EP, len(tp))
     tp_ext, tp_own = tp[is_ext[tp]], tp[~is_ext[tp]]
     n_ext = 0 if a.ext_share is None or not len(tp_ext) else min(int(round(P * a.ext_share)), len(tp_ext))
     log(f"training on {int(use.sum())} games of {len(tp)} players (folds {sorted(set(fold[use].tolist()))}; external players {len(tp_ext)} with {int((use & is_ext[owner]).sum())} games"
@@ -211,9 +222,16 @@ def main(argv=None):
         log(f"  step {step} [{label}]: held-out own games among {int(has.sum())} players: " + "; ".join(f"{k} ({x['n']}) top-1 / top-5 / top-20 {x['top1']:.3f} / {x['top5']:.3f} / {x['top20']:.3f}" for k, x in res.items() if isinstance(x, dict)))
         return res
 
+    sym_tab = None
+    if a.sym_aug:  # [8, 363]: where a point goes under each board symmetry (361 = pass and 362 = padding stay)
+        yy, xx = np.divmod(np.arange(361), 19)
+        maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
+        sym_tab = np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int64)
     net.train()
     ar, tl, ta, t_last, every = np.arange(P), 0.0, 0.0, time.time(), (50 if a.smoke else 500)
     for step in range(start, steps):
+        if a.ext_share is not None and a.ext_share_end is not None:
+            n_ext = min(int(round(P * (a.ext_share + (a.ext_share_end - a.ext_share) * step / max(steps - 1, 1)))), len(tp_ext))
         pl = rng.choice(tp, P, replace=False) if a.ext_share is None else np.concatenate([rng.choice(tp_ext, n_ext, replace=False), rng.choice(tp_own, P - n_ext, replace=False)])
         u = rng.random((P, W))
         u[np.arange(W)[None] >= cnt[pl][:, None]] = 2.0
@@ -223,7 +241,10 @@ def main(argv=None):
             hit = torch.rand(len(rows), T, device=dev) < torch.rand(len(rows), 1, device=dev) * a.mask
             gl = torch.where(hit[..., None], net.mu.to(gl.dtype)[None, None], gl)
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            z = net(gl, tb(G["POS"][rows].astype(np.int64)), tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64)))
+            pos_np = G["POS"][rows].astype(np.int64)
+            if sym_tab is not None:
+                pos_np = sym_tab[rng.integers(8)][pos_np]
+            z = net(gl, tb(pos_np), tb(G["MOV"][rows].astype(np.int64)), tb(G["LEN"][rows].astype(np.int64)), tb(G["SUBJ"][rows].astype(np.int64)))
         z = z.float().reshape(P, M.M_EP, M.D_OUT)
         tot, sc = z.sum(1), net.log_scale.exp()
         logits = sc * z.reshape(-1, M.D_OUT) @ F.normalize(tot, dim=-1).T
@@ -248,10 +269,11 @@ def main(argv=None):
         if (step + 1) % eval_every == 0 or step + 1 == steps:
             hist += [evaluate(net, step + 1, "raw"), evaluate(ema, step + 1, "ema")]
             net.train()
-            torch.save({"net": net.state_dict(), "ema": ema.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(), "step": step + 1, "hist": hist}, state_file)
+            if not a.no_state:
+                torch.save({"net": net.state_dict(), "ema": ema.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(), "step": step + 1, "hist": hist}, state_file)
             t_last = time.time()
     cpu = lambda m: {k: x.detach().cpu().clone() for k, x in m.state_dict().items()}  # noqa: E731
-    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share}
+    meta = {"step": steps, "horizon": horizon, "drop": a.drop, "mask": a.mask, "ema": a.ema, "seed": a.seed, "net": v, "players_trained": int(len(tp)), "games": int(use.sum()), "all_folds": bool(a.all_folds), "ext_players": int(len(tp_ext)), "ext_share": a.ext_share, "ext_share_end": a.ext_share_end, "sym_aug": bool(a.sym_aug), "p_ep": int(P)}
     for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
         torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "state": label}, "step": steps}, out / f"ckpt_{v}_{a.tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
     (out / f"train_{name}.json").write_text(json.dumps({**meta, "history": hist}, indent=1) + "\n")

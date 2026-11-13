@@ -100,9 +100,9 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
             save(step + 1, embed(net, A, everything))
 
 
-def load_net(ckpt):
+def load_net(ckpt, state="best"):
     net = m88.build_model()
-    net.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=False)["best_state"])
+    net.load_state_dict(torch.load(ckpt, map_location="cpu", weights_only=False)["best_state" if state == "best" else "net"])
     return net.cuda()
 
 
@@ -125,6 +125,7 @@ def main(argv=None):
     ap.add_argument("--ply-dir", default="/work/u2507115/pid_v2/ply_official")
     ap.add_argument("--tests-dir", default=str(R2 / "data" / "tests_1111"))
     ap.add_argument("--out", default="/work/u2507115/pid_v2/seq_ft")
+    ap.add_argument("--state", choices=("best", "last"), default="best", help="the checkpoint's state with the best held-out top-1 on seen players, or the one after its final step")
     ap.add_argument("--holdout", type=int, default=0, help="official mode: games per candidate kept out of the fine-tune (pseudo-pool; 0 = the real pool)")
     ap.add_argument("--holdout-seed", type=int, default=0)
     a = ap.parse_args(argv)
@@ -185,7 +186,7 @@ def main(argv=None):
             tag = f"offsim_{a.pool}_h{a.holdout}s{a.holdout_seed}_net{a.net}{a.tag}"
     owner = np.array([own.get(k, -1) for k in A["key"]])
     log(f"{tag}: {len(owner)} games ({int((owner >= 0).sum())} candidate games of {len(players)} players, {int((owner < 0).sum())} question games); network {ckpt.name}")
-    net = load_net(ckpt)
+    net = load_net(ckpt, a.state)
 
     def save(step, vec):
         np.savez(out / f"{tag}_t{step}.npz", key=A["key"], emb=vec.astype(np.float16), step=np.array(step))

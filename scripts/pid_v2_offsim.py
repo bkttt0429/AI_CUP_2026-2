@@ -67,6 +67,8 @@ def main(argv=None):
     ap.add_argument("--holdout", type=int, default=3)
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1])
     ap.add_argument("--steps", nargs="+", type=int, default=[0, 50, 100])
+    ap.add_argument("--alt", default=None, help="a second fusion document (another network composition): scored at --alt-step next to the first, paired difference")
+    ap.add_argument("--alt-step", type=int, default=50)
     ap.add_argument("--mix", nargs="*", type=int, default=[], help="an extra arm 'mix': every network's vectors after each of these step counts, all averaged (e.g. 50 100)")
     ap.add_argument("--boot", type=int, default=2000)
     ap.add_argument("--workers", type=int, default=12)
@@ -80,7 +82,10 @@ def main(argv=None):
     assert comps[-1] == "seq" and isinstance(doc["emb_model"], str)
     emb = PlayerEmbedding.from_state(torch.load(str(ROOT / doc["emb_model"]), map_location="cpu", weights_only=False))
     store = load_store(str(ROOT / doc["trunk_store"]))
-    nets = [re.fullmatch(r"official_pub2_net(-?\d+)(.*)_t\d+\.npz", Path(x[0]).name).groups() for x in doc["seq_official"]]  # (net, tag) of every network of the document
+    nets_of = lambda d_: [re.fullmatch(r"official_pub2_net(-?\d+)(.*)_t\d+\.npz", Path(x[0]).name).groups() for x in d_["seq_official"]]  # noqa: E731  (net, tag) of every network of a document
+    nets = nets_of(doc)
+    alt = json.loads(Path(a.alt).read_text()) if a.alt else None
+    assert alt is None or list(alt["components"]) == comps
     print(f"document {Path(a.fusion).name}: {len(nets)} sequence networks, weights {dict(zip(comps, np.round(doc['weights'], 3).tolist()))}", flush=True)
     load = lambda f: (lambda z: dict(zip(z["key"].astype(str), z["emb"].astype(np.float32))))(np.load(f))  # noqa: E731
     runs, half = [], {}
@@ -110,6 +115,9 @@ def main(argv=None):
             for t in a.steps:
                 by_t[t] = [load(Path(a.ft_dir) / f"offsim_{pool}_h{a.holdout}s{s}_net{v}{tg}_t{t}.npz") for v, tg in nets]
                 Z[("seq", t)] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=by_t[t])["seq"])
+            if alt is not None:
+                seqs = [load(Path(a.ft_dir) / f"offsim_{pool}_h{a.holdout}s{s}_net{v}{tg}_t{a.alt_step}.npz") for v, tg in nets_of(alt)]
+                Z[("seq", "alt")] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=seqs)["seq"])
             if a.mix:
                 Z[("seq", "mix")] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=[x for t in a.mix for x in by_t[t]])["seq"])
             runs.append({"pool": pool, "seed": s, "Z": Z, "truth": truth, "n": n, "primary": primary})
@@ -122,8 +130,10 @@ def main(argv=None):
     out = {"document": Path(a.fusion).name, "holdout": a.holdout, "seeds": a.seeds, "steps": a.steps, "scores": {}, "steps_diff": {}, "calibration": {}}
     cat = lambda rs, f: np.concatenate([f(r) for r in rs])  # noqa: E731
     groups = {"pub2": [r for r in runs if r["pool"] == "pub2"], "priv2": [r for r in runs if r["pool"] == "priv2"], "both": runs}
-    arms = [*a.steps, *(["mix"] if a.mix else [])]
-    sc = {(id(r), t): per_question(fus.scores(mats(r, t)), r["truth"]) for r in runs for t in arms}
+    arms = [*a.steps, *(["mix"] if a.mix else []), *(["alt"] if alt is not None else [])]
+    fus_alt = Fusion()
+    fus_alt.w = np.asarray((alt or doc)["weights"], dtype=float)
+    sc = {(id(r), t): per_question((fus_alt if t == "alt" else fus).scores(mats(r, t)), r["truth"]) for r in runs for t in arms}
     for g, rs in groups.items():
         n = cat(rs, lambda r: r["n"])
         cluster = cat(rs, lambda r: np.char.add(r["pool"] + "|", r["truth"].astype(str)))
@@ -132,7 +142,7 @@ def main(argv=None):
             x = cat(rs, lambda r: sc[(id(r), t)])
             out["scores"][g][str(t)] = {"mix": mix(x, n), **{str(m): float(x[n == m].mean()) for m in SIZES}}
         print(f"{g}: document weights, by fine-tune steps: " + "  ".join(f"t{t} mix {v_['mix']:.4f} (n=1 {v_['1']:.4f}, n=2 {v_['2']:.4f}, n=3 {v_['3']:.4f})" for t, v_ in out["scores"][g].items()), flush=True)
-        for x_, y_ in ((50, 0), (100, 0), (100, 50), *[("mix", t) for t in a.mix]):
+        for x_, y_ in ((50, 0), (100, 0), (100, 50), *[("mix", t) for t in a.mix], ("alt", a.alt_step)):
             if x_ in arms and y_ in arms:
                 d = cat(rs, lambda r: sc[(id(r), x_)] - sc[(id(r), y_)])
                 b = boot_mix(d, n, cluster, a.boot, rng)
