@@ -43,10 +43,12 @@ def _split(make, cand_items, q_items, players):
     return out
 
 
-def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=None, seq=None):
+def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=None, seq=None, rows_full=None, emb_full=None):
     """{name: [Q, C]}. cands {player: [(key, colour)]}, questions [[(key, colour)]], moves {key: parsed moves as recorded},
     sgfs {key: record}, rows {key: [256] trunk row of the player's side}, emb a fitted aicup_pid.embed.PlayerEmbedding,
-    seq {key: [128] unit vector of the player's side from the sequence identity model (scripts/pid_v2_seq_embed.py)}."""
+    seq {key: [128] unit vector of the player's side from the sequence identity model (scripts/pid_v2_seq_embed.py)};
+    rows_full {key: row of the UNPROJECTED trunk statistics (scripts/pid_trunk_extract.py --full)} and emb_full, one or several
+    PlayerEmbedding fitted on such rows: the component 'embfull' (METHOD_NOTES 2.75)."""
     which = set(which or (*SPLIT, *MERGED))
     players = sorted(cands)
     vm = {k: view(moves[k], c) for games in (*cands.values(), *questions) for k, c in games}
@@ -91,6 +93,14 @@ def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=No
         else:
             from aicup_pid.fusion import standardise
             S["emb"] = np.mean([standardise(m) for m in mats], axis=0)
+    if "embfull" in which and emb_full is not None:
+        from aicup_pid.fusion import standardise
+        mats = []
+        for one in (emb_full if isinstance(emb_full, (list, tuple)) else [emb_full]):  # several seeds: mean of their row-standardised matrices
+            C = np.stack([one.set_vector(np.stack([rows_full[k] for k, _ in cands[p]])) for p in players])
+            Q = np.stack([one.set_vector(np.stack([rows_full[k] for k, _ in q])) for q in questions])
+            mats.append(standardise(one.scale * (Q @ C.T)))
+        S["embfull"] = np.mean(mats, axis=0)
     if "seq" in which and seq is not None:  # prototype = normalised sum of the game vectors, as the model was trained
         unit = lambda X: X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-12)  # noqa: E731
         mats = []
