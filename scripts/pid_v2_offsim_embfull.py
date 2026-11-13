@@ -38,15 +38,20 @@ from pid_v2_offsim import SIZES, boot_mix, mix, per_question  # noqa: E402
 WEIGHTS = (0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0)
 
 
-def load_full(dirs):
+def load_full(dirs, phase=False, keep=None):
+    """{key: row}: `full` (1,536 values), with phase=True followed by `fullp` (the three phase means, 2,304 values)."""
     out = {}
     for d in dirs:
         for f in sorted(glob.glob(f"{d}/*.npz")):
             if f.endswith(".tmp.npz"):
                 continue
             z = np.load(f)
-            if "full" in z.files:
-                out.update(zip(z["keys"].astype(str), z["full"].astype(np.float32)))
+            if "full" not in z.files or (phase and "fullp" not in z.files):
+                continue
+            X = np.hstack([z["full"], z["fullp"]]).astype(np.float32) if phase else z["full"].astype(np.float32)
+            for k, r in zip(z["keys"].astype(str), X):
+                if keep is None or k in keep:
+                    out[k] = r
     return out
 
 
@@ -57,6 +62,10 @@ def main(argv=None):
     ap.add_argument("--ft-dir", default="/work/u2507115/pid_v2/seq_ft_offsim")
     ap.add_argument("--train-rows", nargs="+", default=["/work/u2507115/pid_v2/fullrows/rows"])
     ap.add_argument("--pool-rows", nargs="+", default=["/work/u2507115/pid_v2/fullrows_off2"])
+    ap.add_argument("--phase", action="store_true", help="rows = full + fullp (3,840 values)")
+    ap.add_argument("--max-games", type=int, default=0, help="at most this many games of a training player (0: all)")
+    ap.add_argument("--min-games", type=int, default=8)
+    ap.add_argument("--support", type=int, default=40)
     ap.add_argument("--emb-seeds", nargs="+", type=int, default=[0, 1, 2])
     ap.add_argument("--emb-steps", type=int, default=3000)
     ap.add_argument("--hidden", type=int, default=512)
@@ -74,25 +83,28 @@ def main(argv=None):
     T, rng = Path(a.tests_dir), np.random.default_rng(0)
     games = v2.training_games(aicup_pid.TRAIN_DIR).merge(pd.read_csv(FOLDS_CSV, dtype={"player_id": str})[["player_id", "fold"]], on="player_id")
     owner_of = dict(zip(games.game_key[games.fold != 0], games.player_id[games.fold != 0]))
-    tr = load_full(a.train_rows)
+    tr = load_full(a.train_rows, a.phase, keep=owner_of)
     by = {}
     for k in tr:
         p = owner_of.get(k)  # fold-0 games and games of other files have no owner here: left out
         if p is not None:
             by.setdefault(p, []).append(k)
-    by = {p: ks for p, ks in sorted(by.items()) if len(ks) >= 8}
+    if a.max_games:
+        g_ = np.random.default_rng(2)
+        by = {p: (sorted(g_.permutation(sorted(ks))[:a.max_games].tolist()) if len(ks) > a.max_games else ks) for p, ks in by.items()}
+    by = {p: ks for p, ks in sorted(by.items()) if len(ks) >= a.min_games}
     if a.max_players and len(by) > a.max_players:
         keep = np.random.default_rng(1).permutation(len(by))[:a.max_players]
         names = list(by)
         by = {names[i]: by[names[i]] for i in sorted(keep.tolist())}
     rows_by = {p: np.stack([tr[k] for k in ks]) for p, ks in by.items()}
     print(f"training rows: {sum(len(v_) for v_ in by.values())} games of {len(by)} players (folds 1-4) ({time.time() - t0:.0f} s)", flush=True)
-    models = [PlayerEmbedding(seed=s, p_aug=0.0, steps=a.emb_steps, hidden=a.hidden).fit(rows_by) for s in a.emb_seeds]
+    models = [PlayerEmbedding(seed=s, p_aug=0.0, steps=a.emb_steps, hidden=a.hidden, support=a.support, min_games=a.min_games).fit(rows_by) for s in a.emb_seeds]
     print(f"{len(models)} embedding networks trained; episode top-1 at the end {np.mean([m.history[-1]['acc'] for m in models]):.3f} ({time.time() - t0:.0f} s)", flush=True)
     if a.save:
         torch.save([m.state_dict() for m in models], a.save)
     del tr, rows_by
-    pool_rows = load_full(a.pool_rows)
+    pool_rows = load_full(a.pool_rows, a.phase)
 
     doc = json.loads(Path(a.fusion).read_text())
     comps = list(doc["components"])
