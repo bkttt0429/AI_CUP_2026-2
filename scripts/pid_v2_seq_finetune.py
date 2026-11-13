@@ -7,6 +7,9 @@ Why: the network identifies players it was trained on far better than unseen one
 top-1 in the rank session's evaluation); official players are unseen.
   --mode sim --fold v --seed s        the simulated pool of pid_v2_sim2.py (fold v, net v) -> <out>/sim_f<v>_s<s>_t<step>.npz
   --mode official --pool pub2|priv2 --net v   an added official pool under net v -> <out>/official_<pool>_net<v>_t<step>.npz
+  --mode official ... --holdout h [--holdout-seed s]   the labelled pseudo-pool of METHOD_NOTES 2.41: h games of every candidate
+                                      (aicup_pid.v2.candidate_holdout) are kept out of the fine-tune, like question games
+                                      -> <out>/offsim_<pool>_h<h>s<s>_net<v>_t<step>.npz
 Each output holds the vectors of every game of the pool (candidates and questions) after <step> fine-tune steps (0 = as is).
 Run from the AI_CUP_2026-1 checkout."""
 import argparse
@@ -122,6 +125,8 @@ def main(argv=None):
     ap.add_argument("--ply-dir", default="/work/u2507115/pid_v2/ply_official")
     ap.add_argument("--tests-dir", default=str(R2 / "data" / "tests_1111"))
     ap.add_argument("--out", default="/work/u2507115/pid_v2/seq_ft")
+    ap.add_argument("--holdout", type=int, default=0, help="official mode: games per candidate kept out of the fine-tune (pseudo-pool; 0 = the real pool)")
+    ap.add_argument("--holdout-seed", type=int, default=0)
     a = ap.parse_args(argv)
     t0 = time.time()
     log = lambda s: print(f"{s} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
@@ -171,6 +176,13 @@ def main(argv=None):
                     parts[name].append(key[m] if name == "key" else z[name][m])
         A = {k: np.concatenate(x) for k, x in parts.items()}
         tag, ckpt = f"official_{a.pool}_net{a.net}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.net}{a.ckpt_suffix}.pt"
+        if a.holdout:
+            from aicup_pid import v2
+            cands, _q, _ids, _sgfs = v2.official_pool(Path(a.tests_dir) / f"player_identification_candidates2_{tagname}.csv", Path(a.tests_dir) / f"player_identification_test2_{tagname}.csv")
+            assert {k for g in cands.values() for k, _ in g} == set(own), "candidate keys differ from aicup_pid.v2.official_pool"
+            held = {k for g in v2.candidate_holdout(cands, a.holdout, a.holdout_seed).values() for k, _ in g}
+            own = {k: i for k, i in own.items() if k not in held}
+            tag = f"offsim_{a.pool}_h{a.holdout}s{a.holdout_seed}_net{a.net}{a.tag}"
     owner = np.array([own.get(k, -1) for k in A["key"]])
     log(f"{tag}: {len(owner)} games ({int((owner >= 0).sum())} candidate games of {len(players)} players, {int((owner < 0).sum())} question games); network {ckpt.name}")
     net = load_net(ckpt)

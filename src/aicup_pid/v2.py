@@ -129,6 +129,14 @@ def official_pool(cand_path, q_path):
     return cands, questions, qids, sgfs
 
 
+def candidate_holdout(cands, h, seed):
+    """{player: [h held-out (key, colour)]}: the labelled pseudo-pool cut from an official pool's own candidates (METHOD_NOTES
+    2.41). Per candidate (sorted ids, games in file order) h games drawn without replacement, in the drawn order; the same
+    draw in scripts/pid_v2_seq_finetune.py --holdout (those games stay out of the fine-tune) and scripts/pid_v2_offsim.py."""
+    rng = np.random.default_rng(4100 + seed)
+    return {p: [cands[p][i] for i in rng.permutation(len(cands[p]))[:h]] for p in sorted(cands)}
+
+
 RANK_ROWS = ("results/m82/rows_train.npz", "results/m84_rowsp")  # under AI_CUP_2026-1, written by the rank session (read-only here)
 _PERM = np.r_[0:64, 128:192, 64:128, 192:256]
 
