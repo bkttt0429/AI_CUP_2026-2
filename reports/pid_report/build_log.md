@@ -62,3 +62,4 @@ All in lesson sec-33 (資源表), none on a card: 官方 Tutorial 與資料集 r
 - C-Q22 (tie rule between two notes): cited in the sources of sec-31 only.
 - D-Q01 (opponent-side signals re-tested with stronger networks, 11-15): sec-32 (chapter 17) table row, not adopted.
 The other items of section 9 (A-Q01 to A-Q09, A-Q11 to A-Q13, A-Q15 to A-Q20, B-Q01 to B-Q06, B-Q08, B-Q09, B-Q11, B-Q12, C-Q02 to C-Q09, C-Q11, C-Q12, C-Q14, C-Q16 to C-Q21, C-Q23) are not cited by any card or lesson.
+2026-11-15 02:05 | 778801 | fix round 1 (speaker script fold 0 exception, rule both parts; glossary EMA and 官方網路): selftest OK; charts 14, cards with derivation buttons 35, lessons 35 / OK; no checker line -> PID_BUILD OK (778800 ran before the chapter-16 line was saved; superseded)
