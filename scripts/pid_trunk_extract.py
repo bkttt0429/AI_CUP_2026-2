@@ -143,6 +143,62 @@ def full_vectors(model, bins, globs, pos, mover, rows, batch):
     return out_g, out_l
 
 
+def policy_vectors(model, bins, globs, pos, mover, rows, batch):
+    """full_vectors plus what the network itself EXPECTED at every position (METHOD_NOTES 2.102, probe P). One forward pass
+    gives the trunk and the policy (channel 0, the side to move, the neutral metadata row); with the policy over the legal
+    board points (on board, empty, not the ko point; pass left out and the rest renormalised):
+      g [n, C]  board-pooled trunk vector               x [n, C]  trunk vector at the played point (zero for a pass)
+      e [n, C]  policy-weighted mean of the trunk vectors of the board points = the played-point vector the network expects
+                (zero for a pass, so that x - e is zero there)
+      s [n, 5]  the played move's surprisal (-log p, pass included in that distribution), its rank in the policy (0 = the top
+                move), the policy's entropy, its top probability, the Chebyshev distance between the played point and the
+                policy's top board point (0 for a pass)
+    Also returns the number of played moves my legality mask called illegal (their surprisal is clipped; should be ~0)."""
+    from aicup.l1b import _GraphExtraOutputs
+    n = len(pos)
+    C = None
+    S = np.zeros((n, 5), np.float32)
+    bad = 0
+    rows_t = torch.as_tensor(rows, dtype=torch.float32, device="cuda")
+    meta = model.get_has_metadata_encoder()
+    with torch.no_grad():
+        for i in range(0, n, batch):
+            j = min(n, i + batch)
+            b, g = torch.as_tensor(bins[i:j]).cuda().float(), torch.as_tensor(globs[i:j]).cuda().float()
+            c = torch.as_tensor(mover[i:j]).cuda().long()
+            extra = _GraphExtraOutputs(["trunkfinal"])
+            with torch.autocast("cuda", dtype=torch.bfloat16):
+                outputs = model(b, g, input_meta=rows_t[c] if meta else None, extra_outputs=extra)
+                logits = model.postprocess_output(outputs)[0][0][:, 0, :]
+            trunk, logits = extra.returned["trunkfinal"].float(), logits.float()
+            if C is None:
+                C = trunk.shape[1]
+                G, X, E = np.empty((n, C), np.float32), np.empty((n, C), np.float32), np.empty((n, C), np.float32)
+            legal_b = ((b[:, 0] - b[:, 1] - b[:, 2] - b[:, 6]) > 0.5).flatten(1)  # [B, 361]
+            legal = torch.cat([legal_b, torch.ones(j - i, 1, dtype=torch.bool, device=b.device)], dim=1)
+            lp = torch.log_softmax(logits.masked_fill(~legal, float("-inf")), dim=1)
+            p = torch.as_tensor(pos[i:j].astype(np.int64)).cuda()
+            on = p < te.PASS_POS
+            lpp = lp.gather(1, p[:, None])[:, 0]
+            miss = ~torch.isfinite(lpp)
+            bad += int(miss.sum())
+            lpp = torch.where(miss, torch.full_like(lpp, -20.0), lpp).clamp(min=-20.0)
+            rank = (lp > lpp[:, None]).sum(1).float()
+            pr = lp.exp()
+            ent = -(pr * torch.where(torch.isfinite(lp), lp, torch.zeros_like(lp))).sum(1)
+            pb = torch.softmax(logits[:, :361].masked_fill(~legal_b, float("-inf")), dim=1)
+            pb = torch.where(torch.isfinite(pb), pb, torch.zeros_like(pb))  # a full board: no legal point
+            e = torch.einsum("bp,bcp->bc", pb, trunk.flatten(2))
+            local = torch.zeros(j - i, C, device=trunk.device)
+            local[on] = trunk[on.nonzero()[:, 0], :, p[on] // 19, p[on] % 19]
+            e = e * on[:, None].float()
+            top = pb.argmax(1)
+            dist = torch.maximum((p // 19 - top // 19).abs(), (p % 19 - top % 19).abs()).float() * on.float()
+            G[i:j], X[i:j], E[i:j] = trunk.mean(dim=(2, 3)).cpu().numpy(), local.cpu().numpy(), e.cpu().numpy()
+            S[i:j] = torch.stack([-lpp, rank, ent, pr.max(1).values, dist], dim=1).cpu().numpy()
+    return G, X, E, S, bad
+
+
 def aggregate_full(g, l, pos, lens):
     """[G, 4C]: per game mean / std of the unprojected pooled vectors and of the unprojected played-point vectors (as aggregate)."""
     C = g.shape[1]

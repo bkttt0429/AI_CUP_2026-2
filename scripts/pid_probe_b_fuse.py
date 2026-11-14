@@ -39,7 +39,8 @@ def main(argv=None):
     ap.add_argument("--ref", required=True)
     ap.add_argument("--folds", nargs="+", type=int, default=[1, 2])
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1])
-    ap.add_argument("--rows", nargs="+", default=["/work/u2507115/pid_v2/fullrows_train/rows", "/work/u2507115/pid_v2/fullrows/rows"])
+    ap.add_argument("--rows", nargs="+", default=["/work/u2507115/pid_v2/fullrows_train/rows", "/work/u2507115/pid_v2/probep/rows", "/work/u2507115/pid_v2/fullrows/rows"],
+                    help="directories of per-game rows with `full` (a game is taken from the first directory that has it)")
     ap.add_argument("--emb-seeds", nargs="+", type=int, default=[0, 1])
     ap.add_argument("--boot", type=int, default=2000)
     ap.add_argument("--out", required=True)
