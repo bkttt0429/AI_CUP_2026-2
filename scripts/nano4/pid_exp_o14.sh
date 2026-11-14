@@ -7,7 +7,7 @@
 #      half of an episode external, 20,000 steps on the 60,000-step cosine = the schedule of o12's 20,000-step snapshots, EMA):
 #      o14As0-5  the pooled half and four more input dimensions replaced by the 68 features (o12's type A)
 #      o14Cs0-1  the 68 features alone (type C)
-#   3. their chain against the live composition (scripts/nano4/pid_chain_job2.sh new v2o14 o14F)
+#   3. their chain against the live composition (scripts/nano4/pid_chain_job3.sh new v2o14 o14F; live = pid_v2c2_bs.csv)
 # Submit with -d afterok:<the extraction jobs>. From the AI_CUP_2026-1 checkout, 8 GPUs.
 # Do not edit while a job runs it; the body is a function called on the last line.
 set -uo pipefail
@@ -23,6 +23,6 @@ main() {
   for k in 0 1 2 3 4 5; do specs+=("-1 o14As$k $C --seed $((k + 60))"); L="$L o14F:$k=ckpt_-1_o14As${k}e.pt"; done
   for k in 0 1; do specs+=("-1 o14Cs$k $C --sup-only --seed $((k + 70))"); L="$L o14F:$((k + 6))=ckpt_-1_o14Cs${k}e.pt"; done
   bash $R2/scripts/nano4/pid_seq_train_fork.sh "$OFF $SUP" "${specs[@]}" || echo "a trainer FAILED (the chain runs with the networks that exist)"
-  LINKS="$L" bash $R2/scripts/nano4/pid_chain_job2.sh new v2o14 o14F
+  LINKS="$L" bash $R2/scripts/nano4/pid_chain_job3.sh new v2o14 o14F
 }
 main "$@"; exit $?
