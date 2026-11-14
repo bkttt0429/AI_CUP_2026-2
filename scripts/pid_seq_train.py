@@ -261,6 +261,8 @@ def main(argv=None):
                     help="hard negatives (METHOD_NOTES 2.55): an episode's competition players come from ONE rank class (class) or from a class and its two neighbours (band), "
                          "its external accounts from one rank folder; classes and folders drawn in proportion to their players")
     ap.add_argument("--rank-ep-share", type=float, default=1.0, help="share of the steps drawn that way; the others are drawn as before")
+    ap.add_argument("--fix-chan", type=float, default=0.0, help="this network never sees a fixed random share of the 128 input dimensions (its own subset, from --seed): their scale is set so large that they standardise to zero, in training and wherever the checkpoint is used (METHOD_NOTES 2.97)")
+    ap.add_argument("--ext-bag", type=float, default=0.0, help="this network trains on a random share of the external accounts (its own subset, from --seed)")
     ap.add_argument("--ema-only", action="store_true", help="write only the EMA checkpoints (official networks: the raw ones are never used)")
     ap.add_argument("--snap", nargs="*", type=int, default=[], help="also write the checkpoints at these steps, as ckpt_<net>_<tag>k<step/1000>[e].pt (snapshots of one long run)")
     ap.add_argument("--m-ep", type=int, default=None, help="games per player in an episode (default 8; METHOD_NOTES 2.69)")
@@ -330,6 +332,10 @@ def main(argv=None):
         if a.ext_cap:
             out_ |= rk >= a.ext_cap
         use[e_idx[out_]] = False
+    if a.ext_bag:  # a different random part of the external accounts for every network: members that err differently
+        ext_p = np.flatnonzero(is_ext)
+        out_p = ext_p[np.random.default_rng(777 + a.seed).random(len(ext_p)) >= a.ext_bag]
+        use &= ~np.isin(owner, out_p)
     cnt = np.bincount(owner[use], minlength=C)
     tp = np.flatnonzero(np.where(is_ext, cnt >= max(a.min_games or M.MIN_GAMES, M.M_EP), cnt >= max(M.MIN_GAMES, M.M_EP)))
     W = int(cnt.max())
@@ -386,6 +392,10 @@ def main(argv=None):
     net.mu.copy_(torch.as_tensor(sample.mean(0)))
     net.sd.copy_(torch.as_tensor(sample.std(0) + 1e-6))
     del sample
+    if a.fix_chan:
+        hidden_dims = np.sort(np.random.default_rng(4242 + a.seed).choice(128, int(round(128 * a.fix_chan)), replace=False))
+        net.sd[torch.as_tensor(hidden_dims, device=net.sd.device)] = 1e6
+        log(f"input dimensions never seen by this network: {len(hidden_dims)} of 128 ({hidden_dims[:8].tolist()} ...)")
     ema = copy.deepcopy(net).eval()
     for p_ in ema.parameters():
         p_.requires_grad_(False)
