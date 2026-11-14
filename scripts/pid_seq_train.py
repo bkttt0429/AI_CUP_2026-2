@@ -261,6 +261,7 @@ def main(argv=None):
                     help="hard negatives (METHOD_NOTES 2.55): an episode's competition players come from ONE rank class (class) or from a class and its two neighbours (band), "
                          "its external accounts from one rank folder; classes and folders drawn in proportion to their players")
     ap.add_argument("--rank-ep-share", type=float, default=1.0, help="share of the steps drawn that way; the others are drawn as before")
+    ap.add_argument("--ema-only", action="store_true", help="write only the EMA checkpoints (official networks: the raw ones are never used)")
     ap.add_argument("--snap", nargs="*", type=int, default=[], help="also write the checkpoints at these steps, as ckpt_<net>_<tag>k<step/1000>[e].pt (snapshots of one long run)")
     ap.add_argument("--m-ep", type=int, default=None, help="games per player in an episode (default 8; METHOD_NOTES 2.69)")
     ap.add_argument("--min-games", type=int, default=None, help="an EXTERNAL account trains with at least this many usable games (default 8); competition players always need 8")
@@ -470,7 +471,10 @@ def main(argv=None):
 
     def write_ckpt(tag, at):
         for sfx, model, label in (("", net, "raw"), ("e", ema, "ema")):
-            torch.save({"best_state": cpu(model), "net": cpu(model), "best": {**meta, "step": at, "state": label}, "step": at, "arch": arch}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
+            if a.ema_only and sfx == "":
+                continue
+            sd_ = cpu(model)  # one copy, under both names the loaders know (two separate copies doubled every file)
+            torch.save({"best_state": sd_, "net": sd_, "best": {**meta, "step": at, "state": label}, "step": at, "arch": arch}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
 
     net.train()
     ar, tl, ta, tc, t_last, every = np.arange(P), 0.0, 0.0, 0.0, time.time(), (50 if a.smoke else 500)
