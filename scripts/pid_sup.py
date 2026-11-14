@@ -34,6 +34,23 @@ def fit(rows, owners, k=64, ridge=1e-3):
     return mu.astype(np.float32), sd.astype(np.float32), W[:, ::-1][:, :k].astype(np.float32), lam[::-1][:k]
 
 
+def fit_means(X, owners, k=64, ridge=1e-3):
+    """fit for any stack of per-game mean blocks: X [G, d] (e.g. pooled, played-point and policy-expected vectors, METHOD_NOTES
+    2.102). Returns mu [d], sd [d], W [d, k], ratios [k]: feature = ((x - mu) / sd) @ W for the same stack per game or per ply."""
+    from scipy.linalg import eigh
+    from scipy.sparse import csr_matrix
+    X = X.astype(np.float64)
+    mu, sd = X.mean(0), X.std(0) + 1e-6
+    X = (X - mu) / sd
+    _pl, inv = np.unique(owners, return_inverse=True)
+    cnt = np.bincount(inv).astype(float)
+    cm = np.asarray(csr_matrix((np.ones(len(X)), (inv, np.arange(len(X)))), shape=(len(cnt), len(X))) @ X) / cnt[:, None]
+    resid = X - cm[inv]
+    Sw = resid.T @ resid / max(len(X) - len(cnt), 1)
+    lam, W = eigh(np.cov(cm.T), Sw + ridge * np.trace(Sw) / len(Sw) * np.eye(len(Sw)))
+    return mu.astype(np.float32), sd.astype(np.float32), W[:, ::-1][:, :k].astype(np.float32), lam[::-1][:k]
+
+
 def load_sup(dirs, stats=None):
     """(index {key: (start, n)}, t [N] int16 ply numbers, Z [N, K] float16 standardised) over every part of the directories.
     Parts hold `z` (float16, unstandardised) or `zq` (int8: the standardised value x 20, written with a stats file). With

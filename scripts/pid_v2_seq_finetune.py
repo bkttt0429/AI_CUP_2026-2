@@ -13,6 +13,7 @@ top-1 in the rank session's evaluation); official players are unseen.
 Each output holds the vectors of every game of the pool (candidates and questions) after <step> fine-tune steps (0 = as is).
 Run from the AI_CUP_2026-1 checkout."""
 import argparse
+import os
 import glob
 import math
 import multiprocessing as mp
@@ -254,7 +255,10 @@ def main(argv=None):
         log(f"supervised features in input dimensions {net.sup_cfg['dims']}{' (alone)' if net.sup_cfg['only'] else ''} for all {len(idx_s)} games")
 
     def save(step, vec, view=""):
-        np.savez(out / f"{tag}{view}_t{step}.npz", key=A["key"], emb=vec.astype(np.float16), step=np.array(step))
+        dest = out / f"{tag}{view}_t{step}.npz"  # written whole or not at all: other jobs list this directory (parallel chains)
+        tmp = dest.with_name(dest.name + ".tmp.npz")
+        np.savez(tmp, key=A["key"], emb=vec.astype(np.float16), step=np.array(step))
+        os.replace(tmp, dest)
         log(f"  vectors after {step} steps written{' (symmetry view ' + view[1:] + ')' if view else ''}")
 
     mix = None

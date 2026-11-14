@@ -65,12 +65,15 @@ def main(argv=None):
     ap.add_argument("--skip-keys", default=None, help="a key list whose games are left out (already extracted elsewhere)")
     ap.add_argument("--select", nargs="+", default=None, help="instead of --keys: external games, the select.csv files of scripts/ext_fox_select.py (game_key, sgf_content, color)")
     ap.add_argument("--max-plies", type=int, default=0, help="with --select: keep only the subject's plies whose ply number is below this (0: all)")
+    ap.add_argument("--scalars", action="store_true", help="append four policy scalars to every ply's features: surprisal, log(1 + rank), entropy, distance to the policy's top point (METHOD_NOTES 2.102)")
     a = ap.parse_args(argv)
     global MAX_T
     MAX_T = a.max_plies if a.select else 0
     t0 = time.time()
     P = np.load(a.proj)
     mu, sd, W = P["mu"].astype(np.float32), P["sd"].astype(np.float32), P["W"].astype(np.float32)
+    blocks = [str(b) for b in P["blocks"]] if "blocks" in P.files else ["g", "x"]  # "e": the policy-expected played-point vector
+    use_pol = "e" in blocks or a.scalars
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     tasks_all = None
@@ -102,7 +105,7 @@ def main(argv=None):
     mine = keys if a.select else keys[a.shard::a.nshards]
     parts = [mine[i:i + a.part_size] for i in range(0, len(mine), a.part_size)]
     todo = [(k, p) for k, p in enumerate(parts) if not (out / f"sup_s{a.shard:03d}_p{k:04d}.npz").exists()]
-    print(f"shard {a.shard}/{a.nshards}: {len(mine)} of {len(keys)} games, {len(parts)} parts, {len(todo)} to do; projection to {W.shape[1]} dims", flush=True)
+    print(f"shard {a.shard}/{a.nshards}: {len(mine)} of {len(keys)} games, {len(parts)} parts, {len(todo)} to do; projection of {'+'.join(blocks)} to {W.shape[1]} dims" + (" + 4 policy scalars" if a.scalars else ""), flush=True)
     if not todo:
         return 0
     config = torch.load(te.CKPT, map_location="cpu", weights_only=True)["config"]
@@ -120,10 +123,17 @@ def main(argv=None):
             if some:
                 bins, globs = np.concatenate([d[1] for d in some]), np.concatenate([d[2] for d in some])
                 pos, mover = np.concatenate([d[3] for d in done]), np.concatenate([d[4] for d in done])
-                fg, fl = PT.full_vectors(model, bins, globs, pos, mover, rows, a.batch)
-                z = ((np.hstack([fg, fl]) - mu) / sd) @ W
+                if use_pol:
+                    fg, fl, fe, sc_, _bad = PT.policy_vectors(model, bins, globs, pos, mover, rows, a.batch)
+                    src = {"g": fg, "x": fl, "e": fe}
+                    z = ((np.hstack([src[b] for b in blocks]) - mu) / sd) @ W
+                    if a.scalars:
+                        z = np.hstack([z, np.stack([sc_[:, 0], np.log1p(sc_[:, 1]), sc_[:, 2], sc_[:, 4]], axis=1)])
+                else:
+                    fg, fl = PT.full_vectors(model, bins, globs, pos, mover, rows, a.batch)
+                    z = ((np.hstack([fg, fl]) - mu) / sd) @ W
             else:
-                z = np.zeros((0, W.shape[1]), np.float32)
+                z = np.zeros((0, W.shape[1] + (4 if a.scalars else 0)), np.float32)
             if not np.isfinite(z).all():
                 raise ValueError(f"part {k}: non-finite features")
             path = out / f"sup_s{a.shard:03d}_p{k:04d}.npz"
