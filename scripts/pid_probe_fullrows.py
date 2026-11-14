@@ -88,6 +88,7 @@ def main(argv=None):
     ap.add_argument("--per-player", type=int, default=16)
     ap.add_argument("--rows", default="/work/u2507115/pid_v2/fullrows")
     ap.add_argument("--emb-seeds", nargs="+", type=int, default=[0, 1])
+    ap.add_argument("--arms", nargs="*", default=None, help="only these representations (rp256 is always kept as the reference)")
     ap.add_argument("--boot", type=int, default=2000)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -149,6 +150,36 @@ def main(argv=None):
         "rpm128": lambda ks: (lambda X: np.hstack([X[:, :C] @ R[128][0], X[:, 2 * C:3 * C] @ R[128][1]]))(stack(full, ks)),
         "rpm256": lambda ks: (lambda X: np.hstack([X[:, :C] @ R[256][0], X[:, 2 * C:3 * C] @ R[256][1]]))(stack(full, ks)),
     }
+    # supervised linear projections (METHOD_NOTES 2.82): the directions of the per-game MEANS that separate the training players best
+    # (between-player against within-player scatter), fitted on the training sample only. A linear map of a mean is the mean of the
+    # map, so the same matrix could be applied to every ply.
+    from scipy.linalg import eigh as geigh
+    own_tr = np.array([owner_of[k] for k in tr_keys])
+    Xm = ((F_tr - mu) / sd)[:, m_idx]
+    pl_, inv_ = np.unique(own_tr, return_inverse=True)
+    cnt_ = np.bincount(inv_).astype(float)
+    cm = np.stack([np.bincount(inv_, weights=Xm[:, j]) for j in range(Xm.shape[1])], axis=1) / cnt_[:, None]
+    resid = Xm - cm[inv_]
+    Sw = resid.T @ resid / max(len(Xm) - len(pl_), 1)
+    Sb = np.cov(cm.T)
+    ridge = 1e-3 * np.trace(Sw) / len(Sw)
+    lam, Wl = geigh(Sb, Sw + ridge * np.eye(len(Sw)))
+    Wl = Wl[:, ::-1]
+    print("supervised projection of the means: between / within ratio of the first directions " + " ".join(f"{x:.2f}" for x in lam[::-1][[0, 15, 31, 63, 127, 255]]), flush=True)
+    halves = {}
+    for nm, sl in (("g", slice(0, C)), ("l", slice(C, 2 * C))):  # the pooled and the played-point means separately
+        Xh, ch = Xm[:, sl], cm[:, sl]
+        rh = Xh - ch[inv_]
+        Swh = rh.T @ rh / max(len(Xh) - len(pl_), 1)
+        _lh, Wh = geigh(np.cov(ch.T), Swh + 1e-3 * np.trace(Swh) / len(Swh) * np.eye(len(Swh)))
+        halves[nm] = Wh[:, ::-1]
+    std_m = lambda ks: ((stack(full, ks) - mu) / sd)[:, m_idx]  # noqa: E731
+    for k in (32, 64, 128, 256):
+        reps[f"ldam{k}"] = (lambda k_: lambda ks: std_m(ks) @ Wl[:, :k_])(k)
+    for k in (32, 64):  # the form a per-ply store would take: k directions of the pooled vector, k of the played-point vector
+        reps[f"ldah{k}"] = (lambda k_: lambda ks: (lambda X: np.hstack([X[:, :C] @ halves["g"][:, :k_], X[:, C:] @ halves["l"][:, :k_]]))(std_m(ks)))(k)
+    if a.arms:
+        reps = {k: v for k, v in reps.items() if k in a.arms or k == "rp256"}
     names = list(reps)
     sc = {}  # (learner, representation) -> per-question scores over all pools
     n_all, cl_all = [], []
@@ -192,9 +223,16 @@ def main(argv=None):
                 out["diff_vs_rp256"][f"{learner}:{name}"] = b
                 msg += f"  vs rp256 {b['diff']:+.4f} [{b['ci95'][0]:+.4f}, {b['ci95'][1]:+.4f}]  n=1 {b['by_n']['1']:+.4f}"
             print(msg, flush=True)
-    b = boot(np.concatenate(sc[("emb", "fullm")]) - np.concatenate(sc[("emb", "rp128m")]), n_all, cl_all, a.boot, rng)
-    out["diff_fullm_vs_rp128m"] = b
-    print(f"emb fullm vs rp128m (means only, unprojected against projected): {b['diff']:+.4f} [{b['ci95'][0]:+.4f}, {b['ci95'][1]:+.4f}]  n=1 {b['by_n']['1']:+.4f}", flush=True)
+    if ("emb", "fullm") in sc and ("emb", "rp128m") in sc:
+        b = boot(np.concatenate(sc[("emb", "fullm")]) - np.concatenate(sc[("emb", "rp128m")]), n_all, cl_all, a.boot, rng)
+        out["diff_fullm_vs_rp128m"] = b
+        print(f"emb fullm vs rp128m (means only, unprojected against projected): {b['diff']:+.4f} [{b['ci95'][0]:+.4f}, {b['ci95'][1]:+.4f}]  n=1 {b['by_n']['1']:+.4f}", flush=True)
+    if ("emb", "fullm") in sc:
+        for name in names:
+            if name.startswith("lda"):
+                b = boot(np.concatenate(sc[("emb", name)]) - np.concatenate(sc[("emb", "fullm")]), n_all, cl_all, a.boot, rng)
+                out.setdefault("diff_vs_fullm", {})[name] = b
+                print(f"emb {name} vs fullm (supervised projection against all 768 means): {b['diff']:+.4f} [{b['ci95'][0]:+.4f}, {b['ci95'][1]:+.4f}]  n=1 {b['by_n']['1']:+.4f}", flush=True)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     Path(a.out).write_text(to_json(out, indent=1) + "\n")
     print(f"wrote {a.out} ({time.time() - t0:.0f} s)")
