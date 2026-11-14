@@ -20,20 +20,21 @@ def _blank(m):
     return re.sub(r"[^\n]", " ", m.group(0))
 
 
-def _strip(text):
+def _strip(text, is_html=True):
     text = re.sub(r"<!--.*?-->", _blank, text, flags=re.S)
     text = re.sub(r"/\*.*?\*/", _blank, text, flags=re.S)
     text = re.sub(r"(?m)(^|(?<=\s))//[^\n]*", _blank, text)
-    text = re.sub(r"<svg\b[^>]*>", _blank, text, flags=re.S)  # svg root attributes
-    # every tag's attributes (this also removes coordinate attributes of svg children)
-    text = re.sub(r"</?[A-Za-z][^<>]*>", _blank, text, flags=re.S)
+    if is_html:
+        text = re.sub(r"<svg\b[^>]*>", _blank, text, flags=re.S)  # svg root attributes
+        # every tag's attributes (this also removes coordinate attributes of svg children)
+        text = re.sub(r"</?[A-Za-z][^<>]*>", _blank, text, flags=re.S)
     return text
 
 
-def numbers(text):
+def numbers(text, is_html=True):
     """(line number, token) for every decimal number with >= 3 digits after the point."""
     out = []
-    for i, line in enumerate(_strip(text).split("\n"), 1):
+    for i, line in enumerate(_strip(text, is_html).split("\n"), 1):
         for m in NUM_RE.finditer(line):
             out.append((i, m.group(0).replace("−", "-")))
     return out
@@ -82,6 +83,7 @@ def selftest():
     assert numbers('<rect x="12.500" width="3.250">') == []
     assert numbers("a −0.0123 b") == [(1, "-0.0123")]
     assert numbers("<!-- 0.1234 -->\nx 0.5678") == [(2, "0.5678")]
+    assert numbers("for(i=0;i<n;i++){v=x>0.1234}", False) == [(1, "0.1234")]
     assert card_limits('<div id="card-pid2-x"><ul class="key">' + "<li>a</li>" * 5 + "</ul></div>")
     print("selftest OK")
 
@@ -101,7 +103,7 @@ def main(argv):
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
         lines = text.split("\n")
-        for ln, tok in numbers(text):
+        for ln, tok in numbers(text, path.endswith(".html")):
             if not traceable(tok, facts):
                 ctx = lines[ln - 1]
                 i = ctx.find(tok.lstrip("+-−"))
