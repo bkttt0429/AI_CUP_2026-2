@@ -8,6 +8,7 @@
 # usage: [OUT=<name of the result files, default the group>] pid_v2_newnets2.sh <group> <reference document> <candidate>=<composition> ...
 # Nothing here chooses a file: the rule is in the notes and is applied to the printed numbers.
 set -uo pipefail
+main() {
 R2=/home/u2507115/BK_AICUP_2026-2
 S=$R2/data/seq_ft
 SN=/work/u2507115/pid_v2/seqnet
@@ -41,13 +42,14 @@ for p in "${pids[@]}"; do wait "$p" || echo "a fine-tune worker failed (logs/nan
 echo "fine-tunes done: $(ls $S | grep -c "_${grp}s[0-9]*e_t50") official files, $(ls /work/u2507115/pid_v2/seq_ft_offsim/ | grep -c "_${grp}s[0-9]*e_t50") pseudo-pool files"
 list() {  # brace list of the seeds of a group that have official vectors
   local g=$1 o=() k
-  for k in $SEEDS; do [ -s $S/official_pub2_net-1_${g}s${k}e_t0.npz ] && o+=("$k"); done
+  for k in $SEEDS; do [ -s $S/official_pub2_net-1_${g}s${k}e_t0.npz ] && [ -s $S/official_priv2_net-1_${g}s${k}e_t0.npz ] && o+=("$k"); done
   (IFS='|'; echo "${o[*]}")
 }
 groups=("m90=$S/official_{pool}_net{-1|1|2|3|4}_m90s{0|1|2}e_t0.npz" "m101x=$S/official_{pool}_net{-1|1|2|3|4}_m101x_t0.npz"
         "px=$S/official_{pool}_net{1|2}_xe_t0.npz,$S/official_{pool}_net1_xue_t0.npz" "px2=$S/official_{pool}_net{1|2}_x2e_t0.npz"
         "py=$S/official_{pool}_net{1|2}_yse_t0.npz" "pb=$S/official_{pool}_net{1|2}_ybe_t0.npz")
-for g in o1 o2 o3S o3SR o3BS o3SL o3SK o3SM o4S o4SR; do
+fams=$(ls $S | sed -nE 's/^official_pub2_net-1_(o[0-9][A-Za-z0-9]*)s[0-9]+e_t0\.npz$/\1/p' | sort -u | tr '\n' ' ')  # every family of my official networks that has vectors
+for g in $fams; do
   l=$(list $g)
   if [[ "$l" == *"|"* ]]; then groups+=("$g=$S/official_{pool}_net-1_${g}s{$l}e_t0.npz"); elif [ -n "$l" ]; then groups+=("$g=$S/official_{pool}_net-1_${g}s${l}e_t0.npz"); fi
 done
@@ -77,3 +79,5 @@ for n in "${names[@]}"; do
 done
 for p in "${pids[@]}"; do wait "$p" || echo "a file was not built (logs/nano4/newnets-$J-file-*.log)"; done
 for n in "${names[@]}"; do echo "== file pid_${n}s.csv: $(grep -E 'questions with a different Top-1' logs/nano4/newnets-$J-file-$n.log | head -1) | md5 $(md5sum $R2/upload/pid_${n}s.csv 2>/dev/null | cut -c1-12)"; done
+}
+main "$@"; exit $?
