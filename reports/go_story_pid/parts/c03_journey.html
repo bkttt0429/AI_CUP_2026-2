@@ -1,0 +1,100 @@
+<!-- ================= 第 3 章：解題歷程（2 頁） ================= -->
+<section class="page card" id="card-climb" data-sec="4" data-ch="3" data-chtitle="解題歷程" data-title="分數歷程">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 3 章 · 解題歷程 · 1／2</div>
+      <h3>跳升來自更多、更準的證據，加上集成；換模型結構都沒有用</h3>
+      <div class="formula">
+        <div class="eq">離線分數：0.440（baseline，fold 0）→ 0.6192 → … → 0.7458（CV）；對手錨點再 +0.0193</div>
+        <dl><dt>口徑</dt><dd>0.440 是 fold 0；其餘是 folds 1–4 的 CV（類別平衡）；C＋T 之後是 6 模型集成</dd></dl>
+      </div>
+      <ul class="key">
+        <li>KataGo 人類棋風模型（Human SL）<b>+0.17</b>（fold 0：baseline 0.440 → 0.611）：每一手換成 18 種棋力設定（12k–6d）下的似然</li>
+        <li>用本比賽標籤訓練的等級頭（內部稱 L1b）<b>+0.035</b>、把對手的落子也拿來評分（兩步）<b>+0.036</b>、對手的手也算 Human SL 似然 <b>+0.011</b>（細節見第 4 章）</li>
+        <li>11-06 之後：玩家對比損失 <b>+0.0060</b>（ct9）；認出對手是哪位訓練玩家、讀他的標籤（對手錨點）<b>+0.0193</b>；另有兩個決策推移由 Public 選出，沒有 CV 增益可報（第 7 章）</li>
+        <li>對應難點：一（單手弱）→ 每手似然、等級頭、局面向量與集成；二（玩家偏差）→ 對手的落子，只修掉一部分；三（標籤是期間代表值）→ 棋譜內沒有解（第 6 章），對手錨點從標籤端補上一部分（第 7 章）。其他嘗試見第 5 章</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>官方 baseline 只有 0.44</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>補每手證據、對手證據、局面向量，再集成</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>之後每一步的增益都不到 0.02</b></span><button class="deriv-open" data-sec="4">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="climb"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §2、§3.1、§4H、§4J′、§4M M8／M22／M33／M82；METHOD_NOTES.md</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-4" data-title="3.1 里程碑與每一步解決的問題">
+  <h3>3.1 里程碑與每一步解決的問題</h3>
+  <p class="proves">對應報告卡 5：增益來自證據與集成，不來自模型結構</p>
+  <table>
+    <tr><th>步驟</th><th>解決什麼</th><th class="n">CV</th><th class="n">fold 0</th><th class="n">Public</th></tr>
+    <tr><td>官方 baseline</td><td>主辦方提供的基準</td><td class="n">—</td><td class="n">0.440</td><td class="n">0.4631</td></tr>
+    <tr><td>Human SL＋MLP</td><td>每手換成 18 種棋力設定（profile）的 log p，24 維題目特徵</td><td class="n">0.6192</td><td class="n">0.6113</td><td class="n">—</td></tr>
+    <tr><td>＋L1b（fused）</td><td>用本資料標籤微調的 10 個等級頭；只有鑑別式目標有效</td><td class="n">0.6545</td><td class="n">0.6535</td><td class="n">—</td></tr>
+    <tr><td>＋對手 L1b（fused_opp）</td><td>對手的手也評分，16 維</td><td class="n">0.6735</td><td class="n">0.6716</td><td class="n">—</td></tr>
+    <tr><td>＋差值（fused_opp_diff）</td><td>對手 − 本人 3 維</td><td class="n">0.6916</td><td class="n">0.6888</td><td class="n">—</td></tr>
+    <tr><td>讓子修正（_r，主檔）</td><td>讓子局補讓子石、B／W 對調後重評分</td><td class="n">0.6929</td><td class="n">—</td><td class="n">0.7148</td></tr>
+    <tr><td>＋HD 5 維（fused_opp_diff_hd）</td><td>每題的讓子資訊（互先、讓先比例、讓子數、上／下手讓子差）；R 從 59 維變 64 維</td><td class="n">0.7026</td><td class="n">—</td><td class="n">—</td></tr>
+    <tr><td>C＋T 集成</td><td>每手 162 維 token（含 trunk 向量），逐手 MLP 與擴張卷積各 6 個</td><td class="n">0.7258（12 模型）</td><td class="n">—</td><td class="n">0.7494</td></tr>
+    <tr><td>ct3</td><td>fold 0 併入訓練、每人評分局 20 → 40 局</td><td class="n">集成 +0.0047（只量 40 局；fold 0 無法 CV）</td><td class="n">—</td><td class="n">0.7625</td></tr>
+    <tr><td>ct7</td><td>對手手上也填 Human SL 似然；24 個 CV 驗證過的成員</td><td class="n">集成 +0.0110</td><td class="n">—</td><td class="n">0.7687835</td></tr>
+    <tr><td>ct9</td><td>同一配方加玩家對比損失：同一人的兩組局要得到相近的表示（4.4 節）</td><td class="n">集成 +0.0060（0.7398 → 0.7458）</td><td class="n">—</td><td class="n">0.7622032</td></tr>
+    <tr><td>ct13、ct28</td><td>兩個決策推移（1D→A、4D→5D），由 Public 分數解碼選出（7.1 節）</td><td class="n">不適用：類別平衡的 CV 判不了這類改動</td><td class="n">—</td><td class="n">0.7748456、0.7827471</td></tr>
+    <tr><td>ct44</td><td>對手錨點（五成分＋條件化比對），只在邊界區作用、ct28 改過的 38 題鎖定（7.2、7.3 節）</td><td class="n">錨點對底 +0.0193／+0.0204；測試端密度下的期望 +0.012–0.014</td><td class="n">—</td><td class="n">0.8067107</td></tr>
+  </table>
+  <p>右圖：第 1 點是官方 baseline 在 fold 0 的分數（本協議下重訓、期望分決策；照 notebook 的 argmax 是 0.399）；第 2–6 點是單一 MLP 的 CV；第 7–10 點是 6 模型集成（3C＋3T）的 CV：0.7241（C＋T）、0.7288（＋40 局）、0.7398（ct7 型成員）、0.7458（＋對比損失）；最後一點 0.7651 ＝ 0.7458 加上對手錨點在同一個底上的配對增益 +0.0193（驗證端的錨點密度；兩個實測相加 <span class="tag t-i">推論</span>）。Public 點是實際上傳檔的分數（C＋T 檔是 12 模型，CV 0.7258；最後一點是 ct44，另含兩個由 Public 選出的推移）。口徑不同的地方，圖上只用灰色虛線相接，不要互相比較絕對值。</p>
+  <p class="src">出處：設計文件 §2（第 29–43 行）、§3.1（第 47–64 行）、第 180 行、§4H（第 349–351 行）、§4J′（第 421 行）、§4M M8、M22；METHOD_NOTES.md 第 29 行（baseline 0.440）、第 195／197 行（fused 0.6545／0.6535）、第 494 行（_r 0.6929、_hd 0.7026）；results/baseline_official_eval.json；M33 結果、M71 第 2 步（底 0.7458）、M82 結果與測試端候選、「11/11 Public 讀數與規則判定」。</p>
+</section>
+
+<section class="page card" id="card-public" data-sec="5" data-ch="3" data-title="Public 上傳紀錄">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 3 章 · 解題歷程 · 2／2</div>
+      <h3>Public 上傳：11-06 以前只看方向；11-07 起用來解碼推移、否決候選</h3>
+      <div class="formula">
+        <div class="eq">Public 400 題：兩檔差的標準誤約 0.01（95% 約 ±0.02）</div>
+        <dl><dt>例</dt><dd>約 57 題換決策時，配對標準誤約 0.011</dd></dl>
+      </div>
+      <ul class="key">
+        <li>C＋T 對主檔：Public <b>+0.0346</b>，CV 預期 +0.033 <span class="tag t-m">實測</span></li>
+        <li>ct2 對 C＋T：CV +0.0039，Public −0.0079（只改 16 題）</li>
+        <li>ct3 對 C＋T：Public +0.0130，CV 預期 +0.008–0.009</li>
+        <li>ct6 CV 預期 +0.010，Public 卻 <b>−0.0095</b> → 第 5 章的 production gate</li>
+        <li>→ 改成 ct7：Public +0.0063，CV 預期 +0.010，同向（在抽樣範圍內，不算確認）</li>
+        <li>ct9 對 ct7：CV +0.0060，Public <b>−0.0066</b>（只差 21 題，抽樣範圍內）→ 以 CV 為準，維持 ct9</li>
+        <li>ct13、ct28：一次只加一個推移，分數差可以精確解碼（第 7 章）<span class="tag t-p">用了 Public 回饋</span></li>
+        <li>ct42、ct44：對手錨點先過 CV，Public 只做否決；ct44 <b>0.8067107</b> <span class="tag t-m">實測</span></li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>Public 太小</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>模型以 CV 決策；Public 只用在兩個推移與否決</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>Private 一樣只有 400 題</b></span><button class="deriv-open" data-sec="5">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="uploads"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §4J′、§4M；上傳排程修訂 7–9；使用者回報的 Public 分數</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-5" data-title="3.2 每一次上傳">
+  <h3>3.2 每一次上傳</h3>
+  <p class="proves">對應報告卡 6：模型的取捨以 CV 為準；Public 另外用在解碼推移與否決候選</p>
+  <table>
+    <tr><th>檔案</th><th>內容</th><th class="n">Public</th><th>讀法</th></tr>
+    <tr><td>submission_rank.csv（主檔）</td><td>fused_opp_diff_r：59 維題目特徵＋MLP</td><td class="n">0.7148</td><td>官方 baseline 0.4631</td></tr>
+    <tr><td>submission_rank_ct.csv</td><td>C＋T 12 模型</td><td class="n">0.7494</td><td>對主檔 +0.0346，與 CV 的 +0.033 幾乎一樣；約 90 題決策不同，配對標準誤約 0.013</td></tr>
+    <tr><td>submission_rank_ct2.csv</td><td>按局數路由（n ≤ 10 用專訓小題的模型）</td><td class="n">0.7415</td><td>只改 Public 16 題；CV +0.0039 未達門檻，不採用</td></tr>
+    <tr><td>submission_rank_ct3.csv</td><td>fold 0 併入、每人 40 局</td><td class="n">0.7625</td><td>對 C＋T +0.0130，CV 預期 +0.008–0.009，同向</td></tr>
+    <tr><td>submission_rank_ct4.csv</td><td>ct3 ＋ 第二組 L1b head 的 12 個成員</td><td class="n">0.7687835</td><td>CV 檢定 +0.0006 不採用（M9）；與 ct3 只差 29／800 題</td></tr>
+    <tr><td>submission_rank_ct6.csv</td><td>對手 HSL，12 個全資料 production 模型</td><td class="n">0.7529805</td><td>對 ct3 −0.0095：52 題中淨輸約 6 題；production gate 找到原因（§5.1）</td></tr>
+    <tr><td>submission_rank_ct7.csv（11-06 的最終檔）</td><td>對手 HSL，24 個 CV 驗證過的成員</td><td class="n">0.7687835</td><td>對 ct3 +0.0063，CV 期望 +0.010；與 ct3 決策差 106／800</td></tr>
+    <tr><td>submission_rank_ct9.csv</td><td>同配方＋玩家對比損失（M33，CV +0.0060）</td><td class="n">0.7622032</td><td>對 ct7 −0.0066：Public 只差 21 題，其中 2 題是後來解出的 A｜1D 門檻題；CV 的 3.9 萬題較可信，維持 ct9 當底</td></tr>
+    <tr><td>submission_rank_ct10.csv</td><td>A｜1D 專家（M46；類別平衡 CV −0.0052，不採用）</td><td class="n">0.7701047</td><td>改動的 20 題淨多猜中 5 題 → 提示「把 1D 推向 A」在這個測試集上是對的</td></tr>
+    <tr><td>submission_rank_ct12.csv</td><td>只在兩條邊界用專家（M49；CV +0.0017，未達門檻）</td><td class="n">0.7656229</td><td>增益來自其中 2 題 1D→A 與兩級的運氣（事後解碼）</td></tr>
+    <tr><td>submission_rank_ct13.csv</td><td>ct9 ＋ 1D→A 推移（r ＝ 2）</td><td class="n">0.7748456</td><td>對 ct9 +0.0126424 ＝ 8 題全對；保留</td></tr>
+    <tr><td>14 個探測檔（ct14–ct19、ct21–ct23、ct25–ct27、ct29、ct32）</td><td>各 ＝ ct13 ＋ 一個推移</td><td class="n">0.7660244–0.7795865</td><td>全部丟棄（7.1 節的表）</td></tr>
+    <tr><td>submission_rank_ct28.csv</td><td>ct13 ＋ 4D→5D 推移（r ＝ 2）</td><td class="n">0.7827471</td><td>對 ct13 +0.0079：7 對 2 錯；未達事先門檻，由使用者決定保留</td></tr>
+    <tr><td>submission_rank_ct40.csv</td><td>錨點（只用開局模型）先改後驗，再重算兩個推移</td><td class="n">0.7761668</td><td>對 ct28 −0.0066，其中 −2.264 分落在 3 題已確定是 A 的題 → 組合改成「推移過的題鎖定」</td></tr>
+    <tr><td>submission_rank_ct42.csv</td><td>ct28 鎖定 38 題＋五成分錨點（邊界區）</td><td class="n">0.7880062</td><td>對 ct28 +0.0053（33 題）；過了事先寫的否決門檻 0.7787</td></tr>
+    <tr><td>submission_rank_ct44.csv（最終檔）</td><td>ct28 鎖定 38 題＋五成分與條件化比對的錨點（邊界區）</td><td class="n">0.8067107</td><td>對 ct28 +0.0240（45 題）；CV 期望 +0.012–0.014</td></tr>
+  </table>
+  <p>ct4 與 ct7 的 Public 分數相同，但兩檔在 Public 有 47 題決策不同；同分是巧合，不是同一個模型。依「最後一次上傳生效」，截止前最後一筆必須是選定的最終檔（現在是 ct44）。</p>
+  <p>11-07 以後 Public 的用法分兩種。決策推移：每個探測檔只比前一檔多一個推移，分數差唯一分解成對錯題數，據此留下兩個推移；這是用 Public 的標籤資訊做選擇，在第 7 章揭露。對手錨點：做法與權重都不看 Public，先過 CV；上傳前寫下門檻，Public 只用來否決明顯變差的候選（ct42 ≥ 0.7787 才傳 ct44；ct44 ≥ max(0.7787, ct42 − 0.0040) 才取代）。</p>
+  <p class="src">出處：設計文件 §4J′ 第 421 行、§4M 第 581、595、640、738、812 行附近；ct4 的 Public 分數與 47 題差異：使用者 11-05 18:52 貼的上傳紀錄與當時的檔案比對（設計文件未記錄）。11-06 之後：設計文件 M33（Public 回報）、M46（ct10）、M49（ct12）、M52–M54、M58、M71（ct40 的讀數與處置）、M82 測試端候選、「11/11 Public 讀數與規則判定」；上傳排程_2026-11-08.md 修訂 7–9。</p>
+</section>

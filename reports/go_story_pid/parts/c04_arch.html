@@ -1,0 +1,177 @@
+<!-- ================= 第 4 章：我們的架構（4 頁） ================= -->
+<section class="page card" id="card-arch" data-sec="6" data-ch="4" data-chtitle="我們的架構" data-title="整體架構">
+  <div class="report stack">
+    <div class="txt">
+      <div class="num">第 4 章 · 我們的架構 · 1／4</div>
+      <h3>整體架構：每手證據 → 整局序列 → 24 個模型平均 → 期望分決策</h3>
+      <ul class="key cols3">
+        <li><b>階段一（表示）</b>：KataGo 重播每一局，每個局面只讓網路算一次（不搜尋），每手抽出一個 162 維向量（token）</li>
+        <li><b>階段二（聚合）</b>：C（逐手 MLP）或 T（擴張卷積）讀整局，平均／標準差池化，加 64 維題目特徵</li>
+        <li><b>階段三（集成與決策）</b>：24 個成員的十級機率平均，選期望分最高的等級</li>
+      </ul>
+      <p class="cap">11-06 之後，最終檔 ct44 在這三個階段之上再加三步：成員改用加了玩家對比損失的同一配方（ct9，4.4 節）、兩個決策推移、對手錨點（第 7 章）。</p>
+      <div class="cause"><span><span class="k">問題</span><b>證據分散在數千手</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>逐手 token、整題聚合</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>跨手互動沒有額外資訊</b></span><button class="deriv-open" data-sec="6">推導 ▸</button></div>
+    </div>
+    <div class="anim span" data-anim="pipeline"></div>
+  </div>
+</section>
+<section class="lesson" id="sec-6" data-title="4.1 架構細節">
+  <h3>4.1 架構細節</h3>
+  <p class="proves">對應報告卡 7：三個階段，每一層都按玩家 cross-fit</p>
+  <h4>階段一（表示）：重播與每手 token（162 維）</h4>
+  <table>
+    <tr><th>欄位</th><th class="n">維度</th><th>內容</th></tr>
+    <tr><td>盤面 trunk 向量</td><td class="n">64</td><td>KataGo humanv0 trunk 在落子前局面的盤面池化向量，固定隨機投影到 64 維</td></tr>
+    <tr><td>落點 trunk 向量</td><td class="n">64</td><td>實際落點那一格的 trunk 向量，同樣投影；pass 為 0</td></tr>
+    <tr><td>L1b 分數</td><td class="n">11</td><td>10 個等級頭的 log p（置中）＋ level；同一組 10 個等級頭，本人手上放本人著手的 log p、對手手上放對手著手的 log p</td></tr>
+    <tr><td>Human SL 分數</td><td class="n">19</td><td>18 個 profile（12k–6d）的 log p（置中）＋ level；M14 起對手手上也填（ct6 首用，ct6 作廢後由 ct7 沿用）</td></tr>
+    <tr><td>旗標</td><td class="n">4</td><td>is_target、mover、t／T、pass</td></tr>
+  </table>
+  <p>重播：KataGo Board／GameState，RULES_CHINESE；讓子局擺標準讓子點、B／W 對調（aicup.sgf.setup_and_moves）。每手只存實際落子那一格的機率。L1b 按玩家 cross-fit：模型 A 訓 folds 1、2，B 訓 folds 3、4，各自只評沒看過的折。</p>
+  <h4>名詞：「中國規則」與「不搜尋」</h4>
+  <ul>
+    <li><b>中國規則、貼目 7.5</b>：KataGo 的網路除了盤面，還把規則（數子或數目、打劫、自殺）與貼目當成全域輸入。重播時所有局都設成中國規則（RULES_CHINESE、數子法）、貼目 7.5。這是抽特徵時餵給網路的設定，不是那盤棋的對局條件；資料來源幽玄の間實際用日本規則（數目法），互先貼 6.5、讓先與讓子不貼目。訓練與測試用同一個設定，所以特徵前後一致；兩種規則主要差在終局怎麼數（單官、雙活），開局與中盤的落子分布幾乎相同。換成日本規則與實際貼目的對照實驗（M26，同一組 600 位玩家、12,000 局）：每手 log p 平均只變 +0.0042 nats，相鄰兩級的局層 AUC 0.6825 → 0.6830（+0.0005，事先門檻 +0.01），在現行集成之上的偏相關 −0.093 [−0.169, +0.006]。正式系統層級再比一次（M27：只換 Human SL，重訓 24 個成員）：集成 +0.0014 [−0.0007, +0.0036]，未過門檻。日本規則讓實際著手略微更可能，但不帶額外的等級資訊，所以維持現行設定。</li>
+    <li><b>不搜尋</b>：KataGo 下棋時通常做蒙地卡羅樹搜尋，往後推演很多步再決定。我們每個局面只讓網路算一次（一次前向），讀策略頭給的「每個點會被下的機率」。Human SL 設成某個等級時，這個機率近似「這個等級的人類會下這手的機率」，正是我們要的證據；搜尋會讓判斷變強、但不會更像人類，計算量也多上百倍。所以 Human SL 18 個等級各一次前向，L1b 一次前向出 10 個等級頭。</li>
+    <li><b>讓子修正</b>：讓子局（HD ≥ 2）的記錄沒有讓子石，黑白記號也相反；重播時把讓子石擺回標準星位、再把顏色對調，這會實際改變棋盤，與上面兩項不同。</li>
+  </ul>
+  <h4>階段二（聚合）</h4>
+  <ul>
+    <li>C：每手一個 MLP（隱藏 110），平均／標準差池化到每局，再到每題。</li>
+    <li>T：5 個 kernel 3 的擴張卷積（d ＝ 64、感受野 63 手、約 97k 參數），同樣池化。</li>
+    <li>R：64 維題目特徵（fused_opp_diff_hd：Human SL、L1b、對手、差值、讓子）。</li>
+  </ul>
+  <h4>階段三：集成與決策</h4>
+  <ul>
+    <li>24 個成員 ＝ 4 個驗證折 × {C, T} × 3 seed；每個成員訓 fold 0 ＋ 其餘三折（每人 40 局）、留一折驗證、10% 訓練玩家留出選停止點。</li>
+    <li>測試時 24 個成員的十級機率平均（每個成員讀 L1b 模型 A、B 兩組 token），再做期望分決策。最後的 predict 步驟（24 個 checkpoint × L1b A／B，共 48 次 pass）在 1 張 GPU 上約 281 秒；前面的 8 張 GPU 分片評分（約 29 分）與 trunk 向量抽取（8 片、每片約 6–7 分）另計。</li>
+  </ul>
+  <p class="src">出處：scripts/trunk_seq_check.py 第 129–131 行（N_SCORES、D_TOKEN、HIDDEN）、scripts/trunk_extract.py 說明、設計文件 §2、§4J、§4M M14 第 3 步（第 713 行）、M21、M22；submission_rank_ct7_report.json（total_wall_s、passes、vec_extract）。</p>
+</section>
+
+<section class="page card" id="card-evidence" data-sec="7" data-ch="4" data-title="每手證據">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 4 章 · 我們的架構 · 2／4</div>
+      <h3>每手證據：Human SL 的 18 種棋力設定（profile），加上用本比賽標籤訓練的等級頭（L1b）</h3>
+      <div class="formula">
+        <div class="eq">每手 ＝ 18 個 log p（12k … 6d）＋ 10 個等級頭的 log p</div>
+        <dl><dt>Human SL</dt><dd>KataGo b18c384nbt-humanv0，權重凍結，18 次前向</dd>
+        <dt>L1b</dt><dd>KataGo 主幹網路（trunk）小幅微調（lr 1e-5），加上 10 個用本比賽標籤訓練的等級輸出頭，1 次前向</dd></dl>
+      </div>
+      <ul class="key">
+        <li>同一局面，弱棋與強棋 profile 的落子分布差很多；但單手的差會被其他手蓋過</li>
+        <li>只用 NLL（凍結或微調 trunk）的 fused 0.6257／0.6250，只比 Human SL 多約 +0.006；加入等級交叉熵後 fused 0.6545，對 Human SL <b>+0.035</b> <span class="tag t-m">實測</span></li>
+        <li>每手只存實際落子那一格的機率</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>現成模型的尺度被壓縮</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>用本資料標籤訓練等級頭</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>再微調 trunk 也是 0</b></span><button class="deriv-open" data-sec="7">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="profiles"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §2、§4M M3；10-31 研究筆記報告（reports/go_report）第 4 章</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-7" data-title="4.2 Human SL 與 L1b">
+  <h3>4.2 Human SL 與 L1b</h3>
+  <p class="proves">對應報告卡 8：現成模型給方向，本資料的標籤給尺度</p>
+  <table>
+    <tr><th>項目</th><th>內容</th></tr>
+    <tr><td>Human SL 權重</td><td>KataGo b18c384nbt-humanv0，凍結；18 個 profile（12k–6d），每個 profile 一次前向；metadata 固定為 KGS、主時間 1200 秒、讀秒 30 秒 × 5、2020-03</td></tr>
+    <tr><td>L1b</td><td>trunk 以 lr 1e-5 微調（heads3_A／B）＋ 10 個等級 policy head，固定 rank-unknown metadata，bf16；目標手與對手手各 10 維</td></tr>
+    <tr><td>cross-fit</td><td>A 訓 folds 1、2，評 0、3、4；B 訓 3、4，評 0、1、2</td></tr>
+    <tr><td>成本</td><td>L1b 評分約 900 局面／秒／張 GPU；兩側約 2.2 億局面，一個節點 8 張 GPU 約 8–9 小時；Human SL 18 profile 另一遍、更貴</td></tr>
+  </table>
+  <h4>試過但沒用的變體</h4>
+  <ul>
+    <li>微調過的 trunk 當 token（M3）：集成層 −0.0016 [−0.0050, +0.0018]。</li>
+    <li>換 metadata（Fox、Tygem、不同讀秒；M18）：局層相鄰 AUC 最多 0.6825，與 production 相同。</li>
+    <li>本人著手以對手段位為條件（M17）：給定集成與對手強度後偏相關 −0.030，關閉。</li>
+  </ul>
+  <p class="src">出處：設計文件 §2（第 33–43 行）、§4M M3、M17、M18。</p>
+</section>
+
+<section class="page card" id="card-opp" data-sec="8" data-ch="4" data-title="對手通道">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 4 章 · 我們的架構 · 3／4</div>
+      <h3>對手的落子也是證據：配對系統依當局掛牌（RP 帶）配來對手，對手的平均強度是第二把尺</h3>
+      <div class="formula">
+        <div class="eq">對手手上：L1b 對對手著手的評分 ＋ 對手的 Human SL 似然</div>
+        <dl><dt>不加維度</dt><dd>token 的 Human SL 19 欄原本只在本人手上有值，對手手上補上</dd></dl>
+      </div>
+      <ul class="key">
+        <li>L1b 對手 16 維 <b>+0.0181</b>（fold 0）、差值 3 維 <b>+0.0181</b>（CV）<span class="tag t-m">實測</span></li>
+        <li>對手 HSL：題目層 +0.0200 → 集成層 <b>+0.0096</b>；局數越少增益越大（n 5：+0.0129）</li>
+        <li>照正式提交的訓練方式（fold 0 也併入、每人 40 局）重做 CV，也是 +0.0106、+0.0110</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>本人的證據帶著偏差</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>對手的平均強度當第二把尺</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>對手也帶同一個偏差</b></span><button class="deriv-open" data-sec="8">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="opp"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §3.1、§4M M14、M20、M22</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-8" data-title="4.3 對手通道的驗證">
+  <h3>4.3 對手通道的驗證</h3>
+  <p class="proves">對應報告卡 9：對手 Human SL 在三種集成協定下都約 +0.01（題目層 +0.02）</p>
+  <table>
+    <tr><th>比較</th><th class="n">差</th><th>95% CI</th><th>出處</th></tr>
+    <tr><td>對手 L1b 16 維（fused_opp vs fused，fold 0）</td><td class="n">+0.0181</td><td>[+0.0094, +0.0266]</td><td>§3.1</td></tr>
+    <tr><td>對手 − 本人差值 3 維</td><td class="n">+0.0181</td><td>[+0.0140, +0.0220]</td><td>§3.1</td></tr>
+    <tr><td>對手 HSL，題目層 R（M14 第 1 步）</td><td class="n">+0.0200</td><td>[+0.0156, +0.0245]</td><td>m14_r.json</td></tr>
+    <tr><td>對手 HSL，C／T 集成 6 對 6（M14 第 2 步）</td><td class="n">+0.0096</td><td>[+0.0062, +0.0130]</td><td>ens_m14_oh.json；四折 +0.0108／+0.0133／+0.0050／+0.0090</td></tr>
+    <tr><td>production 配方的 CV（M20，folds 1–2）</td><td class="n">+0.0106</td><td>[+0.0060, +0.0154]</td><td>compare_m20_1_2.json</td></tr>
+    <tr><td>CV 驗證過的成員（M22，四折）</td><td class="n">+0.0110</td><td>[+0.0073, +0.0148]</td><td>ens_m22.json；n 5／10／20：+0.014／+0.011／+0.008</td></tr>
+  </table>
+  <p>設計：token 的 Human SL 19 欄（level ＋ 18 個置中 log p）原本只在本人手上有值，M14 第 2 步把對手手上的這 19 欄填入對手的 Human SL 分數，與 L1b 欄「同一組等級頭分別評本人與對手的著手」同一設計；參數量不變。另一個變體（R 再加 39 欄）對它 +0.0002，依事先規則取較簡單的版本。</p>
+  <p class="src">出處：設計文件 §3.1、§4M 第 697–712 行、M20、M22。</p>
+</section>
+
+<section class="page card" id="card-decide" data-sec="9" data-ch="4" data-title="集成與決策">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 4 章 · 我們的架構 · 4／4</div>
+      <h3>集成與決策：24 個成員平均，再選期望分最高的等級</h3>
+      <div class="formula">
+        <div class="eq">期望分(c) ＝ p(c) ＋ 0.368 × [ p(c−1) ＋ p(c+1) ]</div>
+        <dl><dt>選法</dt><dd>不選機率最高的等級，選期望分最高的等級</dd></dl>
+      </div>
+      <ul class="key">
+        <li>24 個成員 ＝ 4 個驗證折 × {C, T} × 3 seed，每個都有自己的驗證分</li>
+        <li>成員驗證分 C 0.7215–0.7378、T 0.7202–0.7362，沒有弱成員 <span class="tag t-m">實測</span></li>
+        <li>ct7 的 800 題中，有 23 題的期望分決策和「機率最高」不同</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>差一級也有分</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>期望分決策</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>CV 上，決策層的其他調整都沒有增益</b></span><button class="deriv-open" data-sec="9">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="decide"></div>
+      <div class="chips"><span class="chip"><b>來源</b>submission_rank_ct7_proba.csv；設計文件 §4M M22</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-9" data-title="4.4 集成成員與決策規則">
+  <h3>4.4 集成成員與決策規則</h3>
+  <p class="proves">對應報告卡 10：每個成員都驗證過，決策對準官方計分</p>
+  <ul>
+    <li>成員：results/models/ct_cv/val{v}_{C,T}-f0-x40-oh_s{0–2}.pt，v ＝ 1–4；全部納入，不依驗證分挑選；事先規定驗證分低於同臂同折均值 0.02 以上就排除，實際沒有。</li>
+    <li>四折、每折 6 個 ct7 型成員對 6 個只用三折訓練、每人 40 局（x40）、沒有對手 Human SL 的成員：+0.0110 [+0.0073, +0.0148]；6 模型集成 0.7288 → 0.7398。</li>
+    <li>ct7 推論：24 個 checkpoint、L1b 模型 heads3_A／heads3_B；800 題都不需要退回備用檔；C、T 各組與整體集成的決策一致率 0.955、0.965；預測分布每級 68–110 題（submission_rank_ct7_report.json）。</li>
+    <li>期望分決策：對每個等級 c 算 p(c) ＋ e<sup>−1</sup>［p(c−1) ＋ p(c+1)］，取最大。右圖的例子是 pub_q_0177：機率最高是 2D（0.240），但 3D 的期望分 0.376 高於 2D 的 0.343。</li>
+  </ul>
+  <h4>決策層沒有通過的調整</h4>
+  <ul>
+    <li>溫度重校準 ±0.001；類別偏置重校準 −0.03（有害）。</li>
+    <li>按局數路由（ct2）：CV +0.0039 未達門檻，Public −0.0079。</li>
+    <li>11-10 重量一次（M75，39,327 題）：期望分對「機率最高」+0.0023 [+0.0011, +0.0034]，兩者只在 3.0–3.3% 的題不同；直接以實得分數訓練的學習式決策層 −0.0073 [−0.0106, −0.0039]，比規則差。若能在後驗最高的兩級之間完美二選一，分數是 0.919：決策層缺的是前兩級之間的資訊，不是選法。</li>
+  </ul>
+  <h4>11-06 之後：玩家對比損失（M33，ct9）</h4>
+  <ul>
+    <li>作法：同一個配方、同樣 24 個成員，訓練時多加一項對比損失（權重 0.1）：一批裡同一位玩家的兩題要得到相近的題目表示，不同玩家的要分開。對比頭只在訓練時用，參數量不變。</li>
+    <li>6 對 6 集成 0.7398 → 0.7458，+0.0060 [+0.0036, +0.0085]，四折 +0.0044／+0.0041／+0.0098／+0.0059；只把同一人的題配成一批、不加對比損失的對照是 +0.0013 [−0.0011, +0.0037]；加了對比損失的對這個對照 +0.0048 [+0.0022, +0.0074]，四折全正，所以增益來自損失本身。同配方換 seed 的雜訊是 −0.0005 [−0.0030, +0.0019]。</li>
+    <li>讀法：對比損失懲罰「隨抽到哪幾局而變」的部分，也就是第 2 章裡會隨局數變小的抽樣雜訊；玩家層偏差還在 <span class="tag t-i">推論</span>。</li>
+    <li>ct9 ＝ 這 24 個成員（權重 results/models/ct_cv_m33）：與 ct7 的決策差 44／800 題（Public 21、Private 23）。Public 0.7622032，比 ct7 低 0.0066；21 題的配對差標準差約 3 分，這個差在抽樣範圍內，而且之後解碼出其中 2 題落在 A｜1D 門檻上（第 7 章）。ct9 是之後所有檔的底。</li>
+    <li>對比損失的變體（權重 0.05／0.2／0.3、溫度、4 個視角）與在它之上再疊成員家族、更多 seed，都沒有再過門檻（5.2 節第二張表）。</li>
+  </ul>
+  <p class="src">出處：設計文件 §4M M22（第 806–812 行附近）、gate 診斷、§4K；ct7 機率檔；M33 結果與後續（歸因診斷、ct9 產生、Public 回報）、M39／M40、M54、M75。</p>
+</section>

@@ -1,0 +1,408 @@
+<title>圍棋棋力預測報告</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 版面沿用使用者的太陽能板報告模板（封面＋報告卡＋推導彈窗＋簡報／閱讀／筆記三種模式；動畫都是 SVG <animate>，可拖曳進度條）。
+   本報告沒有官方影像：右欄放動畫或圖表，左欄放文字、公式框、長條圖與「問題 → 作法 → 限制」。 */
+:root{
+  --bg:#f7f7f5; --paper:#fff; --ink:#1d1f24; --muted:#5d6370; --line:#d9dbe0;
+  --accent:#0b6e69; --accent-soft:#e3f1ef; --warn:#a4451c; --warn-soft:#fbeee6;
+  --hot:#d1343a; --blue:#0072b2; --gold:#b98900; --deriv:#f2f3f6;
+  --stage-bg:#e9ebee; --backdrop:rgba(233,235,238,.82);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
+code{font-family:Consolas,monospace;font-size:13px;background:var(--deriv);padding:0 4px;border-radius:4px;word-break:break-all}
+a{color:var(--accent)}
+svg text{font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
+
+/* 頂列 */
+.top{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:center;padding:10px 20px;flex-wrap:wrap}
+.top h1{font-size:15px;margin:0;font-weight:600}
+.ch-menu-btn{padding:4px;margin:-4px;border:0;border-radius:5px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.ch-menu-btn:hover{background:var(--accent-soft)}
+.ch-menu-caret{color:var(--muted);margin-left:3px}
+.ch-menu-dlg{position:fixed;inset:52px auto auto 16px;margin:0;width:340px;max-width:calc(100vw - 16px);padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.ch-menu-dlg::backdrop{background:var(--backdrop)}
+.ch-menu-dlg a{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:5px;color:var(--ink);font-size:14px;text-decoration:none}
+.ch-menu-dlg a:hover{background:var(--accent-soft);color:var(--accent)}
+.ch-menu-dlg .meta{color:var(--muted);font-size:12px;flex-shrink:0}
+.ch-menu-dlg hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+.modes{margin-left:auto;display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.modes button{border:0;background:transparent;color:var(--ink);padding:6px 14px;font:inherit;font-size:14px;cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--accent);color:var(--paper)}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 90px}
+
+/* 頁 */
+.page{background:var(--paper);border:1px solid var(--line);border-radius:10px;margin:0 0 28px;position:relative;scroll-margin-top:70px}
+
+/* 封面 */
+.cover{padding:34px 38px 28px}
+.kicker{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.04em}
+.cover h2{font-size:29px;line-height:1.4;margin:8px 0 8px}
+.cover h2 .brand{display:block;font-size:15px;color:var(--muted);font-weight:600}
+.lead{color:var(--muted);margin:0 0 16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:14px 0 18px}
+.kpi{background:var(--accent-soft);border-radius:8px;padding:10px 14px}
+.kpi .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12.5px;color:var(--muted)}
+.kpi.warn{background:var(--warn-soft)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:6px 22px;background:var(--deriv);border-radius:8px;padding:12px 16px;margin:0 0 18px;font-size:14px}
+.gloss h4{grid-column:1/-1;margin:0 0 2px;font-size:14px;color:var(--accent)}
+.gloss div b{display:inline-block;min-width:6.5em}
+.route{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.route li{display:flex;gap:12px;align-items:baseline;background:var(--accent-soft);border-radius:8px;padding:8px 14px}
+.route li b{color:var(--accent);font-size:16px;min-width:3.2em}
+.route li a{color:var(--ink);text-decoration:none}
+.route li a:hover{color:var(--accent)}
+.route li .c{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.metaline{margin-top:16px;font-size:13px;color:var(--muted);display:flex;gap:4px 18px;flex-wrap:wrap}
+/* 封面只放標題，置中 */
+.cover{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:min(78vh,760px);padding:56px 64px}
+.cover h2{font-size:64px;line-height:1.15;margin:0;letter-spacing:.04em}
+.cover .cover-sub{margin:18px 0 0;font-size:18px;color:var(--muted)}   /* 分隔頁（1106 報告）的一行小字 */
+
+/* 報告卡：左文右圖，圖欄比較寬 */
+.report{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:24px;padding:22px 26px 18px;align-items:start}
+.report.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.report>.anim.span{grid-column:1/-1;margin:0}   /* 第 8 頁：動畫橫跨整張卡，放大 */
+.report>.anim.span .an-stage>svg{max-height:calc(100vh - 290px)}   /* 動畫占大部分畫面，整頁仍在一個畫面內 */
+/* 橫跨整張卡的動畫：進度條放在動畫下方的留白，不蓋到動畫最底下的字 */
+.report>.anim.span .an-stage{padding-bottom:40px}
+.report>.anim.span .an-zone{height:40px}
+.report>.anim.span .an-ctl{bottom:5px}
+/* 第 8 頁上半部收緊，把空間讓給動畫 */
+#card-decode .report{padding-top:12px;gap:10px 22px}
+#card-decode .txt h3{margin:2px 0 6px}
+#card-decode .key{margin:4px 0 6px}
+#card-decode .key li{margin:2px 0}
+#card-decode #chart-r1 h4{margin:0 0 4px}
+#card-decode .anim.span .an-tech{margin-bottom:4px;padding:3px 9px}
+.report>*{min-width:0}
+.num{font-size:12px;color:var(--muted)}
+.report h3{font-size:22px;line-height:1.4;margin:2px 0 12px;word-break:keep-all;overflow-wrap:anywhere}
+.formula{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin:0 0 12px;font-size:15px}
+.formula .eq{font-size:17px;text-align:center;margin:2px 0 4px;font-weight:600}
+.formula dl{display:grid;grid-template-columns:auto 1fr;gap:2px .7em;margin:6px 0 0;padding-top:6px;border-top:1px solid rgba(11,110,105,.22);font-size:13px;line-height:1.45}
+.formula dt{font-weight:600}
+.formula dd{margin:0;color:var(--muted)}
+.report ul{margin:0;padding-left:20px}
+.report li{margin:5px 0}
+.tag{display:inline-block;font-size:11px;border-radius:4px;padding:0 5px;margin-left:3px;vertical-align:1px;white-space:nowrap}
+.t-m{background:#e3f4ea;color:#1d6b3e}.t-i{background:#fff1d6;color:#8a5a00}.t-p{background:#fde7e7;color:#9b2226}
+
+/* 怎麼看右圖 */
+.howto{background:#f3f8f7;border:1px solid #d3e7e3;border-radius:8px;padding:9px 13px 7px;margin:14px 0 0;font-size:14px;line-height:1.55}
+.howto>b{display:block;font-size:13px;color:var(--accent);margin-bottom:3px}
+.howto ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:2px 18px}
+.howto li{display:flex;gap:6px;align-items:center;margin:2px 0}
+.howto li>span{flex:0 1 auto}
+.howto .sw,.howto .bd,.howto .ztag{margin-top:0}
+.report ul.key li{margin:7px 0}
+.formula .eq.sub{font-size:15px;font-weight:500}
+.sw{flex:none;display:inline-block;width:22px;height:14px;border:2.5px solid var(--c);border-radius:2px;background:#1b1e23;margin-top:3px}
+.sw.dash{border-style:dashed}
+.bd{flex:none;font-style:normal;display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 3px;border-radius:10px;background:var(--c);color:var(--t,#fff);font-size:11px;font-weight:700;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.3);margin-top:1px}
+.ztag{flex:none;font-style:normal;display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:19px;padding:0 4px;border:1.5px dashed #59606b;border-radius:3px;font-size:11.5px;font-weight:700;background:#fff;margin-top:1px}
+
+/* 問題 → 作法 → 限制（放在左欄底部） */
+.cause{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:14px;border-top:1px dashed var(--line);padding-top:12px;margin-top:16px}
+.cause .k{font-size:12px;color:#fff;background:var(--muted);border-radius:4px;padding:0 6px;margin-right:4px}
+.cause .k.go{background:var(--accent)}.cause .k.stuck{background:var(--warn)}
+.cause .arrow{color:var(--muted)}
+.cause .bridge{flex:1 1 220px;font-size:13px;color:var(--accent)}
+.cause.lim>span{flex-basis:100%}
+/* 第 10 頁「到 0.98 要幾筆、多久」表：筆數長條深色到下限、淺色是範圍；把握分四色 */
+.stg{font-size:.86em}
+.stg td{vertical-align:middle;padding:5px 8px}
+.stg td:nth-child(3){min-width:7.5em}
+.stg tr.tot td{font-weight:700;background:var(--deriv)}
+.stg-bar{display:flex;height:6px;background:#eef0f3;border-radius:3px;margin-top:3px;overflow:hidden}
+.stg-bar i{display:block;height:100%;background:var(--warn)}
+.stg-bar i:first-child{min-width:3px}
+.stg-bar i.rg{background:#f3c9a8}
+.cf{display:inline-block;font-size:.85em;font-weight:700;border-radius:10px;padding:0 8px;white-space:nowrap}
+.c-hi{background:#e3f4ea;color:#1d6b3e}.c-mid{background:#fff1d6;color:#8a5a00}.c-lo{background:#fde7d9;color:#a4451c}.c-vlo{background:#fde7e7;color:#9b2226}
+.deriv-open{flex:none;margin-left:auto;border:1px solid var(--accent);background:var(--paper);color:var(--accent);border-radius:16px;padding:3px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.deriv-open:hover{background:var(--accent);color:#fff}
+
+/* 配圖 */
+.fig{display:flex;flex-direction:column;gap:6px}
+.fv{display:flex;flex-direction:column;gap:7px}
+.fv+.fv{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+.fv-ttl{font-size:13.5px;font-weight:600}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:var(--paper);border-radius:14px;padding:2px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.stage{position:relative}
+.stage.main{display:flex;justify-content:center;cursor:zoom-in}
+.sv{position:relative;width:100%;border-radius:8px;overflow:hidden;background:#0b0d10;box-shadow:0 2px 12px rgba(20,30,40,.22)}
+.sv svg,.inset svg{display:block;width:100%;height:auto}
+.zoom-hint{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.62);color:#fff;font-size:12px;border-radius:12px;padding:1px 10px;pointer-events:none}
+.err{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#ddd;font-size:13px;padding:20px;text-align:center;background:#111}
+.err.show{display:flex}
+.insets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.inset{margin:0}
+.inset figcaption{font-size:12.5px;font-weight:600;margin:0 0 4px;display:flex;align-items:center;gap:6px;line-height:1.35}
+.inset .stage{border-radius:7px;overflow:hidden;background:#0b0d10;box-shadow:0 1px 6px rgba(20,30,40,.2)}
+.inset-cap{align-self:center;margin:0}
+.legend{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12.5px;color:var(--muted)}
+.legend label{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.legend i{display:inline-block;width:18px;border-top:3px solid}
+.legend i.d{border-top-style:dashed}
+.legend .focus-tg{margin-left:auto;color:var(--ink)}
+.cap{font-size:12.5px;color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:11.5px;border:1px solid var(--line);border-radius:12px;padding:1px 8px;color:var(--muted);background:var(--paper)}
+.chip b{color:var(--ink);margin-right:3px}
+/* 圖例：一行、淡底；補的「被塗黑的區域」「放大範圍」和圖層勾選並排 */
+.legend{color:var(--ink);gap:4px 16px;padding:6px 10px;background:var(--deriv);border-radius:8px;align-items:center}
+.legend i{width:22px}
+.legend .lg-x{display:flex;align-items:center;gap:5px}
+.legend .lg-x .ztag{margin:0}
+.legend .lg-x b{display:inline-block;width:22px;height:12px;background:#0b0d10;border-radius:2px}
+/* 放大圖放在主圖右側（左大右小），圖例與圖說橫跨底下 */
+.fv:has(> .insets){display:grid;grid-template-columns:minmax(0,2.15fr) minmax(0,1fr);grid-template-areas:"main ins" "leg leg" "cap cap";gap:8px 12px;align-items:start}
+.fv:has(> .insets)>.stage.main{grid-area:main}
+.fv:has(> .insets)>.insets{grid-area:ins;grid-template-columns:1fr;gap:10px}
+.fv:has(> .insets)>.legend{grid-area:leg}
+.fv:has(> .insets)>.cap{grid-area:cap}
+/* 每張卡左欄的動畫：一輪 9 秒（SVG <animate>；SIFT 用下面的 CSS 動畫） */
+.anim{margin:14px 0 0;border:1px solid var(--line);border-radius:10px;padding:10px 12px 8px;background:#fff}
+.anim svg{display:block;width:100%;height:auto}
+.an-steps{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:.84em;margin:0 0 6px}
+.an-steps span{white-space:nowrap}
+.an-note{font-size:.74em;color:var(--muted);margin-top:4px}
+.anim .an-k{font-size:13px;fill:#5d6370}
+.anim .an-n{font-size:13px;font-weight:700;fill:#1d1f24}
+.anim .an-t{font-size:14px;font-weight:700;fill:#1d1f24}
+.anim .an-l{font-size:12px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#0b0d10;stroke-width:3px}
+.anim .an-v{font-size:15px;font-weight:700}
+.anim .an-ok{fill:#1d6b3e}
+.anim .an-no{fill:#9b2226}
+.anim .sift-t{font-size:13px;font-weight:700;fill:#1d1f24}
+.anim .sift-c{font-size:11px;font-weight:700;fill:#fff;paint-order:stroke;stroke:#0b0d10;stroke-width:3px}
+.anim .kp{fill:#ffd60a;stroke:#0b0d10;stroke-width:1}
+.anim .ln{fill:none;stroke:#32d7ff;stroke-width:1.6}
+.anim .ln.bad{stroke:#ff3b30;stroke-width:1.4}
+.anim .vd{font-size:14px;font-weight:700}
+.anim .vd.ok{fill:#1d6b3e}
+.anim .vd.no{fill:#9b2226}
+/* 「技術」：動畫上方一行，寫實際用的方法 */
+.an-tech{display:flex;align-items:baseline;gap:8px;font-size:.8em;line-height:1.45;margin:0 0 6px;padding:5px 9px;border-radius:6px;background:var(--accent-soft)}
+.an-tech b{flex:none;font-size:.88em;color:#fff;background:var(--accent);border-radius:4px;padding:0 6px}
+/* 進度條：平常只露出底部一條細線；滑鼠移到動畫底部（或用鍵盤選到）才展開成控制列，不擋上方的字與按鈕。觸控裝置改放在動畫下方 */
+.an-stage{position:relative}
+.an-zone{position:absolute;left:0;right:0;bottom:0;height:56px}
+.an-ctl{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:8px;padding:3px 12px 3px 5px;border-radius:999px;background:rgba(17,19,23,.8);color:#fff;font-size:12px;opacity:0;transform:translateY(6px);pointer-events:none;transition:opacity .18s,transform .18s}
+.an-zone:hover .an-ctl,.an-ctl:focus-within,.anim.scrub .an-ctl{opacity:1;transform:none;pointer-events:auto}
+.an-mini{position:absolute;left:0;bottom:0;width:0;height:3px;border-radius:0 2px 2px 0;background:#32d7ff;opacity:.65;pointer-events:none;transition:opacity .18s}
+.an-zone:hover+.an-mini,.an-zone:focus-within+.an-mini,.anim.scrub .an-mini{opacity:0}
+@media (hover:none){.an-zone{position:static;height:auto}.an-ctl{position:static;margin-top:6px;opacity:1;transform:none;pointer-events:auto}.an-mini{display:none}}
+/* 第 8 頁動畫上方的分段按鈕（點了跳到那一段） */
+.anim .an-chip{cursor:pointer}
+.anim .an-chip:focus{outline:none}
+.anim .an-chip:focus-visible rect{stroke:#32d7ff;stroke-width:2}
+.anim .an-cl{font-size:12px;font-weight:700}
+.anim .an-sv{font-size:16px;font-weight:700;fill:#fff}
+.anim .an-sk{font-size:11px;fill:#c9ced6}
+.an-pp{flex:none;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:transparent;color:#fff;font-size:12px;line-height:26px;cursor:pointer}
+.an-pp:hover{background:rgba(255,255,255,.16)}
+.an-seek{flex:1;min-width:0;height:18px;margin:0;accent-color:#32d7ff;cursor:pointer}
+.an-time{flex:none;min-width:4.4em;text-align:right;font-variant-numeric:tabular-nums;opacity:.85}
+/* 和官方圖合併的動畫放右欄（面板、裂紋、彩色熱影像） */
+.fig>.anim{margin:0}
+body.m-present .fig>.anim .an-stage>svg{max-height:calc(100vh - 300px)}
+body.m-present .report>.anim.span .an-stage>svg{max-height:calc(100vh - 270px)}
+@media print{.an-ctl{display:none}}
+
+/* 大圖 */
+.fig-dlg{padding:0;border:0;border-radius:10px;background:#0b0d10;max-width:98vw;max-height:98vh;overflow:auto}
+.fig-dlg::backdrop{background:rgba(10,12,16,.8)}
+.big-head{display:flex;gap:12px;align-items:center;padding:7px 14px;color:#e8eaed;font-size:14px}
+.big-head .x{margin-left:auto;background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer}
+.big-body svg{display:block;margin:0 auto 10px}
+
+/* 圖表 */
+.bars .row{display:grid;grid-template-columns:150px 1fr 70px;gap:8px;align-items:center;margin:4px 0;font-size:13px}
+.bars .track{background:#eceef1;border-radius:4px;height:15px;overflow:hidden;display:flex}
+.bars .fill{height:100%;border-radius:4px}
+.bars .val{text-align:right;font-variant-numeric:tabular-nums}
+.bars h4{font-size:13px;margin:12px 0 4px;color:var(--ink)}
+.flow{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.flow .s{border:1px solid var(--line);border-radius:7px;padding:5px 9px;font-size:12.5px;flex:1 1 130px;background:var(--paper)}
+.flow .s b{display:block;font-size:13px}
+.flow .s.pub{border-color:#e7c46b;background:#fffaf0}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+th{background:var(--deriv);font-weight:600}
+td.n,th.n{text-align:right}
+
+/* 推導層 */
+.lesson{display:none}
+body.m-notes .lesson{display:block;background:var(--deriv);border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;margin:-28px 0 28px;padding:6px 28px 22px}
+.lesson h3{font-size:19px;margin:14px 0 4px}
+.lesson h4{font-size:15.5px;margin:18px 0 6px}
+.lesson .proves{font-size:13px;color:var(--muted);border-left:3px solid var(--accent);padding-left:10px;margin:4px 0 12px}
+.lesson-dlg{width:min(860px,calc(100vw - 24px));max-height:calc(100vh - 40px);padding:0;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.lesson-dlg::backdrop{background:var(--backdrop)}
+.dlg-head{position:sticky;top:0;background:var(--paper);display:flex;gap:10px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--line)}
+.dlg-head .k{font-size:12px;color:var(--accent);font-weight:600}
+.dlg-head .t{font-weight:600}
+.dlg-head .x{margin-left:auto;border:0;background:transparent;font-size:18px;cursor:pointer}
+.dlg-body{padding:4px 24px 18px}
+.dlg-body h3:first-child{display:none}
+.dlg-foot{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--line);padding:8px 18px;display:flex;gap:8px;justify-content:flex-end}
+.dlg-foot button{border:1px solid var(--line);background:var(--paper);border-radius:6px;padding:4px 12px;font:inherit;font-size:13px;cursor:pointer}
+
+/* 結論頁 */
+.after{padding:26px 34px}
+.after h2{font-size:22px;margin:4px 0 10px}
+.next{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:6px;padding:8px 14px;margin:12px 0}
+.refs ol{font-size:13px;color:var(--muted);padding-left:22px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+
+/* 頁碼列 */
+.pager{position:fixed;right:18px;bottom:16px;z-index:15;display:flex;gap:6px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:4px 8px;box-shadow:0 1px 4px rgba(20,30,40,.08);font-size:13px}
+.pager button{border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;padding:2px 8px;color:var(--ink)}
+.pager button:disabled{opacity:.3;cursor:default}
+
+/* 簡報模式：一次一頁，頁面隨螢幕放寬，配圖由程式依螢幕高度縮放 */
+body.m-present{background:var(--stage-bg)}
+body.m-present main{max-width:none;padding:14px 16px 64px}
+body.m-present main>.page{display:none;max-width:min(1580px,calc((100vh - 100px) * 1.8));margin:0 auto;min-height:calc(100vh - 110px)}
+body.m-present main>.page.cur{display:block}
+/* 簡報模式字級：跟著螢幕高度放大（1080p 約 17.6 px），卡片裡的字都用 em 跟著縮放 */
+body.m-present .report,body.m-present .cover,body.m-present .after{font-size:clamp(15px,1.65vh,19px)}
+body.m-present .report h3{font-size:1.55em}
+body.m-present .num{font-size:.78em}
+body.m-present .formula{font-size:.95em}
+body.m-present .formula .eq{font-size:1.12em}
+body.m-present .formula .eq.sub{font-size:.95em}
+body.m-present .formula dl{font-size:.82em}
+body.m-present .howto,body.m-present .cause{font-size:.9em}
+body.m-present .cause .bridge{font-size:.92em}
+body.m-present .bars h4{font-size:.86em}
+body.m-present .bars .row{font-size:.82em;grid-template-columns:11em 1fr 5.5em}
+body.m-present .bars .track{height:1.2em}
+body.m-present .flow .s{font-size:.8em}
+body.m-present .legend,body.m-present .cap,body.m-present .chip,body.m-present .inset figcaption{font-size:.8em}
+body.m-present .tag{font-size:max(11px,.7em)}
+body.m-present table{font-size:.85em}
+body.m-present .cover h2{font-size:4.2em}
+body.m-present .cover .cover-sub{font-size:1.25em}
+body.m-present .kpi .v{font-size:1.5em}
+body.m-present .kpi .l{font-size:.78em}
+body.m-present .gloss,body.m-present .route li{font-size:.9em}
+body.m-present .metaline{font-size:.78em}
+body.m-present .after h2{font-size:1.35em}
+body.m-present .refs ol{font-size:.8em}
+
+/* Public 排行榜（第 8 頁）：依使用者 10-30 的兩張截圖重製成表格，數字在 NUM.board；字級用 em，簡報模式跟著放大 */
+.report.shots{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+.lb{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 2px 12px rgba(20,30,40,.12)}
+.lb-head{display:flex;align-items:center;gap:10px;padding:8px 14px;background:linear-gradient(90deg,#1f4e79,#1aa3b8);color:#fff}
+.lb-site{font-weight:700;font-size:.86em;letter-spacing:.02em}
+.lb-tabs{margin-left:auto;display:flex;gap:6px}
+.lb-tabs button{border:1px solid rgba(255,255,255,.65);background:transparent;color:#fff;border-radius:14px;padding:1px 12px;font:inherit;font-size:.8em;cursor:pointer}
+.lb-tabs button[aria-pressed="true"]{background:#fff;color:#1f4e79;font-weight:700}
+.lb-t{width:100%;border-collapse:collapse;font-size:.9em;font-variant-numeric:tabular-nums}
+.lb-t th{background:#fff;color:#6b7280;font-weight:500;font-size:.85em;border-bottom:2px solid #e5e7eb;padding:7px 10px;text-align:left}
+.lb-t td{border-bottom:1px solid #eef0f3;padding:6px 10px;vertical-align:middle}
+.lb-t .n{text-align:center;width:3.6em}
+.lb-t .lb-tm{color:#6b7280;font-size:.86em;white-space:nowrap}
+.lb-sc{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.lb-sc b{font-weight:600}
+.lb-bar{height:5px;background:#eef0f3;border-radius:3px;margin-top:3px}
+.lb-bar i{display:block;height:100%;border-radius:3px;background:#a7afbb}
+.lb-t tr.me td{background:#fff3ef;font-weight:700}
+.lb-t tr.me td:first-child{box-shadow:inset 4px 0 0 var(--hot)}
+.lb-t tr.me .lb-bar i{background:var(--hot)}
+.lb-me{display:inline-block;margin-left:6px;font-size:.72em;font-weight:700;color:#fff;background:var(--hot);border-radius:10px;padding:0 8px;vertical-align:.1em}
+.lb-gap{font-size:.76em;font-weight:700;color:var(--hot);white-space:nowrap}
+.lb-note td{text-align:center;color:var(--muted);font-size:.85em;background:#fafbfc}
+#card-pub .lb-t tbody tr:nth-child(n+9):not(.me):not(.lb-note){display:none}   /* 第 11 頁：排行榜只列前 8 名（11-05 截圖就是前 8 名），頁面不超長 */
+.lbd-t{font-size:.84em;font-weight:600;margin:12px 0 6px}
+.lbd{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.lbd-c{border:1px solid var(--line);border-radius:8px;padding:6px 9px;background:#fff;display:flex;flex-direction:column;line-height:1.35}
+.lbd-c span{font-size:.78em;color:var(--muted)}
+.lbd-c b{font-size:1.05em;font-variant-numeric:tabular-nums}
+.lbd-c i{font-style:normal;font-size:.76em;color:var(--muted)}
+.lbd-c.up{border-color:var(--hot);background:#fff3ef}
+.lbd-c.up i{color:var(--hot);font-weight:700}
+.lbd-c.tot{background:var(--accent-soft);border-color:#bfe0dc}
+.lbd-c.tot i{color:var(--accent);font-weight:700}
+.raw-shots{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.raw-shots figure{margin:0}
+.raw-shots img{display:block;width:100%;border:1px solid var(--line);border-radius:6px}
+.raw-shots figcaption{font-size:12px;color:var(--muted)}
+
+@media (max-width:820px){.report,.report.even,.report.shots,.cols{grid-template-columns:1fr}.insets{grid-template-columns:1fr 1fr}.lbd{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media print{
+  .top .modes,.pager,.deriv-open,.tabs,.zoom-hint,.legend input{display:none}
+  .top{position:static}
+  body{background:#fff}
+  main>.page{break-after:page;display:block!important}
+  .lesson{display:none!important}
+}
+
+/* ===== 圍棋報告新增 ===== */
+.top{top:env(safe-area-inset-top,0px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.pager{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.cover .cover-kicker{color:var(--accent);font-size:15px;font-weight:600;letter-spacing:.08em;margin:0 0 14px}
+.cover .cover-sub{max-width:36em}
+.cover .kpis{width:min(760px,100%);margin-top:30px;text-align:left}
+.anim .an-s{font-size:11.5px;fill:#5d6370}
+.anim .an-w{font-size:12px;font-weight:700;fill:#fff}
+.anim .an-b{font-size:13px;font-weight:700;fill:#0b6e69}
+.anim .an-h{font-size:13px;font-weight:700;fill:#a4451c}
+.table-wrap{overflow-x:auto}
+.after .kpis{margin-top:10px}
+.after ul{padding-left:20px}
+.after li{margin:4px 0}
+.src{font-size:12.5px;color:var(--muted)}
+/* 架構頁：上下排，動畫放大；三個階段並排 */
+.report.stack{grid-template-columns:minmax(0,1fr);gap:10px}
+.report.stack .txt h3{margin-bottom:8px}
+ul.key.cols3{list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px;margin:4px 0 6px}
+ul.key.cols3 li{margin:0;background:var(--accent-soft);border-radius:8px;padding:8px 12px;font-size:.92em;line-height:1.5}
+.report.stack .cause{margin-top:8px;padding-top:8px}
+body.m-present #card-arch .anim.span .an-stage>svg{max-height:calc(100vh - 470px)}
+body.m-present .fig .an-stage>svg{max-height:calc(100vh - 330px)}
+body.m-present .after{font-size:clamp(14px,1.55vh,18px)}
+.fig>.bars{margin-top:4px}
+.fig>.bars .row{margin:2px 0}
+/* 排行榜（依使用者 11-06 傳的截圖重製） */
+.lb-cap{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+@media (max-width:820px){ul.key.cols3{grid-template-columns:1fr}}
+@media (max-width:520px){.cover h2{font-size:40px}.cover{padding:40px 18px}.report{padding:16px 14px}.bars .row{grid-template-columns:96px 1fr 64px}.lb-t th:nth-child(4),.lb-t td.lb-tm{display:none}.lb-t th,.lb-t td{padding:6px 6px}.lb-t .n{width:2.6em}.report>.anim.span .an-stage{overflow-x:auto}.report>.anim.span .an-stage>svg{min-width:720px}.after{padding:20px 16px}.refs li,.src{overflow-wrap:anywhere}}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important}}
+/* ===== 競賽一（玩家辨識，11-06 加）：架構圖與 3-環圖的外框；窄螢幕時圖本身橫向捲動 ===== */
+.pid-fig{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;overflow-x:auto}
+.pid-fig svg{display:block;width:100%;height:auto}
+.report.stack>.pid-fig svg{min-width:720px}
+.fig .table-wrap table{font-size:13px}
+/* 第 11 章的上傳紀錄（依使用者 11-06 的 AIdea 截圖重製）：時間欄另用 lb-tm2，避開第 7 章排行榜在窄螢幕隱藏第 4 欄的規則 */
+#pid-uploads .lb-tm2{color:#6b7280;font-size:.86em;white-space:nowrap}
+#pid-uploads .lb-sub{font-size:.8em;font-weight:400;color:var(--muted);line-height:1.35;margin-top:2px}
+@media (max-width:520px){#pid-uploads .lb-t th:nth-child(4){display:table-cell}#pid-uploads .lb-tm2{white-space:normal}}
+/* 名詞註記（parts/a09_terms.js）：每頁第一次出現的術語加虛線底；指向、聚焦或點一下顯示一行說明 */
+.term{border-bottom:1.5px dotted var(--accent);cursor:help}
+.term:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.term-tip{position:fixed;z-index:60;max-width:min(22em,calc(100vw - 16px));padding:6px 10px;border-radius:6px;background:var(--ink);color:var(--paper);font-size:13px;line-height:1.5;font-weight:400;text-align:left;box-shadow:0 4px 14px rgba(20,30,40,.25);pointer-events:none}
+@media print{.term{border-bottom:0}}
+</style>
+
+<script>document.body.classList.add("m-read")</script>
+<header class="top">
+  <h1><button type="button" class="ch-menu-btn" id="menu-btn" aria-haspopup="dialog">AI CUP 2026 圍棋棋力預測 · 方法與實驗結果 <span class="ch-menu-caret">▾</span></button></h1>
+  <div class="modes" role="group" aria-label="模式">
+    <button data-mode="present" aria-pressed="false">簡報</button>
+    <button data-mode="read" aria-pressed="true">閱讀</button>
+    <button data-mode="notes" aria-pressed="false">筆記</button>
+  </div>
+</header>
+<dialog class="ch-menu-dlg" id="ch-menu" aria-label="章節"></dialog>
+<main>

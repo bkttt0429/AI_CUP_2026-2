@@ -1,0 +1,69 @@
+<!-- ================= 第 1 章：比賽在做什麼 ================= -->
+<section class="page card" id="card-task" data-sec="0" data-ch="1" data-chtitle="比賽在做什麼" data-title="任務與評分">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 1 章 · 比賽在做什麼</div>
+      <h3>任務：從一位玩家的 5–20 局棋譜，猜出他的等級</h3>
+      <div class="formula">
+        <div class="eq">猜中 1 分；差一級 e<sup>−1</sup> ≈ 0.368 分；其餘 0 分</div>
+        <dl><dt>10 個等級</dt><dd>D、C、B、A（各跨三級：10–12k、7–9k、4–6k、1–3k）與 1D–6D</dd>
+        <dt>總分</dt><dd>所有題直接平均；名次看 Private 400 題</dd></dl>
+      </div>
+      <ul class="key">
+        <li>訓練 <b>100 萬局、8,007 位玩家</b>，每級 10 萬局；每局只有一方有標籤</li>
+        <li>沒有勝負、玩家名稱、對局時間；對手的等級也不知道</li>
+        <li>測試 Public、Private 各 400 題，n ＝ 5／10／15／20 局各 100 題 <span class="tag t-m">實測</span></li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>只有落子</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>每一手都當成「像哪一級」的證據</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>單手的訊號很弱</b></span><button class="deriv-open" data-sec="0">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="task"></div>
+      <div class="bars" id="chart-players"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §1、§4J′；REPORT.md §3.4；data/tests</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-0" data-title="1.1 資料、評分與規則">
+  <h3>1.1 資料、評分與規則</h3>
+  <p class="proves">對應報告卡 1：一題 = 一位玩家的 5–20 局；猜中 1 分、差一級 0.368 分</p>
+  <h4>資料</h4>
+  <table>
+    <tr><th>項目</th><th>內容</th></tr>
+    <tr><td>來源</td><td>日本棋院「幽玄の間」19 路棋譜，2021–2023 年，主辦方已取得授權</td></tr>
+    <tr><td>訓練集</td><td>1,000,000 局、8,007 位玩家、每級 100,000 局；每位玩家只屬一個等級；每局只有一方是標籤玩家（同一局不會出現在兩位玩家名下）；對手本人偶爾另有局在訓練集，比例估不出來</td></tr>
+    <tr><td>沒有的資訊</td><td>勝負、玩家名稱、對局時間、對手等級</td></tr>
+    <tr><td>讓子標記（v1.1）</td><td>HD[0] 互先貼目 79.3%、HD[1] 讓先 17.1%、HD[2–9] 讓子 3.6%（36,421 局、3,474 位玩家）；讓子局的讓子石沒有記錄，B／W 記號與實際顏色相反</td></tr>
+    <tr><td>測試集</td><td>Public 400 ＋ Private 400 題、共 10,000 局；每檔 n ＝ 5／10／15／20 各 100 題；HD[1] 22.8%、HD ≥ 2 為 0 局；同一題的所有棋譜固定同一執色；與訓練棋譜逐字重疊 0 局</td></tr>
+  </table>
+  <h4>評分與上傳規則</h4>
+  <ul>
+    <li>每題：猜中 1 分，差一級 e<sup>−1</sup> ≈ 0.368 分，差兩級以上 0 分；所有題直接平均。</li>
+    <li>每日 5 次上傳，<b>最後一次上傳生效</b>；截止 11-24 23:59:59；名次依 Private。</li>
+    <li>資料使用規定（資料集 README）：「僅供 2026 AI CUP 競賽使用」；「棋譜已匿名化，不得用於識別真實使用者。」</li>
+  </ul>
+  <div class="gloss"><h4>名詞與內部代號</h4>
+    <div><b>等級</b>比賽的 10 類（D、C、B、A、1D–6D）；「差一級」指相鄰兩類</div>
+    <div><b>標籤</b>主辦方給每位玩家的等級，整段期間只有一個值</div>
+    <div><b>掛牌</b>幽玄の間在某一局當時顯示的段級位，由積分 RP 決定</div>
+    <div><b>Human SL（HSL）</b>KataGo 的人類棋風模型 b18c384nbt-humanv0：給定局面與棋力設定（profile，12k–6d 共 18 個），預測該棋力的人會下哪裡</div>
+    <div><b>L1b</b>在 KataGo 主幹網路（trunk，小幅微調）上，為 10 個等級各接一個落子預測頭、用本比賽標籤訓練；每手輸出「這一級的人會下這手」的 10 個 log 機率</div>
+    <div><b>pmi</b>一手棋在 18 個 profile 上的後驗平均位置（0 ＝ 12k … 17 ＝ 6d），越大越像高段</div>
+    <div><b>強度錨點</b>從對手的棋力加上讓子規則推回的本人等級（第 2、6 章）</div>
+    <div><b>對手錨點</b>認出某一局的對手是哪位訓練玩家後，讀到的那個標籤（第 7 章，11-10 起）</div>
+    <div><b>C／T</b>讀整局的兩種模型：C 對每一手各用一個小 MLP、再對整局取平均與標準差；T 用擴張卷積，每次看連續約 63 手</div>
+    <div><b>R</b>題目層的 64 維摘要特徵與其 MLP</div>
+    <div><b>oh</b>對手的手也填 Human SL 分數的版本（對手通道）</div>
+    <div><b>x40</b>每位訓練玩家的評分局從 20 局補到 40 局</div>
+    <div><b>fold 0／CV</b>玩家分 5 折；fold 0 原本只做採用前檢查（ct3 起併入正式訓練），CV 是 folds 1–4 輪流驗證</div>
+    <div><b>OOF</b>out-of-fold：每位玩家都由沒看過他的模型預測</div>
+    <div><b>production gate</b>用 794 位沒進任何正式模型訓練的留出玩家，檢查正式模型的集成（ct6 之後設立）</div>
+    <div><b>M、ct 編號</b>M 是設計文件 §4M 的實驗編號；ct 是提交檔編號；11-06 的最終檔是 ct7，現在是 ct44（第 7 章）</div>
+  </div>
+  <h4>我們的離線評估方式</h4>
+  <ul>
+    <li>依玩家分 5 折；fold 0 只在採用前檢查，其餘 folds 1–4 輪流留一折驗證（ct3 起依使用者決定把 fold 0 併入正式訓練，之後只剩 folds 1–4 的 CV）。</li>
+    <li>驗證題每人 1×20 ＋ 2×10 ＋ 4×5 局；主要分數是 n ＝ 5、10、20 三組各自做類別平衡平均，再各占三分之一（官方是所有題直接平均；兩種算法的差例如 fused_opp 類別平衡 0.6735、直接平均 0.6683，見設計文件 §1）。</li>
+    <li>所有比較用同一批題、玩家層 bootstrap 5,000 次的配對信賴區間。</li>
+  </ul>
+  <p class="src">出處：設計文件 §1（第 16–27 行）、§4J′（第 414–421 行）、第 588、893、897 行（fold 0 併入；訓練局的對手裡有訓練玩家）；各級玩家數：REPORT.md §3.4（掃描 10 個訓練 CSV 的結果）；資料使用規定：資料集 README（aicup_context.md 第 39 行）。</p>
+</section>

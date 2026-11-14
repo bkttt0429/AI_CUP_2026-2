@@ -1,0 +1,320 @@
+<!-- ================= 第 7 章：11-06 之後與最終檔（4 頁；11-11 改寫：前三頁新增，第四頁是原本的「結果、風險與揭露」） =================
+     推導節的 id：新增的三節是 sec-22／23／24。玩家辨識那幾章（c08_pid.html）的 data-sec 15–21 與章號 8–12 寫死在那個檔裡、由另一個 session 維護，
+     所以這裡不重新編號；引擎改成依 id 找推導節（98_engine_tail.js），推導節可以跟著卡片放。 -->
+<section class="page card" id="card-push" data-sec="22" data-ch="7" data-chtitle="11-06 之後：推移、對手錨點與最終檔" data-title="決策推移">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 7 章 · 11-06 之後：推移、對手錨點與最終檔 · 1／4 <span class="tag t-p">用了 Public 回饋</span></div>
+      <h3>決策推移：從 Public 分數解出每次改動的對錯，留下 1D→A 與 4D→5D 兩個</h3>
+      <div class="formula">
+        <div class="eq">400 × ΔPublic ＝ 0.63212 × X ＋ 0.36788 × Y</div>
+        <dl><dt>X、Y</dt><dd>改動的題裡，差一級與差兩級的淨對錯題數（每題 1 − e<sup>−1</sup> 與 e<sup>−1</sup>）；改動的題少時 (X, Y) 只有一組解</dd>
+        <dt>推移</dt><dd>在兩個相鄰等級之間，把其中一級的勝算乘 2，只改因此翻動的題</dd></dl>
+      </div>
+      <ul class="key">
+        <li>為什麼不靠 CV：這類改動的好壞取決於測試集各級的比例，類別平衡的 CV 判不了（1D→A 在驗證題上，自然比例 +0.0030、類別平衡 −0.0037）<span class="tag t-m">實測</span></li>
+        <li>ct13 ＝ ct9 ＋ 1D→A：Public +0.0126424，正好是 8 題全對 → 保留</li>
+        <li>之後 15 個探測檔各加一個推移，九條邊界都測過。4D→5D 是 7 對 2 錯，<b>沒達到事先寫的門檻</b>（9 題要 8 對），由使用者決定保留；根據是這條邊界兩個方向的探測都指向 5D（13 題對 3 題）</li>
+        <li>其餘 14 個方向丟棄；其中 B→C（6 對 3 錯）依事先登記的規則刪除</li>
+        <li>ct28 ＝ ct9 ＋ 兩個推移：Public <b>0.7827471</b>；與 ct9 差 38 題（Public 17、Private 21）</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>測試集各級的比例，CV 看不到</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>一次只加一個推移，用 Public 分數解碼</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>每個推移只靠約 10 題選出，Public 會高估</b></span><button class="deriv-open" data-sec="22">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="probes"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §4M M52–M54、M58、M63、M66；上傳排程_2026-11-08.md；帳本 m58_decode.py</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-22" data-title="7.1 決策推移與 Public 解碼">
+  <h3>7.1 決策推移與 Public 解碼</h3>
+  <p class="proves">對應報告卡 7 · 1／4：兩個推移是用 Public 分數選的；各自的根據、偏離規則的地方與限制都寫在這裡</p>
+  <h4>怎麼從分數讀出對錯</h4>
+  <p>Public 是 400 題的平均，排行榜顯示到小數第 7 位；每題只有 1、e<sup>−1</sup>、0 三種得分。把一題的決策從 i 改成相鄰的 j：真值是 j 得 +0.63212，真值是 i 得 −0.63212，真值在 j 的另一側得 +0.36788，在 i 的另一側得 −0.36788，其餘不變。兩個檔只差十題上下時，分數差只有一組整數解。例：ct15 對 ct13 是 −0.0072409 ＝（−4 × 0.63212 − 1 × 0.36788）÷ 400，也就是 7 題 5D→6D 裡 1 題對、5 題錯、1 題的真值其實是 4D。所有上傳都記在同一本帳（m58_decode.py），每加一筆就聯合重解一次。</p>
+  <h4>起點：ct10 → ct13</h4>
+  <p>11-07 的 A｜1D 專家（ct10）在類別平衡的 CV 是 −0.0052，Public 卻 +0.0079。解剖（M52）：專家沒有新增判別力（A｜1D 的 AUC 0.8234，ct9 自己的勝算是 0.8197），增益全來自「把 1D 往 A 推」這個方向。換成只乘一個常數的版本（A 的勝算 × 2，只改 ct9 說 1D 而調整後說 A 的題）就是 ct13：Public 8 題、Private 10 題。同一個推移在驗證題上的精確率只有 0.472；Public 8 題全對，表示測試集在 A｜1D 這條邊界和驗證題不同，而 CV 指不出其他邊界是否也不同，所以之後的邊界一律用探測裁決。</p>
+  <h4>16 個推移的讀數</h4>
+  <table>
+    <tr><th>方向</th><th>檔</th><th class="n">Public 翻動</th><th class="n">Public</th><th class="n">X、Y</th><th>解碼</th><th>處置</th></tr>
+    <tr><td>1D→A</td><td>ct13</td><td class="n">8</td><td class="n">0.7748456</td><td class="n">+8、0</td><td>8 對 0 錯</td><td><b>保留</b></td></tr>
+    <tr><td>B→A</td><td>ct14</td><td class="n">13</td><td class="n">0.7732653</td><td class="n">−1、0</td><td>6 對 7 錯</td><td>丟棄</td></tr>
+    <tr><td>5D→6D（r ＝ 2.6）</td><td>ct15</td><td class="n">7</td><td class="n">0.7676047</td><td class="n">−4、−1</td><td>1 對 5 錯、1 題真值 4D</td><td>丟棄</td></tr>
+    <tr><td>2D→1D</td><td>ct16</td><td class="n">12</td><td class="n">0.7741850</td><td class="n">−1、+1</td><td>5 對 6 錯、1 題真值 A</td><td>丟棄</td></tr>
+    <tr><td>3D→2D</td><td>ct17</td><td class="n">8</td><td class="n">0.7669441</td><td class="n">−5、0</td><td>1 對 6 錯、其他 1</td><td>丟棄</td></tr>
+    <tr><td>1D→2D</td><td>ct26</td><td class="n">15</td><td class="n">0.7736668</td><td class="n">+1、−3</td><td>一級淨 +1；3 題真值是 A</td><td>丟棄</td></tr>
+    <tr><td>1D→A 的下一帶</td><td>ct29</td><td class="n">4</td><td class="n">0.7716850</td><td class="n">−2、0</td><td>1 對 3 錯</td><td>丟棄</td></tr>
+    <tr><td>A→1D（勝算 1–2 的一帶）</td><td>ct32</td><td class="n">9</td><td class="n">0.7685244</td><td class="n">−4、0</td><td>改錯比改對多 4 題</td><td>丟棄</td></tr>
+    <tr><td>3D→4D</td><td>ct27</td><td class="n">12</td><td class="n">0.7716850</td><td class="n">−2、0</td><td>5 對 7 錯</td><td>丟棄</td></tr>
+    <tr><td>4D→5D</td><td>ct28</td><td class="n">9</td><td class="n">0.7827471</td><td class="n">+5、0</td><td>7 對 2 錯</td><td><b>保留</b>（未達門檻，使用者決定）</td></tr>
+    <tr><td>5D→4D</td><td>ct19</td><td class="n">8</td><td class="n">0.7660244</td><td class="n">−5、−1</td><td>1 對 6 錯、其他 1</td><td>丟棄</td></tr>
+    <tr><td>B→C</td><td>ct22</td><td class="n">9</td><td class="n">0.7795865</td><td class="n">+3、0</td><td>6 對 3 錯</td><td>刪除（事先登記的規則）</td></tr>
+    <tr><td>C→D</td><td>ct23</td><td class="n">9</td><td class="n">0.7739259</td><td class="n">0、−1</td><td>4 對 4 錯、其他 1</td><td>丟棄</td></tr>
+    <tr><td>C→B</td><td>ct25</td><td class="n">8</td><td class="n">0.7741850</td><td class="n">−1、+1</td><td>3 對 4 錯、其他 1</td><td>丟棄</td></tr>
+    <tr><td>A→B</td><td>ct21</td><td class="n">6</td><td class="n">0.7748456</td><td class="n">0、0</td><td>3 對 3 錯</td><td>丟棄</td></tr>
+    <tr><td>4D→3D</td><td>ct18</td><td class="n">6</td><td class="n">0.7710244</td><td class="n">−3、+1</td><td>1 對 4 錯、其他 1</td><td>丟棄</td></tr>
+  </table>
+  <p>第一列對 ct9（0.7622032），其餘各列對 ct13（0.7748456）；沒有另外註明的都是把勝算乘 2（r ＝ 2）。「其他」是真值不在這兩級、分數不變的題。ct25、ct21、ct18 三列的 X、Y 是由表中的分數依上式換算的。</p>
+  <h4>保留規則，與兩次偏離</h4>
+  <ul>
+    <li>事先寫的保留規則：把「這個推移有效」的先驗設為 0.1（11-08 在讀數前改成 0.05），有效時的精確率 0.8、無效時 0.4，後驗超過 0.5 才保留；換成題數是 9 題要 8 對、12 題要 10 對、8 題要 7 對。</li>
+    <li><b>4D→5D</b>：7／9，後驗 0.43，依規則該丟。使用者在 11-09 決定保留。之後補做的根據（M63，跑之前登錄）：把同一條邊界兩個方向的探測合起來看，真值在 5D 側 13 題、4D 側 3 題，對稱雜訊下的機率 0.0063（約 18 個檢定，校正後約 0.11）；A｜1D 是 14 題對 2 題（0.0016）。兩個方向都測過、而且指向同一側的，只有這兩條邊界。</li>
+    <li><b>B→C</b>：6／9，後驗 0.11。使用者一度把它一起留下（ct35），同時事先登記：反方向的 C→B 探測裡，真值是 C 的要有 6／8 才留。讀數是 4／8 → 刪除，ct35 作廢，最終是 ct28。</li>
+    <li>探測在 11-10 結束：九條邊界的第一帶都測過。剩下三個方向沒有測（2D→3D、6D→5D、D→C；後兩個的翻動題數太少，達不到門檻）。</li>
+  </ul>
+  <h4>為什麼是這兩條邊界</h4>
+  <ul>
+    <li>1D→A：測試集裡級位（D–A）的人比類別平衡多。不用標籤估計的級位占比是 0.480 [0.447, 0.510]（類別平衡時 0.400）；只用 Private 自己的 400 題估也是 0.467 [0.422, 0.515]（M68）。這是 Public 探測以外、而且直接量在 Private 上的第二個根據。下一帶（勝算再遠一點的 1D）只有約四分之一是 A，所以效應緊貼邊界 <span class="tag t-m">實測</span>。</li>
+    <li>4D→5D：沒有組成上的根據（估計的 5D 對 4D 人數比 0.95 [0.49, 1.90]），只有兩個方向的探測。這是兩個推移裡較弱的一個。</li>
+  </ul>
+  <h4>Private 的期望 <span class="tag t-i">推論</span></h4>
+  <ul>
+    <li>1D→A 在 Private 翻 10 題：期望 +0.0045 到 +0.0088。</li>
+    <li>4D→5D 在 Private 翻 11 題：淨得分為正的機率，從「純雜訊」的 0.20（期望 −0.0042）到「平坦先驗加兩個方向 13／16」的 0.95（期望 +0.0097）；用 12 個推移合併的先驗是 0.63（+0.0021）。</li>
+    <li>兩個推移在 Public 合計 +0.0205；這個數字是在同一批題上選出來的，Private 不會有這麼多。</li>
+  </ul>
+  <p class="src">出處：設計文件 §4M M46（ct10）、M52（解剖與 ct13）、M53（探測階梯）、M54（既有上傳的解碼）、M58（探測計畫與三天的讀數）、M63（方向統計與 ct25 規則）、M66（最終檔檢查與 Private 期望）、M68（累積組成）；上傳排程_2026-11-08.md（探測表、修訂 3–7）。</p>
+</section>
+
+<section class="page card" id="card-anchor" data-sec="23" data-ch="7" data-title="對手錨點">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 7 章 · 11-06 之後：推移、對手錨點與最終檔 · 2／4</div>
+      <h3>對手錨點：測試玩家不在訓練集，但他的對手有一部分在；認出對手，讀他的標籤</h3>
+      <div class="formula">
+        <div class="eq">每局證據 e(c) ＝ (1 − a) ＋ a × min( K(d) ÷ P0(d), 30 )</div>
+        <dl><dt>d</dt><dd>認到的那位訓練玩家的標籤 − 候選等級 c</dd>
+        <dt>a</dt><dd>這個比對是真的機率：看比對分數落在冒充者分布的哪一帶</dd>
+        <dt>K、P0</dt><dd>真配對、假配對時 d 的分布；都在驗證玩家上交叉擬合，不看測試標籤</dd></dl>
+      </div>
+      <ul class="key">
+        <li>每一局用對手的落子，在 8,007 位訓練玩家中找最像的人（開局、風格、局部棋形、方位、讓子五種習慣；下一頁再加學出來的比對）；他的標籤是對本人等級的一次觀測</li>
+        <li>比對分數超過冒充者 q99 的對手查詢占 <b>3.30%</b>（冒充者自己 0.96%）；這一帶認到的人與本人同級 <b>0.391</b>（冒充者 0.235）<span class="tag t-m">實測</span></li>
+        <li>真配對的對手約一半同級、九成在鄰級內：一個錨點只是相鄰兩級之間約 2 倍的似然比，所以先校正、再乘進後驗</li>
+        <li>只在邊界區改決策（最看好的兩級相鄰、合占 ≥ 0.5、相差不到 3 倍；測試題的 63.2%）；ct28 推移過的 38 題鎖定</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>標籤端的偏差，棋譜內拆不開（第 6 章）</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>同一個池裡標籤已知的人當錨點</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>約一半的玩家 20 局裡沒有高把握的對手</b></span><button class="deriv-open" data-sec="23">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="anchor"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §4M M71、M73、M76；m71_opp_anchor.json、m71_step2.json、m73_eval.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-23" data-title="7.2 對手錨點：機制、校正與組合">
+  <h3>7.2 對手錨點：機制、校正與組合</h3>
+  <p class="proves">對應報告卡 7 · 2／4：對手的標籤是標籤端的第二個觀測；它要先校正成證據，而且只在模型分不開的地方用</p>
+  <h4>想法</h4>
+  <p>第 6 章的結論是：本人與對手共享的偏差，棋譜內沒有訊號能標定方向。心理計量把兩組人放到同一個尺度只有兩條路：共同的題目，或共同的受測者。這裡對應的是後者：測試局的對手如果是訓練玩家，他的標籤（加上互先或讓先的關係）就是對本人掛牌的直接觀測。訓練集的對手沒有編號，所以要先從落子認人。11-06 的身分比對（6.2 節）問的是「測試玩家本人在不在訓練集」，答案是不在；這裡問的是他的對手。</p>
+  <h4>四個步驟</h4>
+  <ul>
+    <li><b>認對手</b>：每一局以對手的落子為查詢，對每位訓練玩家的習慣模型評分，取第一名的標籤，以及比對分數（第一名減第二名）。一開始只用開局模型（M71）；M73 改成五個成分的融合（開局、31 維風格、局部棋形、方位、讓子類別），權重在留出的本人局上擬合，不看任何等級標籤；M82 再加條件化比對（7.3 節）。</li>
+    <li><b>冒充者對照</b>：同一局的本人側也查一次。驗證時本人已經移出比對庫，所以認到的一定是假的；這個分數分布就是假配對的基準。帶界是冒充者分數的 q50／80／90／95／98／99／99.5／99.9。</li>
+    <li><b>混合模型</b>（互先、讓先 × 本人執色分組；驗證折 v 的校正只用其餘三折）：各帶的 a ＝ 1 − 冒充者占比 ÷ 對手占比（截在 0 到 0.98）；P0(d) 是低帶（≤ q80）的標籤差分布；K(d) 是高帶（&gt; q98）扣掉背景後的分布。</li>
+    <li><b>合併</b>：題目後驗 ＝ 集成的後驗 × 各局的 e(c)，再走同一條期望分規則。讓 2 子以上的局不給證據（測試集沒有這類局）。</li>
+  </ul>
+  <table>
+    <tr><th>量測（驗證玩家 5,092 人 × 20 局；互先局）</th><th>結果</th></tr>
+    <tr><td>對手查詢超過冒充者 q99 的占比（開局模型）</td><td>3.30%（冒充者 0.96%，3.4 倍）</td></tr>
+    <tr><td>這一帶認到的人與本人同級／鄰級內</td><td>同級 0.391 對冒充者 0.235；鄰級內 0.70（q99–99.9）、0.83（&gt; q99.9），冒充者 0.47、0.52</td></tr>
+    <tr><td>每位玩家 20 局裡，有高把握對手（&gt; q99）的局數</td><td>0 局 51.6%、1 局 33.5%、2 局 11.5%、3 局以上 3.4%</td></tr>
+    <tr><td>校正表（九個帶的 a）</td><td>0、0、0.07、0.19、0.36、0.53、0.58、0.72、0.84</td></tr>
+    <tr><td>真配對的標籤差 K(−1, 0, +1)；倍率 K ÷ P0</td><td>0.19／0.50／0.18；1.6／3.1／1.6</td></tr>
+    <tr><td>讓先局</td><td>本人執黑（下手）K(0, +1) ＝ 0.40／0.34；本人執白（上手）K(−1, 0) ＝ 0.35／0.40：認到的對手標籤偏向讓先規則預期的那一側，冒充者不會有這個不對稱</td></tr>
+    <tr><td>改用五成分（M73；留出本人局 4,176 個查詢、8,007 位候選）</td><td>認人 top-1 0.091 → 0.125；超過 q99 的占比 3.50% → 4.05%，同級 0.402 → 0.470，鄰級內 0.745 → 0.844；K(−1, 0, +1) ＝ 0.21／0.54／0.20</td></tr>
+  </table>
+  <h4>測試端：密度比</h4>
+  <p>測試局的對手，高把握的配對比驗證端少。不用標籤估這個比例有兩種方法：高帶的超額占比、高帶裡「認到的標籤與模型自己的決策吻合」的比例。開局模型是 0.78／0.74，五成分 0.754／0.938，五成分＋比對 0.851／0.986；每次取較低的一個，把測試端各帶的 a 乘上它。CV 對這個比例的敏感度不對稱：權重偏低幾乎不損失，偏高約損 0.001。另一項檢查：測試題的本人側（本人不在比對庫裡，6.2 節）超過冒充者 q90／q99／q99.9 的占比是 0.1071／0.0143／0.0022（名目 0.100／0.010／0.001，驗證端 0.0925／0.0081／0.0006），測試端的假配對略多於驗證端，所以期望值要再打折（7.3 節）。</p>
+  <h4>組合：ct40 的教訓 → 鎖定與邊界區</h4>
+  <ul>
+    <li>第一版 ct40 讓錨點先改後驗，再在新的後驗上重算兩個推移。Public 0.7761668，比 ct28 少 2.632 分，其中 2.264 分落在 3 題已經由 ct13 確定是 A 的題：例如 pub_q_0070 的後驗很平，一個標籤是 D、權重 0.55 的錨點就把決策拉到 D。</li>
+    <li>問題有兩個：組合順序讓沒驗證過的後驗去重判已經在 Public 驗證過的推移；低權重的錨點多半是假配對，在後驗平坦的題上造成遠距離的翻動。</li>
+    <li>修正（看到修正版的任何數字前寫下）：ct28 與 ct9 不同的 38 題一律維持 ct28；只用 q90 以上各帶的錨點；錨點只在邊界區內改決策（後驗前兩名相鄰、合占 ≥ 0.5、比值 ≤ 3；驗證題的 65–66%、測試題的 63.2%）。CV 上錨點的增益約 95% 本來就在邊界區內，限定之後改動全部只差一級。</li>
+  </ul>
+  <p class="src">出處：設計文件 §4M M71（先驗、第 1 步、第 2 步、測試端做法與結果、ct40 的 Public 讀數與處置、修正版 ct41）、M73、M76、M82 測試端候選（零假設檢查）、融合認人的測試端候選（ct42／ct43）；m71_opp_anchor.json、m71_step2.json、m73_fused_id.json、m76_boundary.json。</p>
+</section>
+
+<section class="page card" id="card-matcher" data-sec="24" data-ch="7" data-title="條件化比對與結果">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 7 章 · 11-06 之後：推移、對手錨點與最終檔 · 3／4</div>
+      <h3>條件化比對：學一個「這一局像不像這位候選人自己的棋」的度量，錨點增益再 +0.0058</h3>
+      <div class="formula">
+        <div class="eq">ct44 ＝ ct28（38 題鎖定）＋ 邊界區內的對手錨點（五成分＋比對）</div>
+        <dl><dt>比對</dt><dd>競賽一的嵌入網路；一局的一方 ＝ 256 維（各手 KataGo 主幹向量的平均與標準差）；候選人 ＝ 他自己至多 40 局的向量和</dd>
+        <dt>訓練</dt><dd>每次取 512 位玩家，各拿 1 局當查詢、其餘當原型；驗證折的玩家不進訓練</dd></dl>
+      </div>
+      <ul class="key">
+        <li>留出局的認人 top-1：五成分 0.157 → 加比對 <b>0.268</b>；高把握（超過冒充者 q99）的對手查詢 4.45% → 7.52% <span class="tag t-m">實測</span></li>
+        <li>錨點加在集成上的 CV 增益：只用開局 +0.0078 → 五成分 +0.0125 → 五成分＋比對 <b>+0.0193</b>；比對對五成分 +0.0058 [+0.0027, +0.0087]，兩組 seed、八個折全正</li>
+        <li>Public：ct40（先錨點後推移）0.7761668，掉分 → 改成鎖定推移：ct42（五成分）0.7880062 → ct44（＋比對）<b>0.8067107</b></li>
+        <li>ct44 對 ct28 +0.0240，CV 期望只有 +0.012–0.014；多出來的在 Public 雜訊內，不據以上修 <span class="tag t-i">推論</span></li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>手工的習慣成分認不出大多數對手</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>候選人用自己的棋譜當描述，學比對的度量</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>真 D 級的玩家略虧（−0.016）；改動裡三分之一是改壞</b></span><button class="deriv-open" data-sec="24">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="ladder"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §4M M82、M83、「11/11 Public 讀數與規則判定」；m82_eval.json；上傳排程修訂 8–9</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-24" data-title="7.3 條件化比對、Public 讀數與診斷">
+  <h3>7.3 條件化比對、Public 讀數與診斷</h3>
+  <p class="proves">對應報告卡 7 · 3／4：認出更多真的對手，錨點才會變強；重新加權既有的證據沒有用</p>
+  <h4>條件化比對（M82）</h4>
+  <p>五個習慣成分都是手工統計。認對手的候選有 8,007 位、各有自己的棋譜，適合讓網路學一個比對的度量：選項不是類別編號，而是候選人自己的內容。沿用我們在競賽一用的嵌入網路與損失：每局每一方一列 256 維（該方各手的 KataGo humanv0 主幹向量 64＋64 維的平均與標準差），網路把一列映成單位向量；一個訓練批次取 512 位玩家，各取 1 局當查詢，其餘（至多 39 局）的向量和當那位玩家的原型，雙向交叉熵；6,000 步、AdamW 1e-3、seed 0，全部事先固定、不調。驗證折 v 的查詢用「訓練時排除折 v 全部玩家」的網路（本人因此是網路沒看過的人，和測試一致）；測試用全體玩家的網路。</p>
+  <table>
+    <tr><th>量測</th><th>結果</th></tr>
+    <tr><td>比對單獨的認人（7,948 位候選）top-1／top-5／top-20</td><td>0.074／0.181／0.309；網路沒看過的玩家 top-1 0.042–0.067（看過的 0.063–0.075）</td></tr>
+    <tr><td>融合權重（五成分＋比對）</td><td>開局 1.04、風格 0.09、局部棋形 0.69、方位 1.14、讓子 0.61、比對 2.53（風格幾乎被取代）</td></tr>
+    <tr><td>留出局的認人 top-1／top-5／top-20</td><td>五成分 0.157／0.274／0.392 → 加比對 0.268／0.437／0.588（這次的留出局取自第 21–40 局，不和 7.2 的 0.125 比）</td></tr>
+    <tr><td>互先的對手查詢超過冒充者 q99 的占比</td><td>4.45% → 7.52%；這一帶同級 0.470 → 0.515、鄰級內 0.854 → 0.906</td></tr>
+    <tr><td>冒充者的同級率</td><td>0.207 → 0.344：比對帶著棋力訊號；校正以冒充者為基準，這一部分已經扣掉</td></tr>
+    <tr><td>主檢定：五成分＋比對 對 五成分</td><td>+0.0058 [+0.0027, +0.0087]（四折 +0.0062／+0.0060／+0.0058／+0.0051）；換一組 seed +0.0071 [+0.0041, +0.0101]（+0.0085／+0.0078／+0.0078／+0.0043）→ 通過</td></tr>
+  </table>
+  <h4>錨點的 CV 階梯（加在 6 成員集成上；seed 0–2／seed 6–8）</h4>
+  <table>
+    <tr><th>認對手的方法</th><th>錨點對底</th><th>對前一步</th></tr>
+    <tr><td>只用開局模型（M71）</td><td>+0.0078 [+0.0045, +0.0111]／+0.0084 [+0.0052, +0.0115]</td><td>—</td></tr>
+    <tr><td>五成分融合（M73）</td><td>+0.0125 [+0.0092, +0.0159]／+0.0133 [+0.0098, +0.0168]</td><td>+0.0049 [+0.0023, +0.0075]／+0.0048 [+0.0020, +0.0074]</td></tr>
+    <tr><td>五成分＋比對（M82）</td><td>+0.0193／+0.0204（同一次執行重算的五成分是 +0.0135／+0.0133）</td><td>+0.0058／+0.0071</td></tr>
+  </table>
+  <p>底是標準的 6 成員集成（seed 0–2 是 0.7458）。這些是驗證端的錨點密度；測試端的期望見下表。</p>
+  <h4>測試端候選與 Public 讀數</h4>
+  <table>
+    <tr><th>檔</th><th>組成</th><th>對 ct28 的改動</th><th>CV 期望（測試端密度）</th><th class="n">Public</th><th>對 ct28 的解碼</th></tr>
+    <tr><td>ct40</td><td>ct9 後驗 × 錨點（開局模型，權重 × 0.74），再重算兩個推移</td><td>75 題（Public 32、Private 43）</td><td>+0.0057／+0.0060</td><td class="n">0.7761668</td><td>−2.632 分</td></tr>
+    <tr><td>ct42</td><td>ct28 鎖定＋五成分錨點、邊界區（密度比 0.754）</td><td>69 題（33、36），全部只差一級</td><td>+0.0094／+0.0093</td><td class="n">0.7880062</td><td>+2.104 分：X +1、Y +4</td></tr>
+    <tr><td>ct44（最終檔）</td><td>ct28 鎖定＋五成分與比對的錨點、邊界區（密度比 0.851）</td><td>85 題（45、40），全部只差一級</td><td>+0.0137／+0.0156；再依真配對的密度打折後約 +0.012–0.014</td><td class="n">0.8067107</td><td>+9.585 分：X +14、Y +2</td></tr>
+  </table>
+  <ul>
+    <li>上傳規則在讀數之前寫下（上傳排程修訂 8）：先傳 ct42，不到 0.7787（ct28 − 0.004）就回到 ct28 一線；到了才傳 ct44，ct44 不低於 max(0.7787, ct42 − 0.0040) 就是最終檔。錨點的做法與權重都不用 Public 的標籤，Public 在這裡只當否決。</li>
+    <li>ct44 的讀數比 CV 期望高約 1.3 個標準差（兩檔在 Public 只差 45 題）；不據此上修期望，Private 的期望仍是 +0.012–0.014 <span class="tag t-i">推論</span>。</li>
+  </ul>
+  <h4>診斷（M83）</h4>
+  <ul>
+    <li>完全相同的棋譜（30 手以上的著手序列）在訓練列之間、驗證題與別人的訓練列之間、測試與訓練之間、測試題之間都是 <b>0</b>：錨點靠的是對手的其他對局，不是同一局出現兩次。</li>
+    <li>驗證端、測試密度下、邊界區內的改動：9.1% 的題目被改，改對 51.5%、把原本全對的改壞 33.5%，每次改動平均 +0.136 分。</li>
+    <li>依真實等級的增益：D −0.0156、C +0.0295、B +0.0112、A +0.0156、1D +0.0141、2D +0.0038、3D +0.0270、4D +0.0298、5D +0.0169、6D +0.0052。弱的方向是 2D→1D 與 A→1D；D 的損失來自 D｜C 邊界：對手標籤是 C 時，本人是 C 的可能本來就約為 D 的兩倍，這個證據在這條邊界是零和的。依等級條件化的證據（M83）只是把增益在等級之間搬動，總量不變，不採用。</li>
+  </ul>
+  <h4>資料與規則</h4>
+  <p>對手錨點只用本比賽訓練資料裡的匿名 player_id 與它的標籤：比對庫是 8,007 位訓練玩家，查詢是測試題裡對手的落子；沒有外部棋譜庫，也不把任何編號對應到真實的人。資料集 README 的規定是「棋譜已匿名化，不得用於識別真實使用者」。</p>
+  <p class="src">出處：設計文件 §4M M82（登錄、結果、測試端候選 ct44／ct45）、M83（結果與診斷）、「11/11 Public 讀數與規則判定」、M71 測試端結果（ct40 的 CV 期望）、融合認人的測試端候選（ct42）；m82_eval.json、m83_classcond.json；上傳排程_2026-11-08.md 修訂 8、9。</p>
+</section>
+
+<section class="page card" id="card-final" data-sec="14" data-ch="7" data-title="最終檔與揭露">
+  <div class="report shots">
+    <div class="txt">
+      <div class="num">第 7 章 · 11-06 之後：推移、對手錨點與最終檔 · 4／4 · 結果、風險與揭露</div>
+      <h3>最終檔 ct44：Public 0.8067107；兩個推移用了 Public 回饋，錨點只用訓練集內的匿名玩家</h3>
+      <div class="formula">
+        <div class="eq">ct44 ＝ ct9 的 24 個成員 ＋ 2 個推移（38 題）＋ 對手錨點（邊界區）</div>
+        <dl><dt>Public</dt><dd>0.7622032（ct9）＋ 0.0205439（推移）＋ 0.0239636（錨點）＝ 0.8067107</dd>
+        <dt>官方 baseline</dt><dd>Public 0.4631</dd></dl>
+      </div>
+      <ul class="key">
+        <li><b>揭露一</b>：1D→A、4D→5D 兩個推移是看 Public 分數選的，共 38 題（Public 17、Private 21）；它們在 Public 的 +0.0205 會高估 Private <span class="tag t-p">用了 Public 回饋</span></li>
+        <li><b>揭露二</b>：對手錨點把對手比對到本比賽訓練集裡的匿名玩家編號、讀訓練集的標籤；沒有外部棋譜，不對應任何真實身分</li>
+        <li><b>揭露三</b>：外部模型只有 KataGo 的 Human SL（humanv0），和 11-06 相同；一般強網 kata1 測過（M74 等），沒有用在最終檔</li>
+        <li>截止 11-24 23:59:59 前，<b>最後一筆上傳必須是 ct44</b>（md5 367ab951442f）；備援依序是 ct42、ct28</li>
+      </ul>
+      <div class="anim" data-anim="last"></div>
+      <div class="cause"><span><span class="k">問題</span><b>Private 量不到</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>模型與錨點只收 CV 通過的改動；Public 只做否決</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>兩個推移例外：只有 Public 的根據</b></span><button class="deriv-open" data-sec="14">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="table-wrap">
+        <table>
+          <tr><th>ct44 的三層</th><th>根據</th><th class="n">Public</th><th>Private 的期望</th></tr>
+          <tr><td>模型本體（ct9：24 個成員）</td><td>四折 CV 選定（6 成員集成 0.7458）；沒有用 Public 選</td><td class="n">0.7622032</td><td>—</td></tr>
+          <tr><td>兩個推移（38 題）</td><td>Public 解碼；沒有 CV</td><td class="n">+0.0205</td><td>1D→A +0.0045 到 +0.0088；4D→5D −0.0042 到 +0.0097，看先驗 <span class="tag t-i">推論</span></td></tr>
+          <tr><td>對手錨點（改 85 題）</td><td>CV 通過；做法與權重不看 Public，Public 只當否決</td><td class="n">+0.0240</td><td>+0.012 到 +0.014 <span class="tag t-i">推論</span></td></tr>
+        </table>
+      </div>
+      <div class="bars" id="chart-final"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件「11/11 Public 讀數與規則判定」、M66、M82；上傳排程修訂 9</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-14" data-title="7.4 揭露、重現、成本與待確認事項">
+  <h3>7.4 揭露、重現、成本與待確認事項</h3>
+  <p class="proves">對應報告卡 7 · 4／4：最終檔由存下的權重與指令重現；用到 Public 回饋與訓練集內比對的地方逐項列出</p>
+  <h4>揭露</h4>
+  <table>
+    <tr><th>項目</th><th>用在哪裡</th><th>說明</th></tr>
+    <tr><td>Public 排行榜的回饋</td><td>選出兩個決策推移（38 題：Public 17、Private 21）</td><td>每個探測檔只多一個推移，從分數差解出對錯（7.1 節）。4D→5D 沒達到事先寫的保留門檻，由使用者決定保留。競賽頁面沒有明文規定這種用法；每日上傳次數都在限制內。</td></tr>
+    <tr><td>Public 排行榜的回饋</td><td>否決錨點候選</td><td>ct42、ct44 的做法與權重不看 Public；上傳前寫下門檻，分數只用來決定要不要退回 ct28（7.3 節）。ct40 的讀數另外暴露了組合順序的問題，修正寫在看到修正版的數字之前。</td></tr>
+    <tr><td>訓練集內的匿名玩家比對</td><td>對手錨點（ct44 對 ct28 改 85 題）</td><td>把測試局的對手比對到訓練集的 player_id，讀訓練集的標籤。沒有外部棋譜，不對應真實身分。</td></tr>
+    <tr><td>KataGo b18c384nbt-humanv0</td><td>每手 Human SL 似然、trunk 向量、L1b 微調的起點；條件化比對的輸入也是它的 trunk 向量</td><td>外部公開模型，與 11-06 相同。</td></tr>
+    <tr><td>KataGo 引擎（重播）</td><td>Board／GameState 重播、中國規則</td><td>與 11-06 相同。</td></tr>
+    <tr><td>kata1-b18c384nbt（一般強網）</td><td>只用在診斷與未通過的檢定（M23、M25、M29、M42、M74）</td><td>沒有用在任何提交檔。</td></tr>
+    <tr><td>外部棋譜資料</td><td>無</td><td>—</td></tr>
+  </table>
+  <h4>重現 ct44</h4>
+  <ul>
+    <li><b>ct9</b>（md5 6ff60b847e26）：24 個成員的權重在 results/models/ct_cv_m33（配方 pc-f0-x40-oh：4 個驗證折 × {C, T} × 3 seed）；L1b 用 results/l1b/heads3_{A,B}.pt 與其微調 trunk；Human SL 用 models/katago/b18c384nbt-humanv0.ckpt。流程與 ct7 相同：predict_submission.py（8 張 GPU 分片評分，對手那一趟含 18 個 profile）→ trunk_predict.py extract → trunk_predict.py predict（24 個 checkpoint、期望分決策）；步驟寫在 docs/NANO4.md。一致性檢查（fold 1 的 100 題）：測試端與訓練端機率 max |Δp| 0.0024，決策 0 題不同。</li>
+    <li><b>ct13</b>（a9be72a943ee）＝ ct9 ＋ 1D→A（logs/nano4/m52_write_ct13.py）；<b>ct28</b>（d8a854c8f6b4）＝ ct13 ＋ 4D→5D（logs/nano4/m53_write_probe.py）。兩個檔對 ct9 分別差 18 題與 38 題。</li>
+    <li><b>認對手</b>：五成分 logs/nano4/m73_fused_id.py（成分的實作來自競賽一的 aicup_pid）；條件化比對 logs/nano4/m82_cond_id.py、m82_eval.py（輸出 m82_val.npz、m82_test.npz）。</li>
+    <li><b>ct44</b>（367ab951442f）：logs/nano4/m78_build_candidate.py --source matcher（ct28 鎖定＋邊界區；密度比取較低者）。備援 ct42（35d4d4a98d6c）是同一支程式的五成分版本。</li>
+  </ul>
+  <h4>計算環境</h4>
+  <ul>
+    <li>國網 nano4（H200）；所有計算經 Slurm 送到計算節點，登入節點只做編輯與送件。</li>
+    <li>成員推論與 ct7 同量級：L1b 評分約 900 局面／秒／張 GPU；8 張 GPU 分片評分約 29 分、trunk 向量抽取 8 片每片約 6–7 分、predict 步驟（48 次 pass）約 281 秒（ct7 的量測）。</li>
+    <li>對手錨點：五成分評分 6,495 秒（M73）；比對網路五個共約 2 分鐘訓練完，查詢評分 4 個分片各 40–41 分（M82）。</li>
+  </ul>
+  <h4>Public 排行榜（2026-11-06 的截圖，當時的最終檔是 ct7）</h4>
+  <table>
+    <tr><th class="n">排名</th><th>隊伍</th><th class="n">成績</th><th>上傳時間</th><th class="n">次數</th></tr>
+    <tr><td class="n">1</td><td>TEAM_11819（我們）</td><td class="n">0.7687835</td><td>2026-11-05 18:47:08</td><td class="n">7</td></tr>
+    <tr><td class="n">2</td><td>TEAM_11724</td><td class="n">0.7574623</td><td>2026-11-04 17:34:42</td><td class="n">1</td></tr>
+    <tr><td class="n">3</td><td>TEAM_11677</td><td class="n">0.7479805</td><td>2026-11-05 14:23:29</td><td class="n">5</td></tr>
+    <tr><td class="n">4</td><td>TEAM_12289</td><td class="n">0.7470608</td><td>2026-11-05 09:27:19</td><td class="n">2</td></tr>
+    <tr><td class="n">5</td><td>TEAM_11245</td><td class="n">0.7464002</td><td>2026-11-04 12:20:13</td><td class="n">1</td></tr>
+    <tr><td class="n">6</td><td>TEAM_12386</td><td class="n">0.7423199</td><td>2026-11-05 13:27:05</td><td class="n">9</td></tr>
+  </table>
+  <p>這張表照 11-06 的截圖逐列抄錄，只是當天的紀錄：我們那一列是 ct7（7 次上傳對應 3.2 節的前 7 個檔）。之後的排行榜沒有記錄，這份報告只列分數，不主張名次；名次依 Private。</p>
+  <h4>待確認</h4>
+  <ul>
+    <li>主辦方：rank 的取值規則（資料內的檢驗已排除對局當時的掛牌，支持期間代表值）。</li>
+    <li>主辦方：上面兩項做法（用 Public 回饋選推移、把對手比對到訓練集內的匿名玩家）是否符合規則。對應的檔：不含錨點的是 ct28，兩項都不含的是 ct9；只含錨點、不含推移的檔要另外建。</li>
+  </ul>
+  <p class="src">出處：設計文件 M33（ct9 的產生與一致性檢查）、M52、M58、M66、M73、M82（結果與測試端候選）、「11/11 Public 讀數與規則判定」、M58 計畫與上傳排程修訂 3（規則面的記錄）、M70 結果（資料集 README 與競賽規則的查證）；docs/NANO4.md；submission_rank_ct7_report.json（ct7 的計時）；AIdea 排行榜截圖（11-06）。</p>
+</section>
+
+<!-- ================= 結語 ================= -->
+<section class="page after" id="after" data-title="結語">
+  <h2>結語</h2>
+  <div class="cols">
+    <div>
+      <h4>我們做到的</h4>
+      <ul>
+        <li>把每一手棋變成「像哪一級」的證據：Human SL 18 個 profile、鑑別式 L1b、trunk 向量。</li>
+        <li>對手的落子當第二把尺：L1b 評對手著手、差值、對手 Human SL 三步，合計約 +0.05。</li>
+        <li>24 個 CV 驗證過的成員平均（加玩家對比損失），再用期望分決策。</li>
+        <li>對手錨點：認出對手是哪位訓練玩家、讀他的標籤，是第一個作用在標籤端的方法（CV +0.019）。</li>
+        <li>Public 從官方 baseline 0.4631 到 0.8067107；其中 +0.0205 來自用 Public 回饋選出的兩個推移（第 7 章揭露）。</li>
+      </ul>
+    </div>
+    <div>
+      <h4>我們學到的</h4>
+      <ul>
+        <li>增益來自證據與集成，不來自模型結構：序列模型、注意力、樹、校準都沒有增益（注意力池化、樹、類別偏置校準甚至顯著變差）。</li>
+        <li>CV 通過不等於 production 通過：每個成員都要有自己的驗證分（production gate）。</li>
+        <li>剩下的誤差在標籤端：本人與對手共享的偏差，棋譜上拆不開；能動它的是同一個池裡標籤已知的人。</li>
+        <li>認人的指標不等於下游增益；重新加權既有的證據不是槓桿，認出更多真的對手才是。</li>
+        <li>類別平衡的 CV 判不了測試集的組成：那一類改動只能靠 Public，所以要逐項揭露。</li>
+      </ul>
+    </div>
+  </div>
+  <div class="refs">
+    <h4>參考資料</h4>
+    <ol>
+      <li>D. J. Wu. Accelerating Self-Play Learning in Go. arXiv:1902.10565, 2019（KataGo）。</li>
+      <li>KataGo human SL model b18c384nbt-humanv0, github.com/lightvector/KataGo。</li>
+      <li>R. McIlroy-Young et al. Aligning Superhuman AI with Human Behavior: Chess as a Model System. KDD 2020（Maia）。</li>
+      <li>Z. Tang et al. Maia-2: A Unified Model for Human-AI Alignment in Chess. NeurIPS 2024。</li>
+      <li>J. Lee et al. Set Transformer: A Framework for Attention-based Permutation-Invariant Neural Networks. ICML 2019（PMA）。</li>
+      <li>W. Cao, V. Mirjalili, S. Raschka. Rank consistent ordinal regression for neural networks with application to age estimation. Pattern Recognition Letters 2020（CORAL）。</li>
+      <li>日本棋院 幽玄の間 段級位制度說明（u-gen.nihonkiin.or.jp/static/manual_G03.asp）。</li>
+    </ol>
+  </div>
+</section>

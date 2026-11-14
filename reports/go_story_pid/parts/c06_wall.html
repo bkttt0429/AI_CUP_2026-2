@@ -1,0 +1,88 @@
+<!-- ================= 第 6 章：資訊牆（2 頁） ================= -->
+<section class="page card" id="card-wall" data-sec="12" data-ch="6" data-chtitle="撞到的資訊牆" data-title="共享偏差">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 6 章 · 撞到的資訊牆 · 1／2</div>
+      <h3>本人與對手帶著同一個偏差：若兩者的掛牌一起平移，單看棋譜拆不開</h3>
+      <div class="formula">
+        <div class="eq">掛牌與實力的落差，同時出現在本人與對手的證據裡</div>
+        <dl><dt>0.62</dt><dd>用本人前 40 局估出的誤差，和用另 40 局對手推回的誤差，兩者相關 0.62：不同棋局、不同來源，卻有共同的偏差成分</dd></dl>
+      </div>
+      <ul class="key">
+        <li>若一個配對池（一起配對的一群玩家）裡本人與對手的掛牌一起平移，「強池的 1D」與「普通池的 2D」在棋譜上無法區分 <span class="tag t-i">推論</span></li>
+        <li>不需要多個池也會這樣：標籤是期間代表值、對手跟著當局掛牌配（第 2 章的 RP 漫步），就給出同樣的共享偏差</li>
+        <li>對手群的第一手習慣確有痕跡（z 4.0），但和偏差方向無關（Spearman −0.004）<span class="tag t-m">實測</span></li>
+        <li>要拆開需要對局時間、勝負或池的資訊，棋譜裡都沒有；11-10 找到的出口是同一個池裡標籤已知的人，也就是對手（第 7 章）</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>偏差在本人與對手共有</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>找能標定方向的訊號</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>棋譜內的可觀測量都做不到</b></span><button class="deriv-open" data-sec="12">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="wall"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §4M 第 858–890 行；anchor_kalman、pool_fingerprint</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-12" data-title="6.1 可識別性與剩餘空間">
+  <h3>6.1 可識別性與剩餘空間</h3>
+  <p class="proves">對應報告卡 13：再好的裁判也只能確定「他和他的對手都像幾段」</p>
+  <h4>結構結論（條件命題）</h4>
+  <p>「若配對讓本人與對手的掛牌尺度一起平移，而棋譜中沒有能標定平移方向的訊號，則僅憑棋譜無法拆開掛牌與池偏移。」現有結果與此相容；第 2 章的 RP 漫步（標籤是期間代表值、棋譜是無序樣本）給出同樣的結果，不需要另外假設多個池。</p>
+  <table>
+    <tr><th>證據</th><th>結果</th></tr>
+    <tr><td>偏差的半集相關（兩組 40 局）：本人／對手強度錨點</td><td>0.964／0.946；兩者誤差相關 0.79–0.85（n 5–80）</td></tr>
+    <tr><td>本人與對手誤差的跨來源相關</td><td>0.62</td></tr>
+    <tr><td>對手群第一手（星位率）的半集相關</td><td>0.072 vs 打散 0.017（z 4.0），與偏差的級內 Spearman −0.004</td></tr>
+    <tr><td>用對手相關特徵預測偏差方向</td><td>OOF R² +0.005</td></tr>
+    <tr><td>強 AI 網的客觀棋力（M23；加搜尋 M25）</td><td>單看很強（對手策略損失 Spearman 0.936），給定集成後為 0</td></tr>
+    <tr><td>後續著手預測（M28）、心理與賽局特徵（M29）</td><td>單看都和段位強相關，給定集成後為 0；M29 依玩家比例與局面調整後，段位相關也大半消失</td></tr>
+  </table>
+  <h4>剩餘空間</h4>
+  <ul>
+    <li>建模面：設計文件沒有剩餘空間的上界，只有經驗基率：不加新資訊的集成層改動（注意力池化、微調 trunk、混人訓練、第二組等級頭、SWA、ct4＋ct7 疊加、S 成員）共 7 例，沒有一例達到 +0.005（−0.0088 到 +0.0027） <span class="tag t-m">實測</span>。多加集成成員只剩變異縮減（S 成員 9 對 6 +0.0027 [−0.0009, +0.0062]、同源 seed 12 對 6 +0.0017）；軟直方圖 opphist +0.0018，不顯著。Public 400 題兩檔差的標準誤約 0.01，看不出來。</li>
+    <li>11-10 的更新：心理計量的尺度連結只有兩條路，共同題目或共同受測者。對應到這裡，唯一的標籤端觀測是「同一個池裡標籤已知的人」：測試局的對手若是訓練玩家，他的標籤就是對本人掛牌的一次直接觀測。這不違反上面的條件命題（它用了棋譜以外的資訊：訓練集的標籤），做法與結果在第 7 章。</li>
+    <li>標籤定義：資料內的檢驗已排除「每局當時的掛牌」（讓先兩側錨點差 +0.668 [+0.50, +0.84]），也與「抽取時最新快照」不相容（後半錨點離標籤更遠 +0.036），支持「期間代表值（眾數／中央值）」；仍待主辦方確認取值規則。</li>
+  </ul>
+  <p class="src">出處：設計文件 §4M 2026-11-05 總結與「結構結論的最終措辭」（第 858–860 行）、M23、M25、M28、M29、池指紋檢驗、第 550、568、576、642、656、814、818、873、875–879、885 行；M71 的先驗段；anchor_kalman.json、label_mode_test.json。</p>
+</section>
+
+<section class="page card" id="card-ident" data-sec="13" data-ch="6" data-title="身分比對">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 6 章 · 撞到的資訊牆 · 2／2</div>
+      <h3>最後一條路：測試玩家在不在訓練集裡？不在</h3>
+      <div class="formula">
+        <div class="eq">測試玩家也在訓練集裡的比例（n ＝ 5／10／15／20）≈ 0／3%／0／0</div>
+        <dl><dt>認人</dt><dd>開局、風格、局部棋形、方位、讓子五種習慣，在 8,007 人中比對</dd></dl>
+      </div>
+      <ul class="key">
+        <li>認人本身是準的：若玩家在訓練集裡，第一名就認對的比例 <b>0.454</b>，18–20 局時 0.602 <span class="tag t-m">實測</span></li>
+        <li>測試題的比對分數分布，和「不在訓練集」的對照組一樣</li>
+        <li>身分融合的期望增益 +0.0005 [−0.0003, +0.0014]（gate 以 ct3 機率為基底）：不採用</li>
+        <li>11-10 換個對象：測試玩家不在訓練集，但他的對手有一部分在 → 第 7 章的對手錨點</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>想直接讀到標籤</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>五種習慣的身分比對</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>測試玩家不在訓練集</b></span><button class="deriv-open" data-sec="13">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="ident"></div>
+      <div class="chips"><span class="chip"><b>來源</b>ident_pool_local.json、ident_ct8_local.json；設計文件 §4J′、§4M M24</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-13" data-title="6.2 身分比對（M24）">
+  <h3>6.2 身分比對（M24）</h3>
+  <p class="proves">對應報告卡 14：認人可行，但測試題沒有人可認</p>
+  <h4>方法</h4>
+  <p>沿用我們在同系列競賽一（從棋譜集辨識玩家）做的五個習慣成分（開局語言模型、31 維風格統計、局部棋形 token、方位、讓子類別），以「目標＝黑」的視角對每位訓練玩家建模，融合權重在兩半玩家間交叉擬合。池＝8,007 位訓練玩家的比對庫。三個情境：A 池內（4,000 題的局移出、人留在池裡）、B 池外（788 人整個移出）、C 測試（800 題）。比對只在資料集內的匿名玩家編號之間進行，不涉及真實身分；結果（ct8）未用於任何提交。同一套成分在 11-10 改用來認「對手」，那個用法進了最終檔（7.2 節）。</p>
+  <table>
+    <tr><th>量測</th><th>結果</th></tr>
+    <tr><td>A：融合 top-1（全體／n 5–7／8–12／13–17／18–20）</td><td>0.454／0.265／0.460／0.521／0.602</td></tr>
+    <tr><td>A：成分單獨 top-1</td><td>開局 0.406、方位 0.083、風格 0.066、局部 0.008、讓子 0.003</td></tr>
+    <tr><td>margin 中位數：A 認對／A 認錯／B 池外</td><td>4.44／0.40／0.46（B 的 q99 6.15）</td></tr>
+    <tr><td>C：margin 超過 B q99 的題（n ＝ 5／10／15／20）</td><td>1.0%／0.5%／0.5%／2.5%（虛無 1%）</td></tr>
+    <tr><td>C：池內比例的混合估計</td><td>0／0.032／0／0</td></tr>
+    <tr><td>ct8 規則的 gate（ct3 機率為基底）</td><td>期望測試增益 +0.0005 [−0.0003, +0.0014]；只改 1 題 → 不上傳</td></tr>
+  </table>
+  <h4>一次錯誤判定與撤回</h4>
+  <p>11-04 用開局模型做過同樣的檢查（margin ≥ τ 只有 2.9%，結論：測試玩家不是訓練玩家）。11-06 凌晨以「單局 top-1 在同一題重複出現」的統計（n ＝ 20 題中 24% vs 虛無 0）一度判定有重疊；那個虛無模型用的是 20 位不同玩家各一局，而同一位陌生玩家的 20 局本來就會集中到池裡最像他的訓練玩家。以情境 B 為虛無重做後，判定撤回。</p>
+  <p class="src">出處：設計文件 §4J′ 第 420 行、§4M M24（第 901–912 行）；使用者本機執行的 ident_pool.py／ident_ct8.py 輸出。</p>
+</section>

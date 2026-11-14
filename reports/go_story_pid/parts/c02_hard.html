@@ -1,0 +1,118 @@
+<!-- ================= 第 2 章：難在哪裡（3 頁） ================= -->
+<section class="page card" id="card-weak" data-sec="1" data-ch="2" data-chtitle="難在哪裡" data-title="單手訊號弱">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 2 章 · 難在哪裡 · 1／3</div>
+      <h3>難點一：一手棋幾乎看不出等級，相鄰兩級更難分</h3>
+      <div class="formula">
+        <div class="eq">一題的證據 ＝ 每一手「像 r 級」的 log 似然加總</div>
+        <dl><dt>相鄰兩級</dt><dd>每手證據的分布重疊 0.86–0.94</dd></dl>
+      </div>
+      <ul class="key">
+        <li>證據要靠很多手累積：n ＝ 5／10／20 局的分數 <b>0.658／0.725／0.795</b> <span class="tag t-m">實測</span></li>
+        <li>另一組量測（fold 1 有 80 局的 634 人；模型只訓到 20 局）：20 → 40 局，基本版集成 +0.033、加對手通道的版本（第 4 章）只 +0.014；誤差的標準差 0.65–0.69 幾乎不隨局數變 <span class="tag t-m">實測</span></li>
+        <li>KataGo 的人類棋風模型（Human SL，第 4 章）量到：幽玄の間最弱的 D 級只像 KGS 6k–7k、最強的 6D 只像 1d–2d，10 個等級被壓在較窄的範圍</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>單手訊號弱</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>把所有手加總</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>加總後的中心會偏</b></span><button class="deriv-open" data-sec="1">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="accum"></div>
+      <div class="bars" id="chart-byn"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §3.2、§4M M15／M19；prod_heldout.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-1" data-title="2.1 每手證據有多弱">
+  <h3>2.1 每手證據有多弱</h3>
+  <p class="proves">對應報告卡 2：證據會累積，但誤差的標準差幾乎不隨局數下降</p>
+  <table>
+    <tr><th>量測</th><th>結果</th><th>出處</th></tr>
+    <tr><td>每手 pmi（該手在 18 個 profile 上的後驗平均位置，越大越像高段）在相鄰等級間的分布重疊</td><td>0.86–0.94</td><td>§3.2（fused_opp OOF，39,327 題、6,354 人）</td></tr>
+    <tr><td>同一份 OOF 的命中率，n ＝ 5／10／20</td><td>0.496／0.544／0.570</td><td>§3.2</td></tr>
+    <tr><td>production 留出題的 ct3 集成，n ＝ 5／10／20</td><td>0.658／0.725／0.795（全體 0.7261）</td><td>prod_heldout.json（794 人、4,000 題）</td></tr>
+    <tr><td>學習式集成的 n 曲線（base 6 模型，n ＝ 20／40／80）</td><td>0.763／0.796／0.784；加對手通道的版本（內部稱 oh，2 模型）n ＝ 20／40：0.789／0.802</td><td>§4M M19（fold 1 的 634 位有 80 局的玩家；模型只訓到 n ≤ 20）</td></tr>
+    <tr><td>誤差（E − y）的標準差</td><td>base 0.691／0.669／0.677、oh 0.653／0.647：幾乎不隨 n 變</td><td>§4M M19</td></tr>
+    <tr><td>剖面尺度</td><td>本伺服器 6D 本人平均 pmi ≈ humanv0 的 1d–2d 剖面；D 級 ≈ 6k–7k；兩端都沒有截斷</td><td>§4M M15 D1</td></tr>
+  </table>
+  <p>讀法：局數從 5 加到 20，分數升 0.14；再加到 40 局，基本版多 0.033、加對手通道的版本只多 0.014，80 局反而略降（模型只訓到 20 局，是外推的下界）。誤差的標準差不隨局數下降，表示剩下的誤差主要不是「證據不夠」，而是每位玩家自帶的偏差（下一頁）。</p>
+</section>
+
+<section class="page card" id="card-bias" data-sec="2" data-ch="2" data-title="誤差在玩家層">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 2 章 · 難在哪裡 · 2／3</div>
+      <h3>難點二：誤差是玩家層級的，多給棋也修不掉</h3>
+      <div class="formula">
+        <div class="eq">預測誤差 ＝ 玩家偏差（每人固定）＋ 抽樣雜訊（隨局數變小）</div>
+        <dl><dt>63.6%</dt><dd>誤差（預測 − 標籤，保留正負號）的變異中，來自玩家之間的比例</dd></dl>
+      </div>
+      <ul class="key">
+        <li>同一位玩家兩組不重疊的 40 局各估一次，偏差的相關 <b>0.964</b>（扣掉各級均值後 0.931）<span class="tag t-m">實測</span></li>
+        <li>驗證時每位玩家有多題：題題都對的玩家 18.4%、題題都錯的 14.1%（若各題獨立只該有 5.1%、3.8%）</li>
+        <li>加入對手通道（第 4 章）後，偏差的標準差只從 0.644 縮到 0.617；剩下的偏差用對手、讓子、執色、勝負都預測不出來（OOF R²：對手相關 11 欄 +0.005，加勝負代理合計 +0.010）</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>每人有固定偏差</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>找能解釋偏差的訊號</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>可觀測的軸都解釋不了</b></span><button class="deriv-open" data-sec="2">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="bias"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §3.2、§4M；anchor_kalman.json、bias_pred.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-2" data-title="2.2 玩家層偏差的證據">
+  <h3>2.2 玩家層偏差的證據</h3>
+  <p class="proves">對應報告卡 3：偏差跟著人走，不隨局數平均掉</p>
+  <table>
+    <tr><th>量測</th><th>結果</th><th>出處</th></tr>
+    <tr><td>有號誤差變異在玩家之間的比例</td><td>63.6%</td><td>§3.2（fused_opp OOF）</td></tr>
+    <tr><td>全對／全錯玩家（獨立期望）</td><td>18.4%（5.1%）／14.1%（3.8%）</td><td>§3.2</td></tr>
+    <tr><td>偏差的半集相關（兩組不重疊的 40 局）：本人證據／對手強度錨點</td><td>0.964／0.946（扣掉各級均值後 0.931／0.875）；兩者誤差相關 0.79–0.85（n ＝ 5–80），沒有 1/√n 縮小</td><td>anchor_kalman（§4M）</td></tr>
+    <tr><td>對手通道（oh）之後的偏差標準差（n ＝ 20）</td><td>0.644 → 0.617</td><td>§4M M15 D4</td></tr>
+    <tr><td>用 11 個對手相關特徵預測有號偏差（OOF R²）</td><td>+0.005（控制變數 0.000）；再加勝負代理合計 +0.010</td><td>§4M 兩階段可行性 A（bias_pred.json）</td></tr>
+    <tr><td>勝負代理：最後一手勝率對偏差</td><td>Spearman −0.062，低於事先門檻 0.10；加進題目層 MLP（內部稱 R）的消融 +0.0005</td><td>§4M result_proxy、winlm</td></tr>
+  </table>
+  <p>讀法：如果偏差來自某個可觀測的軸（對手強度、讓子、執色、勝負），把那個軸加進模型就能修掉一部分。逐一量過後，只有對手的落子（第 4 章）能修掉一小部分（偏差的標準差 0.644 → 0.617），其餘各軸都預測不出偏差的方向。</p>
+</section>
+
+<section class="page card" id="card-label" data-sec="3" data-ch="2" data-title="標籤是期間代表值">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 2 章 · 難在哪裡 · 3／3</div>
+      <h3>難點三：等級是三年期間的一個代表值，棋譜是期間內的無序樣本</h3>
+      <div class="formula">
+        <div class="eq">當局掛牌（伺服器當時顯示的段級位）＝ 積分 RP 所在的 1,000 點區間</div>
+        <dl><dt>每局</dt><dd>1 級到 6 段附近約 ±100 RP，約 9 個淨勝就跨一個段級位（比賽的 D–A 每類含三個級位）<span class="tag t-i">推論</span></dd></dl>
+      </div>
+      <ul class="key">
+        <li>2021–2023 年間，幾乎每個人都會多次跨過段位邊界 <span class="tag t-i">推論</span></li>
+        <li>同一位玩家當上手（執白讓先）和當下手（執黑受讓）時，從對手棋力推回的等級相差 <b>+0.668 級</b>（若期間內掛牌不變應為 0）<span class="tag t-m">實測</span></li>
+        <li>測試題的局不按時間排（Spearman 0.000 ± 0.012）：用不了時序</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>標籤和每局的實力不同步</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>把標籤當期間代表值</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>時間與勝負都被移除</b></span><button class="deriv-open" data-sec="3">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="anim" data-anim="rp"></div>
+      <div class="chips"><span class="chip"><b>來源</b>設計文件 §4M 第 883–887 行；label_mode_test.json、test_order_check.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-3" data-title="2.3 等級制度與標籤的意義">
+  <h3>2.3 等級制度與標籤的意義</h3>
+  <p class="proves">對應報告卡 4：標籤是一段 RP 漫步的單一代表值</p>
+  <h4>幽玄の間的段級位制度（公開手冊）</h4>
+  <ul>
+    <li>段級位 25 級–8 段，由レーティング點數（RP）決定，每一級／段寬 1,000 RP。</li>
+    <li>每局 RP(new) ＝ RP(old) ＋ C(S − P)；平均每局變動 18 級約 301、1 級約 116、8 段約 35；連勝／連敗有加成。</li>
+    <li>只有レーティング對局計分；讓 4 子以上自動為自由對局，レーティング對局最多讓 3 子。</li>
+  </ul>
+  <h4>資料上的對應</h4>
+  <table>
+    <tr><th>量測</th><th>結果</th><th>出處</th></tr>
+    <tr><td>讓先局（HD1）上手／下手兩側的錨點差</td><td>+0.668 [+0.50, +0.84]；等級固定時預測為 0</td><td>label_mode_test.json</td></tr>
+    <tr><td>錨點隨 game_id 的變化（訓練集）</td><td>後 40 局比前 40 局高 +0.109 [+0.091, +0.127]；玩家內 Spearman +0.058（80 局）、20 局參考 +0.080</td><td>label_mode_test.json、test_order_check.json</td></tr>
+    <tr><td>測試題欄位順序與錨點</td><td>Spearman 0.000 ± 0.012：測試的局不按時間排</td><td>test_order_check.json</td></tr>
+    <tr><td>以眾數為目標的軟直方圖（opphist）</td><td>+0.0018，不顯著</td><td>opphist_r.json</td></tr>
+  </table>
+  <p>讀法：50% 勝率的隨機漫步走 100 局後，RP 的標準差約 1,100 點，超過一個段位。標籤是三年期間的一個值，棋譜是期間內的無序樣本；要重建 RP 軌跡需要對局時間與勝負，這兩者都被移除。標籤的取值規則主辦方沒有說明；資料內的檢驗（T1 讓先兩側、T3 game_id 順序）已排除「對局當時的等級」，也與「抽取時的最新快照」不相容，與期間眾數／中央值相容。</p>
+  <p class="src">出處：設計文件第 883–887 行（幽玄の間手冊 u-gen.nihonkiin.or.jp/static/manual_G03.asp 的摘要；「每局約 ±100 RP」是設計文件依手冊數字的推估）、第 875–881 行；label_mode_test.json（T1、T3）、test_order_check.json。</p>
+</section>

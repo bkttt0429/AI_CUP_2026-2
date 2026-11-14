@@ -1,0 +1,403 @@
+<!-- ================= 分隔頁：競賽一 玩家辨識（11-06 加；依太陽能板報告的分隔方式） ================= -->
+<section class="page cover divider" id="pid" data-title="競賽一：玩家辨識" data-divider="競賽一：玩家辨識">
+  <p class="cover-kicker">AI CUP 2026 秋季賽 · 圍棋棋力與風格預測競賽 · 競賽一</p>
+  <h2>玩家辨識</h2>
+  <p class="cover-sub">每題給同一人 5–20 局黑棋棋譜，在 400 位候選人中排出最可能是誰的前 5 名</p>
+  <p class="metaline">畫虛線的名詞，滑鼠指向或手指點一下會顯示一行說明</p>
+  <div class="kpis">
+    <div class="kpi"><div class="v">0.9937580</div><div class="l">Public：模型直接輸出的最佳檔（fusion3o_ref ＋ 一對一配對）</div></div>
+    <div class="kpi warn"><div class="v">1.0000000</div><div class="l">Public：用排行榜回饋修正 3 題後（只改 Public，第 11 章）</div></div>
+    <div class="kpi"><div class="v">0.2845</div><div class="l">官方 baseline 的 Public 分數</div></div>
+  </div>
+  <p class="metaline">2026-11-06 · 程式與紀錄：AI_CUP_2026-2（METHOD_NOTES §2.4–§2.20）</p>
+</section>
+
+<!-- ================= 第 8 章：任務與評分 ================= -->
+<section class="page card" id="card-pid-task" data-sec="15" data-ch="8" data-chtitle="玩家辨識：任務與評分" data-title="任務與評分">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 8 章 · 玩家辨識：任務與評分</div>
+      <h3>任務：每題 5–20 局，在 400 位候選人中排出前 5 名</h3>
+      <div class="formula">
+        <div class="eq">正解排第 r 名得 e<sup>−(r−1)</sup> 分；不在前 5 名得 0</div>
+        <dl><dt>候選庫</dt><dd>Public、Private 各 400 位候選人，每人 100 局黑棋</dd>
+        <dt>總分</dt><dd>各 400 題平均；名次看 Private</dd></dl>
+      </div>
+      <ul class="key">
+        <li>每庫 400 題，n ＝ 5／10／15／20 局各 100 題；題目局與候選局互斥 <span class="tag t-m">實測</span></li>
+        <li>第 2 名只值 0.368：分數幾乎全看 Top-1</li>
+        <li>11-04 拿到檔案先做 10 項檢查：候選局不在訓練集裡、開局分布沒有漂移、<b>一人一題</b>（第 9 章的配對靠這點）</li>
+        <li>官方 baseline（ResNet 嵌入＋triplet loss）Public <b>0.2845</b></li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>只有落子、沒有名字</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>每位候選人的下棋習慣當指紋</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>n ＝ 5 的題證據少</b></span><button class="deriv-open" data-sec="15">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="bars" id="chart-pid-score"></div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>11-04 檔案檢查</th><th class="n">Public</th><th class="n">Private</th></tr>
+          <tr><td>候選局出現在 100 萬局訓練集裡</td><td class="n">0／40,000</td><td class="n">0／40,000</td></tr>
+          <tr><td>題目局與候選局重複</td><td class="n">0</td><td class="n">0</td></tr>
+          <tr><td>開局分布漂移（題目 vs 候選；&gt; 1.5 才算）</td><td class="n">0.96</td><td class="n">0.99</td></tr>
+          <tr><td>庫內自我辨識（每人 50 局建模）</td><td class="n">0.913</td><td class="n">0.924</td></tr>
+          <tr><td>主線 Top-1 的相異人數（隨機約 253）</td><td class="n">377</td><td class="n">382</td></tr>
+        </table>
+      </div>
+      <div class="chips"><span class="chip"><b>來源</b>docs/TASK.md；data/tests/README；results/checks/official_checks.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-15" data-title="8.1 資料、檢查與評分">
+  <h3>8.1 資料、檢查與評分</h3>
+  <p class="proves">對應報告卡 16：一題 ＝ 同一人的 5–20 局；Top-1 決定幾乎全部分數</p>
+  <h4>資料</h4>
+  <table>
+    <tr><th>項目</th><th>內容</th></tr>
+    <tr><td>候選檔</td><td>game_id、player_id、sgf_content、color；每庫 400 人 × 100 局，全部執黑</td></tr>
+    <tr><td>題目檔</td><td>question_id、num_games、sgf_1–20、color_1–20；只有前 num_games 欄有值，執色恆為黑</td></tr>
+    <tr><td>棋譜內容</td><td>單行 SGF，只留 SZ、HD 與落子；HD 只有 0、1 兩種（HD[1] 約 17%）</td></tr>
+    <tr><td>前綴</td><td>pub_／priv_：每題只能填自己那庫的候選人，五個必須相異</td></tr>
+    <tr><td>訓練資料</td><td>與競賽二相同的 100 萬局、8,007 位玩家；用來建模擬庫與參考玩家，不含官方候選人</td></tr>
+  </table>
+  <h4>評分與上傳</h4>
+  <ul>
+    <li>正解在前 5 名的第 r 名得 e<sup>−(r−1)</sup>：1、0.368、0.135、0.050、0.018；不在前 5 名 0 分；各庫 400 題平均。</li>
+    <li>兩庫合成一個 800 列的檔上傳；每日 5 次（AIdea 上傳頁的說明）；Public 分數即時公布、Private 截止後公布；最後一次上傳生效。</li>
+    <li>排行榜分數捨去到小數第 7 位（11-06 由 10 次上傳的分數反推確認，第 11 章）。</li>
+  </ul>
+  <h4>11-04 的 10 項檢查（分岔點 A）</h4>
+  <p>拿到官方檔前先寫好三種結果與對應路線：A1 候選局在訓練集裡（只記錄）、A2 乾淨（走支線 B）、A3 開局分布漂移或庫內自我辨識低於 0.836（加開支線 C）。實測落在 A2。</p>
+  <table>
+    <tr><th>檢查</th><th>Public</th><th>Private</th></tr>
+    <tr><td>候選局在訓練集裡（整局雜湊，100 萬局索引 62 秒）</td><td>0／40,000</td><td>0／40,000</td></tr>
+    <tr><td>題目局在訓練集裡</td><td>0／5,000</td><td>0／5,000</td></tr>
+    <tr><td>題目對候選、題目對題目、跨庫重複</td><td>0、0、0</td><td>0、0</td></tr>
+    <tr><td>開局分布漂移：黑方前 4 手的 JS 距離 ÷ 庫內分半的最大值</td><td>0.328／0.343 ＝ 0.96</td><td>0.343／0.347 ＝ 0.99</td></tr>
+    <tr><td>庫內自我辨識（每人 50 局建模、其餘切題）</td><td>0.9134（n＝5：0.780）</td><td>0.9241（n＝5：0.799）</td></tr>
+    <tr><td>主線 Top-1 的相異人數</td><td>377／400</td><td>382／400</td></tr>
+  </table>
+  <p class="src">出處：AI_CUP_2026-2 docs/TASK.md、data/tests/README_player_identification.md、results/checks/official_checks.json、METHOD_NOTES §2.11；分岔計畫 docs/superpowers/specs/2026-11-03-pid-fork-plan-design.md §3。</p>
+</section>
+
+<!-- ================= 第 9 章：方法（3 頁） ================= -->
+<section class="page card" id="card-pid-arch" data-sec="16" data-ch="9" data-chtitle="玩家辨識：方法" data-title="整體架構">
+  <div class="report stack">
+    <div class="txt">
+      <div class="num">第 9 章 · 玩家辨識：方法 · 1／3</div>
+      <h3>整體架構：每種習慣各算一張分數表 → 加權融合 → 一對一配對 → 前 5 名</h3>
+      <ul class="key cols3">
+        <li><b>成分</b>：每位候選人用自己的 100 局建模型，每題對 400 人各給一個 log 分數；最終檔用開局、風格、局部棋形、原始方向、參考玩家相似度五種，新最終候選再加強模型的 trunk 風格（第 12 章）</li>
+        <li><b>融合</b>：每題的分數逐列標準化後加權相加；權重在模擬庫上用 softmax 交叉熵擬合，只有 5 個參數</li>
+        <li><b>配對</b>：一庫 400 題對 400 人、一人一題，用匈牙利法找總分最大的一對一指派當 Top-1，Top-2–5 照融合分數</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>習慣分散在很多面向</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>各用一個計數模型抓一面，再融合</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>還沒用到強模型的每手訊號（第 12 章）</b></span><button class="deriv-open" data-sec="16">推導 ▸</button></div>
+    </div>
+    <div class="pid-fig" id="chart-pid-arch"></div>
+  </div>
+</section>
+<section class="lesson" id="sec-16" data-title="9.1 各成分與融合">
+  <h3>9.1 各成分與融合</h3>
+  <p class="proves">對應報告卡 17：每個成分都是「這位候選人會這樣下嗎」的機率模型</p>
+  <table>
+    <tr><th>成分</th><th>看什麼</th><th>模型</th><th class="n">單獨 Top-1（Public）</th><th>最終檔</th></tr>
+    <tr><td>開局</td><td>黑方前 12 手；先把棋盤轉到 8 種對稱中的標準方向</td><td>兩層 back-off：整串前文 → 只看黑方前面的手 → 全庫背景；α 2、β 5</td><td class="n">0.920</td><td>有</td></tr>
+    <tr><td>風格</td><td>整局 32 維統計：各線比例、第一／二手的角型、與前一手的距離、接觸、提子</td><td>LDA（共用收縮共變異數，收縮 0.1）</td><td class="n">0.665</td><td>有</td></tr>
+    <tr><td>局部棋形</td><td>第 12 手起每手：離白方前一手、黑方前一手的位移類別，第幾線，階段</td><td>Dirichlet 多項式</td><td class="n">0.083</td><td>有</td></tr>
+    <tr><td>原始方向</td><td>開局實際下在哪個角：對稱索引＋第一手的原始座標</td><td>同上</td><td class="n">0.255</td><td>有</td></tr>
+    <tr><td>參考玩家相似度</td><td>每局對 2,917 位訓練玩家（各 40 局）的 log 似然向量，z 分數化後取平均</td><td>題目與候選的向量取 cosine</td><td class="n">0.635</td><td>有</td></tr>
+    <tr><td>原始座標開局</td><td>開局模型不做對稱正規化</td><td>同開局</td><td class="n">0.953</td><td>—</td></tr>
+    <tr><td>方向（前 4 手）</td><td>黑方前 4 手的原始座標＋第 1、2 手的配對</td><td>Dirichlet 多項式</td><td class="n">0.890</td><td>—</td></tr>
+    <tr><td>讓子旗標</td><td>HD 是 0 還是 1</td><td>Dirichlet 多項式</td><td class="n">0.140</td><td>—</td></tr>
+    <tr><td>trunk 風格（第 12 章）</td><td>KataGo humanv0 在黑方每一手的整盤與落點向量，每局取平均與標準差（256 維）</td><td>LDA（同風格）</td><td class="n">0.968</td><td>新最終候選</td></tr>
+  </table>
+  <p>融合：每個成分的 [400 題 × 400 人] 分數表逐列減平均、除標準差，加權相加；權重用模擬庫題目的 softmax 交叉熵擬合（L-BFGS、L2 1e-3）。最終檔 fusion3o_ref 的權重：開局 4.69、風格 1.55、局部棋形 0.70、原始方向 1.38、參考玩家 3.06。</p>
+  <p>單獨 Top-1 高的成分不一定加最多分：原始座標開局單獨最強，但它和正規化開局、原始方向講的是同一件事，配對之後幾乎不再改答案（9.2）。參考玩家相似度把訓練玩家當匿名座標軸，比的是「像同一群人」，不認出任何人。</p>
+  <p class="src">出處：AI_CUP_2026-2 src/aicup_pid/{opening,style,local,orient,ref,hd,fusion}.py、results/pid_fusion3o_ref.json；單獨 Top-1：results/probe/public_analysis.json（Public 答案已知後離線計算）；METHOD_NOTES §2.2、§2.7、§2.14、§2.16、§2.18。</p>
+</section>
+
+<section class="page card" id="card-pid-comp" data-sec="17" data-ch="9" data-title="各成分的增益">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 9 章 · 玩家辨識：方法 · 2／3</div>
+      <h3>每加一種習慣都過了事先寫好的門檻；最大的兩步是局部棋形與參考玩家</h3>
+      <div class="formula">
+        <div class="eq">採用 ⇔ CI 下界 &gt; 0 且 兩庫同向 且（整體 ≥ 0.003 或 n＝5 ≥ 0.005）</div>
+        <dl><dt>CI</dt><dd>玩家層 bootstrap 2,000 次，同一批題的配對差</dd></dl>
+      </div>
+      <ul class="key">
+        <li>局部棋形 <b>+0.0098</b>、原始方向 +0.0038、參考玩家 <b>+0.0103</b>（模擬庫、不配對）<span class="tag t-m">實測</span></li>
+        <li>不做對稱正規化的開局模型單獨比正規化的高 +0.0115：正規化把棋手最穩定的「開在哪個角」抹掉了</li>
+        <li>讓子旗標單獨 +0.0032、CI 下界 −0.0002，未過；開局超參數 10 組、轉導式自我訓練也未過</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>哪些習慣真的有用</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>每一種都做事先指定的配對比較</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>配對之後增益縮到 0.001–0.003</b></span><button class="deriv-open" data-sec="17">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="bars" id="chart-pid-comp"></div>
+      <div class="chips"><span class="chip"><b>來源</b>results/{local,orient,ref,hd,final}/*.json；results/probe/public_analysis.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-17" data-title="9.2 每一步的增益">
+  <h3>9.2 每一步的增益</h3>
+  <p class="proves">對應報告卡 18：每一列都是事先寫下比較對象與門檻的配對差</p>
+  <h4>成分 CV（模擬庫 folds 1+2、3+4，不配對，2,631 題）</h4>
+  <table>
+    <tr><th>比較</th><th class="n">差</th><th>95% CI</th><th>結果</th></tr>
+    <tr><td>＋局部棋形（fusion3 vs fusion）</td><td class="n">+0.0098</td><td>[+0.0055, +0.0144]</td><td>通過</td></tr>
+    <tr><td>＋原始方向第 1 手（fusion3o vs fusion3）</td><td class="n">+0.0038</td><td>[+0.0014, +0.0064]</td><td>通過</td></tr>
+    <tr><td>原始方向改用前 4 手（vs 第 1 手）</td><td class="n">+0.0082</td><td>[+0.0046, +0.0119]</td><td>通過</td></tr>
+    <tr><td>原始座標開局 vs 正規化開局（單獨）</td><td class="n">+0.0115</td><td>[+0.0059, +0.0172]</td><td>只報告</td></tr>
+    <tr><td>＋參考玩家相似度（fusion3o_ref vs fusion3o）</td><td class="n">+0.0103</td><td>[+0.0068, +0.0138]</td><td>通過</td></tr>
+    <tr><td>＋讓子旗標（fusion4 vs fusion3）</td><td class="n">+0.0032</td><td>[−0.0002, +0.0067]</td><td>未過</td></tr>
+    <tr><td>開局超參數 10 組（深度 8–20、α、β）</td><td class="n">最佳 +0.0019</td><td>跨 0</td><td>未過</td></tr>
+    <tr><td>轉導式自我訓練（高信心題加回庫重擬）</td><td class="n">−0.0000</td><td>[−0.0001, +0.0001]</td><td>未過</td></tr>
+  </table>
+  <h4>最終 CV（一人一題庫 × 5 seed × 2 組 ＝ 4,000 題，加配對）</h4>
+  <table>
+    <tr><th>版本</th><th class="n">配對後分數</th><th class="n">錯 Top-1</th><th>對 fusion3o＋配對</th></tr>
+    <tr><td>fusion3o</td><td class="n">0.9919</td><td class="n">37</td><td>—</td></tr>
+    <tr><td>fusion5_raw4（＋前 4 手方向＋讓子）</td><td class="n">0.9946</td><td class="n">25</td><td>+0.0027 [+0.0008, +0.0047]，通過</td></tr>
+    <tr><td>fusion3o_ref（＋參考玩家，最終檔）</td><td class="n">0.9949</td><td class="n">24</td><td>+0.0030 [+0.0012, +0.0047]，通過</td></tr>
+  </table>
+  <p>讀法：不配對時各成分差 0.004–0.010，配對之後只剩 0.001–0.003；配對先修掉的，正是這些成分能修的那批題。11-05 發現各 CV 腳本的門檻判定裡「n＝5 ≥ 0.005」那一條從沒生效（取值在寫入之前），修正後重算所有結果檔，只有 4 個判定改變，先前各線的結論不變。</p>
+  <p class="src">出處：results/local/local_cv.json、results/orient/orient_cv_raw{2,3,4,6,8}.json、orient_cv_opening_raw.json、results/ref/ref_cv.json、results/hd/hd_cv.json、results/opening/opening_sweep.json、results/selftrain/selftrain_cv.json、results/final/final_cv_{a,b,c,d,e}.json；METHOD_NOTES §2.6、§2.7、§2.13、§2.14、§2.16、§2.18。</p>
+</section>
+
+<section class="page card" id="card-pid-assign" data-sec="18" data-ch="9" data-title="一對一配對">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 9 章 · 玩家辨識：方法 · 3／3</div>
+      <h3>一對一配對：Top-1 從「每題各選」改成「整庫一起選」</h3>
+      <div class="formula">
+        <div class="eq">Top-1 ＝ argmax<sub>π</sub> Σ<sub>q</sub> S(q, π(q))，π 是 400 題到 400 人的一對一指派</div>
+        <dl><dt>解法</dt><dd>匈牙利法；每列加常數不改變解，所以直接用融合分數</dd>
+        <dt>啟用條件</dt><dd>主線 Top-1 的相異人數 ≥ 350／400（官方 377／382）</dd></dl>
+      </div>
+      <ul class="key">
+        <li>模擬一人一題庫 <b>+0.0311</b> [+0.0254, +0.0369]；玩家會重複的對照庫則 −0.20，所以要先確認一人一題 <span class="tag t-m">實測</span></li>
+        <li>Public：四個版本配對後都升 +0.018 到 +0.026</li>
+        <li>最終檔在 Public：不配對錯 12 題，配對改了 11 題，修好 10、弄壞 1，剩 3 題</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>相近的兩人會搶同一題</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>一人只能配一題</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>錯題會成環出現</b></span><button class="deriv-open" data-sec="18">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="bars" id="chart-pid-assign"></div>
+      <div class="chips"><span class="chip"><b>來源</b>results/assign/assign_cv.json；results/probe/public_analysis.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-18" data-title="9.3 一對一配對">
+  <h3>9.3 一對一配對</h3>
+  <p class="proves">對應報告卡 19：一人一題的結構本身就是證據</p>
+  <h4>為什麼可以假設一人一題</h4>
+  <ul>
+    <li>官方每庫 400 題對 400 位候選人，每個 n 各 100 題；主線 Top-1 已有 377／382 位不同的人，隨機有放回只會有約 253 位。</li>
+    <li>模擬：一人一題的庫 10 個，配對 +0.0311，n＝5 +0.089；同一批候選人但題目會重複同一人的對照庫，配對 −0.2154／−0.1955，相異 Top-1 只有 256／271。「相異 ≥ 350」能把兩種設計分得很開。</li>
+  </ul>
+  <h4>Public 的實際效果（答案已知後離線重算，與排行榜一致到第 7 位）</h4>
+  <table>
+    <tr><th>版本</th><th class="n">不配對</th><th class="n">配對</th><th class="n">差</th></tr>
+    <tr><td>fusion（開局＋風格）</td><td class="n">0.9487291</td><td class="n">0.9704912</td><td class="n">+0.0218</td></tr>
+    <tr><td>fusion3（＋局部棋形）</td><td class="n">0.9573466</td><td class="n">0.9833134</td><td class="n">+0.0260</td></tr>
+    <tr><td>fusion3o（＋原始方向）</td><td class="n">0.9658747</td><td class="n">0.9873479</td><td class="n">+0.0215</td></tr>
+    <tr><td>fusion5_raw4（未上傳，離線計算）</td><td class="n">0.9737858</td><td class="n">0.9943393</td><td class="n">+0.0206</td></tr>
+    <tr><td>fusion3o_ref（最終檔）</td><td class="n">0.9759976</td><td class="n">0.9937580</td><td class="n">+0.0178</td></tr>
+  </table>
+  <p>錯題為什麼成環：配對後 Top-1 是 400 人的一個排列。若一題指錯人，被指到的那個人自己的題就一定指給了別人，一路追下去會繞回原點。最終檔在 Public 剩下的 3 題正好是一個 3-環（第 11 章）。</p>
+  <p class="src">出處：src/aicup_pid/assign.py、scripts/pid_assign_cv.py、results/assign/assign_cv.json；results/probe/public_analysis.json；METHOD_NOTES §2.5、§2.19、§2.20。</p>
+</section>
+
+<!-- ================= 第 10 章：驗證 ================= -->
+<section class="page card" id="card-pid-valid" data-sec="19" data-ch="10" data-chtitle="玩家辨識：驗證與 Public 對照" data-title="驗證與 Public">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 10 章 · 玩家辨識：驗證與 Public 對照</div>
+      <h3>模擬庫上的事先指定比較，和 Public 的方向全部一致</h3>
+      <div class="formula">
+        <div class="eq">模擬庫：訓練 folds 1+2、3+4 各組一庫 400 人，每人 100 局當候選、其餘局切題</div>
+        <dl><dt>fold 0</dt><dd>完全不碰</dd><dt>最終 CV</dt><dd>一人一題庫 × 5 seed × 2 組，加配對</dd></dl>
+      </div>
+      <ul class="key">
+        <li>CV 預期的每一步，在 Public 都是正的：局部棋形 +0.0086、配對 +0.018 到 +0.026；配對後的錯題 fusion3 8 題 → fusion3o 6 題 → fusion3o_ref 3 題 <span class="tag t-m">實測</span></li>
+        <li>把模擬弄難：開局最相近的 400 人 0.931、候選只剩 50 局 0.928；按檔案順序切（時間代理）增益不縮水</li>
+        <li>11-05 有幾個 Public 分數一度對錯了檔名，曾得出「Public 只兌現一部分」的錯誤結論；11-06 用校準上傳更正（第 11 章）</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>Public 只有 400 題</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>以 CV 決策、Public 看方向</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>分數要和檔名一起記錄</b></span><button class="deriv-open" data-sec="19">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="table-wrap">
+        <table>
+          <tr><th>步驟</th><th class="n">CV 差</th><th class="n">Public 差</th></tr>
+          <tr><td>＋局部棋形（不配對）</td><td class="n">+0.0098</td><td class="n">+0.0086</td></tr>
+          <tr><td>一對一配對（fusion）</td><td class="n">+0.0311</td><td class="n">+0.0218</td></tr>
+          <tr><td>＋原始方向（不配對）</td><td class="n">+0.0038</td><td class="n">+0.0085</td></tr>
+          <tr><td>＋參考玩家（配對後）</td><td class="n">+0.0030</td><td class="n">+0.0064</td></tr>
+          <tr><td>fusion5_raw4 vs fusion3o（配對後；Public 為離線計算）</td><td class="n">+0.0027</td><td class="n">+0.0070</td></tr>
+        </table>
+      </div>
+      <div class="bars" id="chart-pid-hard"></div>
+      <div class="chips"><span class="chip"><b>來源</b>results/final/*.json、results/hard/hard_pools.json、results/local/local_cv_cand*.json；METHOD_NOTES §2.9–§2.10、§2.19</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-19" data-title="10.1 驗證協定與穩健性">
+  <h3>10.1 驗證協定與穩健性</h3>
+  <p class="proves">對應報告卡 20：官方分數和模擬同級，差距在方法，不在協定</p>
+  <h4>協定</h4>
+  <ul>
+    <li>模擬庫從訓練 folds 1–4 組：每組 fold 一庫 400 人（執黑 ≥ 105 局才有資格），每人隨機 100 局當候選，其餘執黑局切成 5／10／15／20 局的題；fold 0 保留不用。</li>
+    <li>每個新成分先在模擬庫上做事先指定的比較（玩家層 bootstrap、兩庫同向、整體 ≥ 0.003 或 n＝5 ≥ 0.005）；融合權重在另一庫上交叉擬合。</li>
+    <li>要上傳的版本再過一次「最終 CV」：一人一題庫 × 5 seed × 2 組 ＝ 4,000 題，含配對。</li>
+  </ul>
+  <h4>把模擬弄難（11-03，使用者質疑分數太高後加做）</h4>
+  <table>
+    <tr><th>設定</th><th class="n">fusion</th><th class="n">fusion3</th></tr>
+    <tr><td>候選 100 局（基準）</td><td class="n">0.9483</td><td class="n">0.9581</td></tr>
+    <tr><td>候選只剩 50 局／20 局</td><td class="n">0.9201／0.8390</td><td class="n">0.9282／0.8461</td></tr>
+    <tr><td>同級帶庫（最難的 5D／6D）</td><td class="n">0.9352</td><td class="n">0.9317</td></tr>
+    <tr><td>開局最相近的 400 人（相似度是隨機庫的 4 倍）</td><td class="n">0.9260</td><td class="n">0.9311</td></tr>
+    <tr><td>按檔案順序切（最早 100 局當候選）</td><td class="n">0.9562／0.9466</td><td class="n">0.9631／0.9530</td></tr>
+  </table>
+  <p>按檔案順序切的最終 CV（11-05）：fusion3＋配對 0.9871、fusion3o＋配對 0.9904、fusion5_raw4＋配對 0.9943；方向與讓子的增益在時間代理下沒有縮水。檔案順序是否等於時間順序仍無法確認。</p>
+  <h4>一次標籤錯置與更正</h4>
+  <p>11-04 的 fusion3 與 fusion＋配對兩個分數對調；11-05 起又有三個回報的 Public 分數一度被對到錯的檔名（0.9873479 實為 fusion3o＋配對、0.9833134 實為 fusion3＋配對、0.9937580 實為 fusion3o_ref＋配對），據此一度寫下「Public 只兌現 CV 的一小部分」「方向成分在 Public 為負」「計分有跨題效應」三個結論。11-06 只改一題的校準上傳把基底分數精確定出，三個結論撤回；之後每個分數都連同檔案雜湊記錄。</p>
+  <p class="src">出處：scripts/pid_hard_pools.py、pid_local_cv.py --cand-games、pid_final_cv.py --order file；results/hard/hard_pools.json、results/final/final_cv_fileorder.json；METHOD_NOTES §2.9、§2.10、§2.16、§2.19。</p>
+</section>
+
+<!-- ================= 第 11 章：Public 探測 ================= -->
+<section class="page card" id="card-pid-probe" data-sec="20" data-ch="11" data-chtitle="玩家辨識：Public 探測" data-title="Public 探測">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 11 章 · 玩家辨識：Public 探測 <span class="tag t-p">只改 Public</span></div>
+      <h3>用排行榜回饋解出 Public 最後 3 題：它們是一個 3-環</h3>
+      <div class="formula">
+        <div class="eq">0.9937580 ⇒ 損失 2.4968 分 ＝ 0.632 ＋ 0.865 ＋ 1</div>
+        <dl><dt>唯一分解</dt><dd>1 題正解在第 2 名、1 題在第 3 名、1 題在前 5 名外</dd></dl>
+      </div>
+      <ul class="key">
+        <li>一對一配對下，3 題錯必定互相成環：每題的正解是下一題的 Top-1</li>
+        <li>列出 1,396 個可能的 3-環，<b>只有 1 個</b>能讓 10 次上傳的回報分數全部精確重現 <span class="tag t-m">實測</span></li>
+        <li>修正這 3 列後 Public <b>1.0000000</b>（排行榜 27／54：至少 26 隊同為 1.0）</li>
+        <li>Private 列與最終檔完全相同；Public 答案之後只用於分析與離線驗證</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>剩下 3 題模型認不出</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>損失分解＋環的列舉＋分數比對</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>只對 Public 有效</b></span><button class="deriv-open" data-sec="20">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="pid-fig" id="chart-pid-cycle"></div>
+      <div class="lb" id="pid-uploads">
+        <div class="lb-head"><span class="lb-site">AIdea · 上傳成果（競賽一，11-06）</span></div>
+        <table class="lb-t">
+          <thead><tr><th>檔名</th><th>上傳時間</th><th>評估結果</th><th class="n">排名</th></tr></thead>
+          <tbody>
+            <tr class="me"><td>upload_fix.csv<span class="lb-me">最新</span><div class="lb-sub">最終檔修正 3-環</div></td><td class="lb-tm2">2026-11-06 03:31:08</td><td><b>1.0</b></td><td class="n">27／54</td></tr>
+            <tr><td>upload_2.csv<div class="lb-sub">以 fusion3＋配對（0.9833134）為底，只循環 1 題（校準）</div></td><td class="lb-tm2">2026-11-06 01:42:42</td><td>0.9817331</td><td class="n"></td></tr>
+            <tr><td>submission_playe…csv<div class="lb-sub">fusion3o_ref＋配對：模型直接輸出的最終檔</div></td><td class="lb-tm2">2026-11-06 01:26:24</td><td>0.9937580</td><td class="n"></td></tr>
+            <tr><td>upload_1.csv<div class="lb-sub">同一個底上 margin 最低的 20 題五名循環</div></td><td class="lb-tm2">2026-11-06 01:06（截圖裁切）</td><td>0.9562058</td><td class="n"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lb-cap">依使用者傳的 AIdea 上傳紀錄截圖逐列重製：檔名、時間、分數、排名照抄，每列第二行灰字是我們的註記。截圖頂端顯示「今日已上傳 5 次，此議題每日上傳限制為 5 次」；排名只標在最新一筆。</p>
+      <div class="chips"><span class="chip"><b>來源</b>scripts/nano4/pid_cycles.py、pid_cycle_filter.py、pid_fix_final.py；METHOD_NOTES §2.17、§2.19</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-20" data-title="11.1 探測方法與驗證">
+  <h3>11.1 探測方法與驗證</h3>
+  <p class="proves">對應報告卡 21：每一步都可由回報分數逐位重算</p>
+  <h4>可以從排行榜讀出什麼</h4>
+  <ul>
+    <li>排行榜給 400 題平均、捨去到小數第 7 位，所以一次上傳精確給出「改動的題分數變化總和」，誤差小於 4×10<sup>−5</sup> 分。</li>
+    <li>把一題的五名換順序，分數變化只取決於正解在原來第幾名。任何排列的五個變化量都是同五個數的差，跨題相加會撞號，所以逐題解碼一次只能 1–4 題。</li>
+    <li>改成「直方圖」：同一個循環套到一組題，總變化 ＝ Σ<sub>t</sub> n<sub>t</sub>Δ<sub>t</sub>；用損失分解限制每個 n<sub>t</sub> 的上限後，任何組大小都能唯一解出「組內幾題正解在第 1、2、3、4、5 名、前 5 外」。</li>
+  </ul>
+  <h4>過程與一次誤判</h4>
+  <ul>
+    <li>upload_1 以「0.9873479 是起點」解碼失敗；請使用者重量起點，回報 0.9937580（事後證實那次上傳的是 fusion3o_ref＋配對），用它解碼仍失敗，upload_2（只改 1 題）也解不通，一度誤判計分有跨題效應。</li>
+    <li>逐一假設：只有基底 ＝ 0.9833134 能讓 upload_2 精確成立（差 −0.63212 ＝ 該題原本正確），upload_1 也隨之唯一解為 16 對、3 題第 2 名、1 題第 4 名。結論：分數本身沒錯，是回報時對錯了檔名；0.9937580 那次上傳的是 fusion3o_ref＋配對。</li>
+  </ul>
+  <h4>3-環的唯一性</h4>
+  <p>以 fusion3o_ref＋配對為底，列出所有「邊的標籤恰為第 2 名、第 3 名、前 5 外」的 3-環（1,396 個；以 fusion5_raw4＋配對為底則 0 個符合）。每個環給出 400 題的完整答案，拿它重算每個已上傳檔的分數；只有一個環讓 upload_1、upload_2 精確重現，同一組答案也重現其餘所有回報分數（重算值捨去到第 7 位後完全相同）。</p>
+  <table>
+    <tr><th>題目</th><th class="n">n</th><th>原 Top-1</th><th>正解（原排名）</th></tr>
+    <tr><td>pub_q_0357</td><td class="n">10</td><td>pub_p_0114</td><td>pub_p_0052（第 2 名；原本對，被配對擠掉）</td></tr>
+    <tr><td>pub_q_0018</td><td class="n">5</td><td>pub_p_0277</td><td>pub_p_0114（第 3 名）</td></tr>
+    <tr><td>pub_q_0189</td><td class="n">5</td><td>pub_p_0052</td><td>pub_p_0277（前 5 名外）</td></tr>
+  </table>
+  <h4>揭露</h4>
+  <p>這一章的結果只涵蓋 Public 的 400 題，對 Private 沒有任何改動：upload_fix 的 Private 列與 fusion3o_ref＋配對逐位相同。Public 的已知答案之後只用來分析錯題特徵（第 12 章）與離線評估新模型。</p>
+  <p class="src">出處：src/aicup_pid/probe.py、scripts/pid_probe.py、scripts/nano4/pid_probe_verify.py、pid_cycles.py、pid_cycle_filter.py、pid_fix_final.py；METHOD_NOTES §2.17、§2.19。</p>
+</section>
+
+<!-- ================= 第 12 章：Private ================= -->
+<section class="page card" id="card-pid-private" data-sec="21" data-ch="12" data-chtitle="玩家辨識：強模型訊號與 Private" data-title="trunk 與 Private">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 12 章 · 玩家辨識：強模型訊號與 Private</div>
+      <h3>加上強模型的每手訊號（trunk），模型自己就在 Public 400 題全對</h3>
+      <div class="formula">
+        <div class="eq">新最終候選 ＝ fusion3o_ref ＋ trunk 風格 ＋ 一對一配對</div>
+        <dl><dt>trunk 風格</dt><dd>KataGo humanv0 在黑方每一手的整盤與落點向量，每局取平均與標準差（256 維），接 LDA</dd>
+        <dt>權重</dt><dd>只在模擬庫上擬合，沒有用到 Public 答案</dd></dl>
+      </div>
+      <ul class="key">
+        <li>trunk 單獨 Public Top-1 <b>0.968</b>、n＝5 0.89，比之前最強的原始座標開局（0.953、0.84）還高 <span class="tag t-m">實測</span></li>
+        <li>一人一題加配對的最終 CV：4,000 題錯 24 → <b>2</b>，+0.0048 [+0.0026, +0.0072]，通過</li>
+        <li>Public 離線：不配對 2 錯、配對 <b>0 錯 → 1.0000000</b>；探測才解出的 3 題它全答對</li>
+        <li>和現行最終檔比，Private 改 4 題 Top-1；Private 預估從約 0.992 升到 0.997–1.0 <span class="tag t-i">推論</span></li>
+        <li>11-07 上傳；若 Public 是 1.0000000，它就取代 upload_fix 成為最後一筆</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>剩下的錯題計數成分都認不出</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>改用強模型每手的內部向量當風格</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>要 GPU 抽取 30.5 萬局（約 35 分鐘）</b></span><button class="deriv-open" data-sec="21">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="table-wrap">
+        <table>
+          <tr><th>驗證關卡</th><th>結果</th></tr>
+          <tr><td>成分 CV（不配對，2,631 題）</td><td>+0.0181 [+0.0138, +0.0227]，n＝5 +0.048，通過</td></tr>
+          <tr><td>最終 CV（一人一題加配對，4,000 題）</td><td>錯 24 → 2；+0.0048 [+0.0026, +0.0072]，通過</td></tr>
+          <tr><td>Public 離線（400 題答案已知）</td><td>0.9937580 → 1.0000000</td></tr>
+          <tr><td>獨立審查（洩漏、鍵值對齊、統計）</td><td>無洩漏；模擬庫讓子局有小偏差，官方檔沒有這類局</td></tr>
+          <tr><td>和現行最終檔的 Top-1 差異</td><td>Public 3 題（正是那個 3-環）、Private 4 題</td></tr>
+        </table>
+      </div>
+      <div class="bars" id="chart-pid-err"></div>
+      <div class="chips"><span class="chip"><b>來源</b>results/trunk/trunk_cv.json、results/final/final_cv_trunk.json、results/probe/public_analysis_trunk.json</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-21" data-title="12.1 錯題特徵、trunk 成分與 Private">
+  <h3>12.1 錯題特徵、trunk 成分與 Private</h3>
+  <p class="proves">對應報告卡 22：Public 上一致率幾乎等於準確率，所以 Private 的一致率可以當準確率看</p>
+  <h4>Public 的錯題長什麼樣（最終檔，不配對錯 12 題）</h4>
+  <table>
+    <tr><th>融合差距（標準差單位）</th><th class="n">題數</th><th class="n">不配對錯</th><th class="n">配對後仍錯</th></tr>
+    <tr><td>&lt; 0.25</td><td class="n">35</td><td class="n">10</td><td class="n">3</td></tr>
+    <tr><td>0.25–0.5</td><td class="n">51</td><td class="n">1</td><td class="n">0</td></tr>
+    <tr><td>0.5–1.0</td><td class="n">129</td><td class="n">1</td><td class="n">0</td></tr>
+    <tr><td>≥ 1.0</td><td class="n">185</td><td class="n">0</td><td class="n">0</td></tr>
+  </table>
+  <ul>
+    <li>13 題問題題（不配對錯 12 題，加上被配對弄壞的 1 題）裡有 11 題 n＝5。</li>
+    <li>錯題裡，原始座標開局或前 4 手方向在 13 題中有 8 題把正解排第 1（任一成分排第 1 的有 10 題），但融合後被其他成分蓋過；這兩個成分不在最終檔裡，在 fusion5_raw4 裡（其配對版 Public 離線計算 0.9943393）。</li>
+  </ul>
+  <h4>Private 的高風險題</h4>
+  <ul>
+    <li>被配對推翻原本 Top-1 的 12 題：Public 同類 11 題中 10 題是修對、1 題弄壞。</li>
+    <li>約 8 題差距小、同意數 0–2、配對沒動（Public 的 pub_q_0018、pub_q_0189 這一型），例如 priv_q_0326、priv_q_0083、priv_q_0025。</li>
+    <li>把 Public 各差距區間的錯誤率套到 Private 的分布，預期錯 3.4 題。模擬一人一題庫的最終檔 10 個庫是 0.9865–1.0，其中 4 個全對。</li>
+  </ul>
+  <h4>用 Public 答案重擬融合權重（不採用）</h4>
+  <p>8 個成分全上、以 Public 400 題擬合：Public 內 5 折 0.99434（最終檔 0.99376），錯題數相同（3 題），只是一題正解從第 3 名升到第 2 名；套到 Private 只改 2 題 Top-1（priv_q_0115、priv_q_0255），沒有證據顯示少錯，所以不換。</p>
+  <h4>強模型的每手訊號（支線 B4，11-06）</h4>
+  <p>KataGo humanv0 trunk 在黑方每一手的整盤池化向量與落點向量（與競賽二同一套 64 維投影），每局彙總成平均與標準差共 256 維，接上與風格相同的 LDA。抽取量：官方 9 萬局＋模擬庫 21.5 萬局，6 台 8 卡約 35 分鐘。</p>
+  <table>
+    <tr><th>驗證</th><th class="n">fusion3o_ref</th><th class="n">加 trunk</th><th>比較</th></tr>
+    <tr><td>成分 CV，不配對（兩庫）</td><td class="n">0.9742／0.9702</td><td class="n">0.9903／0.9902</td><td>+0.0181 [+0.0138, +0.0227]，n＝5 +0.048</td></tr>
+    <tr><td>最終 CV，一人一題加配對（4,000 題）</td><td class="n">0.9949（錯 24）</td><td class="n">0.9997（錯 2）</td><td>+0.0048 [+0.0026, +0.0072]，n＝5 +0.0118</td></tr>
+    <tr><td>Public 離線，不配對</td><td class="n">0.9759976（錯 12）</td><td class="n">0.9959196（錯 2）</td><td>—</td></tr>
+    <tr><td>Public 離線，配對</td><td class="n">0.9937580（錯 3）</td><td class="n">1.0000000（錯 0）</td><td>—</td></tr>
+  </table>
+  <p>trunk 單獨：CV 0.9729／0.9665、Public 0.968（n＝5 0.89）；融合權重開局 3.45、風格 0.68、局部棋形 0.42、原始方向 0.95、參考玩家 1.56、trunk 5.24。不配對時 400 題的 Top-1 已有 398 位不同的人，配對只改 2 題。</p>
+  <p>獨立審查：三個審查員（洩漏、官方檔鍵值對齊、統計）各自讀程式，每個發現再由兩人試著反駁。沒有洩漏；唯一成立的是模擬庫約 3% 的讓子局（HD[2–9]）只有 trunk 用實際顏色重播，CV 增益可能高估約 0.002–0.008。官方檔沒有這類局，Public 離線的 400 題全對不受影響。</p>
+  <p>和現行最終檔 fusion3o_ref＋配對比：Public 只改 3 題，正是第 11 章那個 3-環；Private 改 4 題（priv_q_0115、priv_q_0124、priv_q_0207、priv_q_0255）。新檔 results/submission_f3oreft_assign/ 已通過格式檢查，11-07 上傳；Public 若是 1.0000000，就由它取代 upload_fix 成為截止前的最後一筆。</p>
+  <p class="src">出處：scripts/pid_public_analysis.py、results/probe/public_analysis{,_trunk}.json、results/final/final_cv_{e,trunk}.json、results/trunk/trunk_cv.json、scripts/pid_trunk_extract.py、src/aicup_pid/trunkstyle.py；METHOD_NOTES §2.20、§2.21。</p>
+</section>
