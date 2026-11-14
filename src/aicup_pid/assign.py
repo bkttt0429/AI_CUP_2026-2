@@ -80,3 +80,33 @@ def assign_soft(S, lam, k=5, copies=3):
         if out[q, 0] != c:
             out[q] = np.array([c, *[x for x in base[q].tolist() if x != c]][:width])
     return out
+
+
+def sinkhorn_prices(S, tau, iters=300):
+    """log v [C] <= 0: the price of every candidate in the entropic assignment with row sums 1 and column sums <= 1
+    (METHOD_NOTES 2.122). A candidate that several questions want gets a negative price; an uncontested one keeps 0."""
+    S = np.asarray(S, dtype=float)
+    K = np.exp((S - S.max(axis=1, keepdims=True)) / float(tau))
+    v = np.ones(S.shape[1])
+    for _ in range(int(iters)):
+        u = 1.0 / np.maximum(K @ v, 1e-300)
+        v = np.minimum(1.0, 1.0 / np.maximum(K.T @ u, 1e-300))
+    return np.log(np.maximum(v, 1e-300))
+
+
+def assign_sinkhorn(S, tau, k=5, lam=None):
+    """Top-k of the scores minus tau x the Sinkhorn price of each candidate: unlike assign_soft / assign_topk it changes the
+    whole order, not only the Top-1. With lam, the Top-1 is the one of assign_soft(S, lam) and the rest follows the priced
+    order (a collision between two confident questions survives, as in assign_soft)."""
+    S = np.asarray(S, dtype=float)
+    Q, C = S.shape
+    if Q == 0 or C == 0:
+        return topk(S, k)
+    order = topk(S + float(tau) * sinkhorn_prices(S, tau)[None, :], min(C, k + 3))
+    out = order[:, :min(k, C)].copy()
+    if lam is not None:
+        first = assign_soft(S, lam, k)[:, 0]
+        for q, c in enumerate(first):
+            if out[q, 0] != c:
+                out[q] = np.array([c, *[x for x in order[q].tolist() if x != c]][:out.shape[1]])
+    return out

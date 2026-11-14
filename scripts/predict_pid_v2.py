@@ -24,7 +24,7 @@ for d in (ROOT / "src", ROOT / "scripts"):
 import aicup_pid  # noqa: E402,F401
 from aicup.submission import check_game  # noqa: E402
 from aicup_pid import pools, v2  # noqa: E402
-from aicup_pid.assign import assign_soft, assign_topk  # noqa: E402
+from aicup_pid.assign import assign_sinkhorn, assign_soft, assign_topk  # noqa: E402
 from aicup_pid.checks import top1_collisions  # noqa: E402
 from aicup_pid.components import parse_all  # noqa: E402
 from aicup_pid.embed import PlayerEmbedding  # noqa: E402
@@ -32,7 +32,7 @@ from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.trunkstyle import load_store  # noqa: E402
 
 
-def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print, seq=None, big_lam=None):
+def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print, seq=None, big_lam=None, big_tau=None):
     cands, questions, qids, sgfs = v2.official_pool(cand_path, q_path)
     colour = {k: c for games in (*cands.values(), *questions) for k, c in games}
     need_rows = "emb" in doc["components"]
@@ -57,7 +57,10 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
     base = topk(F, pools.TOP_K)
     if assign == "big":  # METHOD_NOTES 2.37: the questions of two or more games are one one-to-one set; the one-game questions stay per question
         idx, rows_big = base.copy(), np.flatnonzero(n > 1)
-        idx[rows_big] = assign_topk(F[rows_big], pools.TOP_K) if big_lam is None else assign_soft(F[rows_big], big_lam, pools.TOP_K)
+        if big_tau is not None:  # METHOD_NOTES 2.122: Sinkhorn prices (with --big-lam: its soft Top-1, then the priced order)
+            idx[rows_big] = assign_sinkhorn(F[rows_big], big_tau, pools.TOP_K, lam=big_lam)
+        else:
+            idx[rows_big] = assign_topk(F[rows_big], pools.TOP_K) if big_lam is None else assign_soft(F[rows_big], big_lam, pools.TOP_K)
     else:
         idx = assign_soft(F, doc["soft_lam"], pools.TOP_K) if (applied and assign == "soft") else assign_topk(F, pools.TOP_K) if applied else base
     rows, j = [], 0
@@ -70,7 +73,7 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
     top = np.sort(F, axis=1)
     rep = {"candidates": str(cand_path), "questions": str(q_path), "n_candidates": len(players), "n_questions": len(qids), "left_out_games": bad,
            "fallback_questions": [qids[i] for i in range(len(qids)) if i not in set(usable)], "games_by_colour": pd.Series(list(colour.values())).value_counts().to_dict(),
-           "assign": {"mode": assign, "applied": applied, "big_lam": big_lam, "n_top1_changed": int((idx[:, 0] != base[:, 0]).sum()),
+           "assign": {"mode": assign, "applied": applied, "big_lam": big_lam, "big_tau": big_tau, "n_top1_changed": int((idx[:, 0] != base[:, 0]).sum()),
                       "top1_changed_by_n": {str(m): int((idx[:, 0] != base[:, 0])[n == m].sum()) for m in sorted(set(n.tolist()))}, "top1_collisions": col},
            "median_top1_margin": float(np.median(top[:, -1] - top[:, -2])), "margin_by_n": {str(m): float(np.median((top[:, -1] - top[:, -2])[n == m])) for m in sorted(set(n.tolist()))},
            "distinct_top1": int(len(set(base[:, 0].tolist())))}
@@ -89,6 +92,7 @@ def main(argv=None):
     ap.add_argument("--assign", choices=["off", "auto", "on", "soft", "big"], default="off",
                     help="soft = aicup_pid.assign.assign_soft with the document's soft_lam (off when it has none); big = one-to-one over the questions of two or more games only (2.37)")
     ap.add_argument("--big-lam", type=float, default=None, help="--assign big: soft assignment with this penalty instead of the hard one")
+    ap.add_argument("--big-tau", type=float, default=None, help="--assign big: Sinkhorn prices with this temperature (aicup_pid.assign.assign_sinkhorn; METHOD_NOTES 2.122); with --big-lam the Top-1 stays the soft assignment's")
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -118,7 +122,7 @@ def main(argv=None):
         print(f"sequence identity vectors: {len(paths)} network(s), {len(seqs[0])} games", flush=True)
     new, reports, cand_ids = {}, [], {}
     for tag, prefix in (("public", "pub2_"), ("private", "priv2_")):
-        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq, big_lam=a.big_lam)
+        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq, big_lam=a.big_lam, big_tau=a.big_tau)
         new.update({q: top for q, top in rows})
         reports.append(rep)
         cand_ids[prefix] = players
