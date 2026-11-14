@@ -34,21 +34,51 @@ def fit(rows, owners, k=64, ridge=1e-3):
     return mu.astype(np.float32), sd.astype(np.float32), W[:, ::-1][:, :k].astype(np.float32), lam[::-1][:k]
 
 
-def load_sup(dirs):
-    """(index {key: (start, n)}, t [N] int16 ply numbers, Z [N, K] float16 standardised) over every part of the directories."""
-    keys, ns, ts, zs = [], [], [], []
+def load_sup(dirs, stats=None):
+    """(index {key: (start, n)}, t [N] int16 ply numbers, Z [N, K] float16 standardised) over every part of the directories.
+    Parts hold `z` (float16, unstandardised) or `zq` (int8: the standardised value x 20, written with a stats file). With
+    `stats` (npz with mean, sd per dimension) the float parts are standardised by it, so that several stores share one scale;
+    without it by their own mean and sd over all plies (the first probe)."""
+    keys, ns, ts, zs, kinds = [], [], [], [], []
     for d in dirs:
         for f in sorted(glob.glob(f"{d}/*.npz")):
             if f.endswith(".tmp.npz"):
                 continue
             z = np.load(f)
-            keys.append(z["keys"].astype(str)); ns.append(z["n"].astype(np.int64)); ts.append(z["t"]); zs.append(z["z"])
+            keys.append(z["keys"].astype(str)); ns.append(z["n"].astype(np.int64)); ts.append(z["t"])
+            if "zq" in z.files:
+                zs.append(z["zq"]); kinds.append("q")
+            else:
+                zs.append(z["z"]); kinds.append("f")
     if not keys:
         raise FileNotFoundError(f"no supervised per-ply parts in {dirs}")
-    keys, n, t, Z = np.concatenate(keys), np.concatenate(ns), np.concatenate(ts), np.concatenate(zs).astype(np.float32)
-    Z = ((Z - Z.mean(0)) / (Z.std(0) + 1e-6)).astype(np.float16)
+    if stats is None and "q" in kinds:
+        raise ValueError("int8 parts need the stats file they were written with")
+    if stats is not None:
+        st = np.load(stats)
+        m, sd = st["mean"].astype(np.float32), st["sd"].astype(np.float32)
+    else:
+        allf = np.concatenate(zs).astype(np.float32)
+        m, sd = allf.mean(0), allf.std(0) + 1e-6
+        del allf
+    Z = np.concatenate([(x.astype(np.float32) / 20.0 if k == "q" else (x.astype(np.float32) - m) / sd).astype(np.float16) for x, k in zip(zs, kinds)])
+    keys, n, t = np.concatenate(keys), np.concatenate(ns), np.concatenate(ts)
     start = np.concatenate([[0], np.cumsum(n)[:-1]])
-    return {k: (int(s), int(m)) for k, s, m in zip(keys.tolist(), start.tolist(), n.tolist())}, t, Z
+    return {k: (int(s_), int(m_)) for k, s_, m_ in zip(keys.tolist(), start.tolist(), n.tolist())}, t, Z
+
+
+def write_stats(dirs, out):
+    """Mean and sd per dimension over all plies of the float parts of the directories -> npz (mean, sd)."""
+    zs = []
+    for d in dirs:
+        for f in sorted(glob.glob(f"{d}/*.npz")):
+            if not f.endswith(".tmp.npz"):
+                z = np.load(f)
+                if "z" in z.files:
+                    zs.append(z["z"].astype(np.float32))
+    allf = np.concatenate(zs)
+    np.savez(out, mean=allf.mean(0), sd=allf.std(0) + 1e-6, plies=np.array(len(allf)))
+    return len(allf)
 
 
 def dense(sup, keys, T=256, alloc=None):

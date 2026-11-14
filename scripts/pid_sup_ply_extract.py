@@ -39,13 +39,16 @@ def main(argv=None):
     ap.add_argument("--part-size", type=int, default=200)
     ap.add_argument("--batch", type=int, default=512)
     ap.add_argument("--max-parts", type=int, default=0)
+    ap.add_argument("--stats", default=None, help="npz (mean, sd) of pid_sup.write_stats: the parts are written as int8 `zq` = standardised value x 20 (half the size)")
+    ap.add_argument("--skip-keys", default=None, help="a key list whose games are left out (already extracted elsewhere)")
     a = ap.parse_args(argv)
     t0 = time.time()
     P = np.load(a.proj)
     mu, sd, W = P["mu"].astype(np.float32), P["sd"].astype(np.float32), P["W"].astype(np.float32)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    keys = sorted(set(PT.read_keys(a.keys)))
+    keys = sorted(set(PT.read_keys(a.keys)) - (set(PT.read_keys(a.skip_keys)) if a.skip_keys else set()))
+    st = np.load(a.stats) if a.stats else None
     mine = keys[a.shard::a.nshards]
     parts = [mine[i:i + a.part_size] for i in range(0, len(mine), a.part_size)]
     todo = [(k, p) for k, p in enumerate(parts) if not (out / f"sup_s{a.shard:03d}_p{k:04d}.npz").exists()]
@@ -71,7 +74,8 @@ def main(argv=None):
                 raise ValueError(f"part {k}: non-finite features")
             path = out / f"sup_s{a.shard:03d}_p{k:04d}.npz"
             tmp = path.with_name(path.name + ".tmp.npz")
-            np.savez(tmp, keys=np.array([d[0] for d in done]), n=np.array([len(d[3]) for d in done], np.int32), t=np.concatenate([d[5] for d in done]).astype(np.int16), z=z.astype(np.float16))
+            feat = {"z": z.astype(np.float16)} if st is None else {"zq": np.clip(np.rint((z - st["mean"]) / st["sd"] * 20.0), -127, 127).astype(np.int8)}
+            np.savez(tmp, keys=np.array([d[0] for d in done]), n=np.array([len(d[3]) for d in done], np.int32), t=np.concatenate([d[5] for d in done]).astype(np.int16), **feat)
             os.replace(tmp, path)
             done_games += len(part)
             if (k % 10) == 0:

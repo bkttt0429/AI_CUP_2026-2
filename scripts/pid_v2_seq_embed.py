@@ -61,6 +61,7 @@ def main(argv=None):
     ap.add_argument("--sup-ply", nargs="*", default=None, help="folds stage: supervised per-ply features (scripts/pid_sup_ply_extract.py; METHOD_NOTES 2.88)")
     ap.add_argument("--sup-dims", type=int, nargs=2, default=None, help="the input dimensions they replace, as the network was trained (pid_seq_train.py --sup-dims)")
     ap.add_argument("--sup-only", action="store_true")
+    ap.add_argument("--sup-stats", default=None)
     ap.add_argument("--flip", action="store_true", help="vectors of the OTHER side of every game (the subject's opponent; METHOD_NOTES 2.38); give --name / --tag a suffix such as _opp")
     a = ap.parse_args(argv)
     global STATE
@@ -88,7 +89,7 @@ def main(argv=None):
     if a.sup_ply and a.sup_dims:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import pid_sup
-        sup = pid_sup.load_sup(a.sup_ply)
+        sup = pid_sup.load_sup(a.sup_ply, a.sup_stats)
     for v in a.folds:
         net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}{a.ckpt_suffix}.pt")
         mu_np, sd_np = net.mu.float().cpu().numpy(), net.sd.float().cpu().numpy()
