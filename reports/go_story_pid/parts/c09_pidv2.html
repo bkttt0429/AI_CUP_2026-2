@@ -169,7 +169,7 @@
         <li>模擬題池：每帳號只取 4 局，融合 −0.0212～−0.0301（對基準） <span class="tag t-m">實測</span></li>
         <li>模擬題池加對稱增強：逐手成分 +0.0592 [+0.0472, +0.0719] <span class="tag t-m">實測</span></li>
       </ul>
-      <div class="cause"><span><span class="k">問題</span><b>網路沒看過測試玩家</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>更多不同的人，加上整批隨機棋盤對稱</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>帳號數到 11.6 萬後飽和</b></span><button class="deriv-open" data-sec="28">推導 ▸</button></div>
+      <div class="cause"><span><span class="k">問題</span><b>網路沒看過測試玩家</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>更多不同的人，加上整批隨機棋盤對稱</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>帳號數到十幾萬後效益趨緩</b></span><button class="deriv-open" data-sec="28">推導 ▸</button></div>
     </div>
     <div class="fig">
       <div class="table-wrap">
@@ -222,7 +222,7 @@
     <tr><td><code>x2e</code></td><td>39,683</td><td class="n">0.6849</td><td class="n">0.7491</td><td class="n">+0.0327 [+0.0241, +0.0415]（4／4 池）</td></tr>
     <tr><td>M90 快照</td><td>0（多一個競賽 fold）</td><td class="n">0.6574</td><td class="n">0.7345</td><td class="n">+0.0181 [+0.0089, +0.0271]（4／4 池）</td></tr>
   </table>
-  <p><code>x2e</code> 對 <code>xe</code> 再 +0.0128 [+0.0043, +0.0221]（4／4 池），所以 9,683 到 39,683 個帳號時還沒有飽和。依局數看融合分數（<code>b</code> → <code>x2e</code>）：1 局題 0.482 → 0.510，2 局題 0.667 → 0.704，3 局題 0.800 → 0.841，5 局題 0.917 → 0.942。外部帳號按級別的增益只有方向性：<code>x</code> 對 <code>b</code> 在 6D 約 +0.005，其他級別 +0.027 到 +0.065（每格約 150–250 題，誤差約 ±0.03）。競賽 fold 有 4 個、外部只佔四分之一時（棋力預測那邊的 M101 兩組網路，8 個模擬池）逐手成分單獨 +0.0200 [+0.0106, +0.0291]，融合只剩 +0.0054 [−0.0007, +0.0117]（6／8 池）。</p>
+  <p><code>x2e</code> 對 <code>xe</code> 再 +0.0128 [+0.0043, +0.0221]（4／4 池），所以 9,683 到 39,683 個帳號時還沒有飽和。依局數看融合分數（<code>b</code> → <code>x2e</code>）：1 局題 0.482 → 0.510，2 局題 0.667 → 0.704，3 局題 0.800 → 0.841，5 局題 0.917 → 0.942。外部帳號按級別的增益（單一網路、逐手成分）只有方向性：<code>x</code> 對 <code>b</code> 在 6D 約 +0.005，其他級別 +0.027 到 +0.065（每格約 150–250 題，誤差約 ±0.03）。競賽 fold 有 4 個、外部只佔四分之一時（棋力預測那邊的 M101 兩組網路，8 個模擬池）逐手成分單獨 +0.0200 [+0.0106, +0.0291]，融合只剩 +0.0054 [−0.0007, +0.0117]（6／8 池）。</p>
   <h4>官方候選人上的單一網路（微調前、1 局題，Public 池／Private 池）</h4>
   <table>
     <tr><th>網路</th><th>外部帳號</th><th class="n">1 局題</th></tr>
@@ -232,7 +232,7 @@
     <tr><td><code>o3S</code>（含對稱增強）</td><td>116,420</td><td class="n">0.505／0.523</td></tr>
     <tr><td><code>o4S</code>（含對稱增強）</td><td>182,167</td><td class="n">0.507／0.526</td></tr>
   </table>
-  <p>39,683 到 107,458 個帳號時單一網路 +0.030／+0.032，當時筆記讀作沒有飽和。同配方的 116,420 到 182,167 個帳號，1 局題只 +0.002–0.003；兩個家族加進組成後（官方擬題池）也只差在 0.001 以內，所以後來的官方網路一律用 11.6 萬帳號那一組資料，「帳號數到 11.6 萬後飽和」是這個讀數的結論。</p>
+  <p>39,683 到 107,458 個帳號時單一網路 +0.030／+0.032，當時筆記讀作沒有飽和。同配方的 116,420 到 182,167 個帳號，1 局題只 +0.002–0.003；兩個家族加進組成後（官方擬題池）也只差在 0.001 以內，筆記據此寫「外部帳號的效益在十幾萬個之後明顯趨緩」，總結中又寫成「到 11.6 萬就飽和」。筆記同時提醒，同樣 2 萬步下每個帳號被看到的次數變少，所以也可能是訓練步數不夠；之後沒有在較長訓練下比較 116,420 與 182,167 個帳號，未再檢定。用量上，較早訓練的官方網路（<code>o4S</code>、<code>o5</code>–<code>o9</code> 各家族，含 <code>o7F</code>、<code>o8D</code>、<code>o9D</code>）用 18.2 萬個帳號；11-14 13:00 刪除 scale3 那批的逐手向量之後，筆記寫「之後的官方網路一律用 11.6 萬帳號那一組資料」，<code>o12</code> 寫明用 11.6 萬個帳號。</p>
   <h4>每帳號只取 4 局明顯較差</h4>
   <p>留出 fold 1、2，都帶對稱增強，共用同一份 116,420 個帳號的資料，帳號子集互相巢狀。基準 <code>d0</code> 是 39,683 個帳號、情節 256 人 × 8 局，逐手成分單獨 0.7505、融合 0.7847。</p>
   <table>
@@ -249,7 +249,7 @@
     <tr><td><code>yse</code>（對稱增強，EMA）</td><td class="n">0.7440</td><td class="n">0.7786</td><td class="n">+0.0295 [+0.0204, +0.0387]（4／4 池）</td></tr>
     <tr><td><code>ys</code>（一般版）</td><td class="n">0.7333</td><td class="n">0.7771</td><td class="n">+0.0280 [+0.0188, +0.0374]（4／4 池）</td></tr>
   </table>
-  <p><code>yse</code> 的逐手成分單獨 +0.0592 [+0.0472, +0.0719]。依局數看融合分數（<code>x2e</code> → <code>yse</code>）：1 局題 0.510 → 0.560，2 局題 0.704 → 0.738，3 局題 0.841 → 0.862，5 局題 0.942 → 0.956。筆記的比較：這個幅度是加大網路（+0.0098）的三倍，接近「加 4 萬個外部帳號」的 +0.0327。在官方候選人上（微調前、單一網路，Public 池／Private 池）：<code>px2</code>（<code>x2e</code>，3 個競賽 fold ＋ 39,683 個帳號）1 局題 0.413／0.428、3 局題 0.661／0.679；<code>py</code>（<code>yse</code>，同資料加對稱增強）1 局題 0.475／0.487、3 局題 0.707／0.732。對稱增強在官方玩家上 +0.060（1 局題）、+0.050（3 局題），與模擬題池的逐手成分增益一致。</p>
+  <p><code>yse</code> 的逐手成分單獨 +0.0592 [+0.0472, +0.0719]。依局數看融合分數（<code>x2e</code> → <code>yse</code>）：1 局題 0.510 → 0.560，2 局題 0.704 → 0.738，3 局題 0.841 → 0.862，5 局題 0.942 → 0.956。筆記的比較：這個融合增益是加大網路融合增益（+0.0098）的三倍，接近「加 4 萬個外部帳號」的 +0.0327。在官方候選人上（微調前、單一網路，Public 池／Private 池）：<code>px2</code>（<code>x2e</code>，3 個競賽 fold ＋ 39,683 個帳號）1 局題 0.413／0.428、3 局題 0.661／0.679；<code>py</code>（<code>yse</code>，同資料加對稱增強）1 局題 0.475／0.487、3 局題 0.707／0.732。對稱增強在官方玩家上 +0.060（1 局題）、+0.050（3 局題），與模擬題池的逐手成分增益一致。</p>
   <h4>外部資料進整條流程之後</h4>
   <p>多網路平均加 50 步題池微調後，在 4 個競賽網路之上加一個外部訓練的網路仍 +0.0048 [+0.0008, +0.0091]（<code>x</code>）與 +0.0049 [+0.0010, +0.0091]（<code>xe</code>），4／4 池。第一個含本隊外部訓練網路的上傳檔 <code>pid_v2is_o1.csv</code> 的 Public 是 0.8829460，比前一個定案檔 +0.0051845。</p>
   <p class="src">出處：facts_B B-E01–B-E21、B-M09、B-M13–B-M15、B-M17、B-M18、B-M20、B-R08、B-R13、B-R17、B-R18、B-R09；facts_C C-X11、C-X12、C-X13、C-X32、C-C02、C-C16、C-M06、C-M24；METHOD_NOTES §2.39、§2.46、§2.47、§2.48、§2.50、§2.51、§2.58、§2.59、§2.65、§2.69、§2.81、§2.89。</p>
@@ -262,9 +262,9 @@
       <h3>訓練更久：單一網路不變，合起來變好</h3>
       <ul class="key">
         <li>8 個加長網路（官方候選留局，1 局題）對原逐手成分 +0.0079 [+0.0035, +0.0125] <span class="tag t-m">實測</span></li>
-        <li>加進組成（擬題池）：×6 +0.0038 [+0.0018, +0.0059]；×18 +0.0051 <span class="tag t-m">實測</span></li>
+        <li>o7F 加進組成（擬題池）：×6 +0.0038 [+0.0018, +0.0059]；×18 +0.0051 <span class="tag t-m">實測</span></li>
         <li>筆記歸納：同配方多訓練 20 個網路 +0.002；訓練久一倍的 8 個 +0.005 <span class="tag t-m">實測</span></li>
-        <li>各種設定、遮蔽的新成員，每批約 +0.001～+0.002（擬題池） <span class="tag t-m">實測</span></li>
+        <li>筆記歸納：各種設定、遮蔽的新成員，每批約 +0.001～+0.002 <span class="tag t-i">推論</span></li>
       </ul>
       <div class="cause"><span><span class="k">問題</span><b>同配方再訓練 20 個只 +0.002</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>把訓練拉長</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>同一次訓練的快照彼此太像</b></span><button class="deriv-open" data-sec="29">推導 ▸</button></div>
     </div>
@@ -319,7 +319,7 @@
   <p>筆記的判斷：全部在雜訊內，這個方向的上限約是擬題池 +0.005。</p>
   <h4>訓練長度：2 萬、3 萬、4 萬步（官方候選留局、微調前）</h4>
   <table>
-    <tr><th>步數（同一批種子的快照）</th><th class="n">單一網路 1 局題（Public／Private 池）</th><th class="n">單一網路 3 局題</th><th class="n">8 個合起來 1 局題</th><th class="n">8 個合起來 3 局題</th></tr>
+    <tr><th>步數（2 萬、3 萬步為同一批種子的快照；4 萬步為完成版）</th><th class="n">單一網路 1 局題（Public／Private 池）</th><th class="n">單一網路 3 局題</th><th class="n">8 個合起來 1 局題</th><th class="n">8 個合起來 3 局題</th></tr>
     <tr><td>2 萬（<code>o3SK</code>）</td><td class="n">0.506／0.521</td><td class="n">0.730／0.769</td><td class="n">0.5697</td><td class="n">0.7778</td></tr>
     <tr><td>3 萬（<code>o3SM</code>）</td><td class="n">0.499／0.514</td><td class="n">0.723／0.762</td><td class="n">0.5761</td><td class="n">0.7913</td></tr>
     <tr><td>4 萬（<code>o3SL</code>）</td><td class="n">0.491／0.505</td><td class="n">0.719／0.751</td><td class="n">0.5763</td><td class="n">0.7926</td></tr>
@@ -340,14 +340,14 @@
   <div class="report">
     <div class="txt">
       <div class="num">第 15 章 · 玩家辨識：讓序列網路變強的做法 · 3／3</div>
-      <h3>有監督的逐手輸入：換一種看棋的方式，單獨最強、也最互補</h3>
+      <h3>有監督的逐手輸入：換一種看棋的方式，單獨最強、也和加長訓練互補</h3>
       <ul class="key">
         <li>官方候選留局，單一網路 1 局題：一般 0.505／0.523 → A 型 0.544／0.557 <span class="tag t-m">實測</span></li>
-        <li>1 局題合起來：加長 8 個＋有監督 16 個 0.6023；一般 12 個 0.5734 <span class="tag t-m">實測</span></li>
+        <li>官方候選留局，1 局題合起來：加長 8＋有監督 16 個 0.6023；一般 12 個 0.5734 <span class="tag t-m">實測</span></li>
         <li>加長＋有監督成員，擬題池 +0.0082 [+0.0054, +0.0110] → Public 0.9035072 <span class="tag t-m">實測</span></li>
         <li>3 萬步完成版，擬題池 +0.0035 [+0.0020, +0.0049] → Public 0.9069275 <span class="tag t-m">實測</span></li>
       </ul>
-      <div class="cause"><span><span class="k">問題</span><b>同一種輸入的網路加再多也飽和</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>輸入換成有監督的判別方向</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>小資料時 +0.048；官方候選上高約 0.016，較小但不是零</b></span><button class="deriv-open" data-sec="30">推導 ▸</button></div>
+      <div class="cause"><span><span class="k">問題</span><b>同配方的網路 12 個加到 16 個幾乎沒有增加</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>輸入換成有監督的判別方向</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>小資料時 +0.048；官方候選上高約 0.016，較小但不是零</b></span><button class="deriv-open" data-sec="30">推導 ▸</button></div>
     </div>
     <div class="fig">
       <div class="bars" id="chart-pid2-single"></div>
@@ -381,7 +381,7 @@
     <tr><td>u3：只留有監督投影</td><td class="n">0.7036</td><td class="n">+0.0004 [−0.0124, +0.0122]</td><td class="n">0.7564</td><td class="n">−0.0013 [−0.0101, +0.0073]</td></tr>
   </table>
   <p>17:52 依事先規則（u2 對 u0 的逐手成分單獨要 ≥ +0.024 才進全量、&lt; +0.01 關閉），實測 +0.0047，判「關閉」，當時的解讀是探針 B 的 +0.048 是小資料現象。18:16–18:45 這個判定被撤回：u2 的區間 [−0.0075, +0.0169] 本來就涵蓋 +0.016，而官方玩家上有監督輸入的單一網路確實高 0.016；規則的門檻（+0.01）定得比這個工具的解析度（約 ±0.012）還細，筆記寫「判錯的是規則，不是資料」。結論不是「放大後消失」，而是「比小資料時看到的小，但不是零」，這條線恢復，<code>o12</code> 的兩個版本隨後進了 19:00 與 21:03 的上傳檔。</p>
-  <h4>(c) 依網路讀什麼分開看（<code>o12K</code>，2 萬步快照；官方候選留局、微調前）</h4>
+  <h4>(c) 依網路讀什麼分開看（官方候選留局、微調前；<code>o12</code> 為 2 萬步快照 <code>o12K</code>）</h4>
   <table>
     <tr><th>網路</th><th>讀什麼</th><th class="n">1 局題（Public 池／Private 池）</th></tr>
     <tr><td><code>o3S</code></td><td>一般對稱增強（2 萬步）</td><td class="n">0.505／0.523</td></tr>
