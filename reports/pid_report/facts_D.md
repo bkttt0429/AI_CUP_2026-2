@@ -23,7 +23,7 @@
 
 ## 7. 外部資源
 
-- **[D-E01]** KataGo 人類風格網路的來源（2026-11-15 查發布頁與磁碟上的檔）：GitHub `lightvector/KataGo` 的發布 v1.15.0（標題 "New Human-like Play and Analysis"）；資產檔名 `b18c384nbt-humanv0.bin.gz`（下載網址 `https://github.com/lightvector/KataGo/releases/download/v1.15.0/b18c384nbt-humanv0.bin.gz`）與給開發者用的 PyTorch 檢查點 `b18c384nbt-humanv0.ckpt`；本隊用的是後者（2026-10-15 取得）。發布頁說這個模型是用大量人類棋譜訓練、預測不同棋力與年代的人類落子；發布頁沒有另外載明模型檔的授權，授權一欄待參賽者核對 KataGo 專案的授權條款後填入。｜出處：發布頁 `https://github.com/lightvector/KataGo/releases/tag/v1.15.0`（2026-11-15 讀取）；檔案 `AI_CUP_2026-1/models/katago/`
+- **[D-E01]** KataGo 人類風格網路的來源（2026-11-15 查發布頁與磁碟上的檔）：GitHub `lightvector/KataGo` 的發布 v1.15.0（標題 "New Human-like Play and Analysis"）；資產檔名 `b18c384nbt-humanv0.bin.gz`（下載網址 `https://github.com/lightvector/KataGo/releases/download/v1.15.0/b18c384nbt-humanv0.bin.gz`）與 `b18c384nbt-humanv0.ckpt`（發布頁說明後者是同一個模型的另一種檔案格式：給開發者用的原始 PyTorch 檢查點）；本隊用的是後者（2026-10-15 取得）。發布頁說這個模型是用大量人類棋譜訓練、預測不同棋力與年代的人類落子；發布頁沒有另外載明模型檔的授權，授權一欄待參賽者核對 KataGo 專案的授權條款後填入。｜出處：發布頁 `https://github.com/lightvector/KataGo/releases/tag/v1.15.0`（2026-11-15 讀取）；檔案 `AI_CUP_2026-1/models/katago/`
 - **[D-E02]** 棋力預測那邊的 M88／M90／M101 網路不是外部資源，是跨競賽沿用：它們是同一位參賽者在另一個競賽（棋力預測）的工作中自己訓練的逐手序列網路，沒有下載來源與授權的問題，但要在報告中說明沿用。它們看過的資料：net −1 不排除任何 fold（含 fold 0），交叉網路各少看一個 fold（訓練程式 `m88_seqid.py` 的條件 `use = ~is_held & (fold != v)`，v = −1 不排除任何 fold）；11-13 的上傳檔平均的 20 個網路裡，4 個是 net −1（M88 一個、M90 三個種子），16 個是交叉網路。M101 的交叉網路看過含 fold 0 的 4 個 fold（B-M16）。｜出處：METHOD_NOTES §2.40（行 553）、§2.47（行 705）
 
 ## 5. 沒有通過的方向（11-15 的重測）
