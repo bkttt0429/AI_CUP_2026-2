@@ -2,21 +2,22 @@
 <section class="page cover divider" id="pid" data-title="競賽一：玩家辨識" data-divider="競賽一：玩家辨識">
   <p class="cover-kicker">AI CUP 2026 秋季賽 · 圍棋棋力與風格預測競賽 · 競賽一</p>
   <h2>玩家辨識</h2>
-  <p class="cover-sub">每題給同一人 5–20 局黑棋棋譜，在 400 位候選人中排出最可能是誰的前 5 名</p>
+  <p class="cover-sub">原始題池每題 5–20 局黑棋、400 位候選人；11-12 新增的題池每題 1–5 局、600 位候選人、每人只有 10 局</p>
   <p class="metaline">畫虛線的名詞，滑鼠指向或手指點一下會顯示一行說明</p>
   <div class="kpis">
-    <div class="kpi"><div class="v">0.9937580</div><div class="l">Public：模型直接輸出的最佳檔（fusion3o_ref ＋ 一對一配對）</div></div>
-    <div class="kpi warn"><div class="v">1.0000000</div><div class="l">Public：用排行榜回饋修正 3 題後（只改 Public，第 11 章）</div></div>
+    <div class="kpi"><div class="v">0.9069275</div><div class="l">Public（11-14 的定案檔 pid_v2c2_bs.csv，21:03；v2 測試集）</div></div>
+    <div class="kpi"><div class="v">0.9937580</div><div class="l">原始測試集的 Public（11-08 重發前）：模型直接輸出的最佳檔</div></div>
+    <div class="kpi warn"><div class="v">1.0000000</div><div class="l">原始測試集：Public：用排行榜回饋修正 3 題後（只改 Public，第 11 章）</div></div>
     <div class="kpi"><div class="v">0.2845</div><div class="l">官方 baseline 的 Public 分數</div></div>
   </div>
-  <p class="metaline">2026-11-06 · 程式與紀錄：AI_CUP_2026-2（METHOD_NOTES §2.4–§2.20）</p>
+  <p class="metaline">2026-11-14 · 程式與紀錄：AI_CUP_2026-2（METHOD_NOTES §2.1–§2.115）；第 8–12 章寫於 11-06（原始測試集），第 13 章起是新增題池</p>
 </section>
 
 <!-- ================= 第 8 章：任務與評分 ================= -->
 <section class="page card" id="card-pid-task" data-sec="15" data-ch="8" data-chtitle="玩家辨識：任務與評分" data-title="任務與評分">
   <div class="report">
     <div class="txt">
-      <div class="num">第 8 章 · 玩家辨識：任務與評分</div>
+      <div class="num">第 8 章 · 玩家辨識：任務與評分（原始測試集，11-06）</div>
       <h3>任務：每題 5–20 局，在 400 位候選人中排出前 5 名</h3>
       <div class="formula">
         <div class="eq">正解排第 r 名得 e<sup>−(r−1)</sup> 分；不在前 5 名得 0</div>
@@ -83,7 +84,7 @@
 <section class="page card" id="card-pid-arch" data-sec="16" data-ch="9" data-chtitle="玩家辨識：方法" data-title="整體架構">
   <div class="report stack">
     <div class="txt">
-      <div class="num">第 9 章 · 玩家辨識：方法 · 1／3</div>
+      <div class="num">第 9 章 · 玩家辨識：方法 · 1／3（原始測試集，11-06）</div>
       <h3>整體架構：每種習慣各算一張分數表 → 加權融合 → 一對一配對 → 前 5 名</h3>
       <ul class="key cols3">
         <li><b>成分</b>：每位候選人用自己的 100 局建模型，每題對 400 人各給一個 log 分數；最終檔用開局、風格、局部棋形、原始方向、參考玩家相似度五種，新最終候選再加強模型的 trunk 風格（第 12 章）</li>
@@ -118,7 +119,7 @@
 <section class="page card" id="card-pid-comp" data-sec="17" data-ch="9" data-title="各成分的增益">
   <div class="report">
     <div class="txt">
-      <div class="num">第 9 章 · 玩家辨識：方法 · 2／3</div>
+      <div class="num">第 9 章 · 玩家辨識：方法 · 2／3（原始測試集，11-06）</div>
       <h3>每加一種習慣都過了事先寫好的門檻；最大的兩步是局部棋形與參考玩家</h3>
       <div class="formula">
         <div class="eq">採用 ⇔ CI 下界 &gt; 0 且 兩庫同向 且（整體 ≥ 0.003 或 n＝5 ≥ 0.005）</div>
@@ -166,7 +167,7 @@
 <section class="page card" id="card-pid-assign" data-sec="18" data-ch="9" data-title="一對一配對">
   <div class="report">
     <div class="txt">
-      <div class="num">第 9 章 · 玩家辨識：方法 · 3／3</div>
+      <div class="num">第 9 章 · 玩家辨識：方法 · 3／3（原始測試集，11-06）</div>
       <h3>一對一配對：Top-1 從「每題各選」改成「整庫一起選」</h3>
       <div class="formula">
         <div class="eq">Top-1 ＝ argmax<sub>π</sub> Σ<sub>q</sub> S(q, π(q))，π 是 400 題到 400 人的一對一指派</div>
@@ -211,7 +212,7 @@
 <section class="page card" id="card-pid-valid" data-sec="19" data-ch="10" data-chtitle="玩家辨識：驗證與 Public 對照" data-title="驗證與 Public">
   <div class="report">
     <div class="txt">
-      <div class="num">第 10 章 · 玩家辨識：驗證與 Public 對照</div>
+      <div class="num">第 10 章 · 玩家辨識：驗證與 Public 對照（原始測試集，11-06）</div>
       <h3>模擬庫上的事先指定比較，和 Public 的方向全部一致</h3>
       <div class="formula">
         <div class="eq">模擬庫：訓練 folds 1+2、3+4 各組一庫 400 人，每人 100 局當候選、其餘局切題</div>
@@ -268,7 +269,7 @@
 <section class="page card" id="card-pid-probe" data-sec="20" data-ch="11" data-chtitle="玩家辨識：Public 探測" data-title="Public 探測">
   <div class="report">
     <div class="txt">
-      <div class="num">第 11 章 · 玩家辨識：Public 探測 <span class="tag t-p">只改 Public</span></div>
+      <div class="num">第 11 章 · 玩家辨識：Public 探測（原始測試集，11-06） <span class="tag t-p">只改 Public</span></div>
       <h3>用排行榜回饋解出 Public 最後 3 題：它們是一個 3-環</h3>
       <div class="formula">
         <div class="eq">0.9937580 ⇒ 損失 2.4968 分 ＝ 0.632 ＋ 0.865 ＋ 1</div>
@@ -332,7 +333,7 @@
 <section class="page card" id="card-pid-private" data-sec="21" data-ch="12" data-chtitle="玩家辨識：強模型訊號與 Private" data-title="trunk 與 Private">
   <div class="report">
     <div class="txt">
-      <div class="num">第 12 章 · 玩家辨識：強模型訊號與 Private</div>
+      <div class="num">第 12 章 · 玩家辨識：強模型訊號與 Private（原始測試集，11-06）</div>
       <h3>加上強模型的每手訊號（trunk），模型自己就在 Public 400 題全對</h3>
       <div class="formula">
         <div class="eq">新最終候選 ＝ fusion3o_ref ＋ trunk 風格 ＋ 一對一配對</div>
@@ -344,7 +345,7 @@
         <li>一人一題加配對的最終 CV：4,000 題錯 24 → <b>2</b>，+0.0048 [+0.0026, +0.0072]，通過</li>
         <li>Public 離線：不配對 2 錯、配對 <b>0 錯 → 1.0000000</b>；探測才解出的 3 題它全答對</li>
         <li>和現行最終檔比，Private 改 4 題 Top-1；Private 預估從約 0.992 升到 0.997–1.0 <span class="tag t-i">推論</span></li>
-        <li>11-07 上傳；若 Public 是 1.0000000，它就取代 upload_fix 成為最後一筆</li>
+        <li>（11-06 時的計畫；之後測試集重發，見第 13 章）</li>
       </ul>
       <div class="cause"><span><span class="k">問題</span><b>剩下的錯題計數成分都認不出</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>改用強模型每手的內部向量當風格</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>要 GPU 抽取 30.5 萬局（約 35 分鐘）</b></span><button class="deriv-open" data-sec="21">推導 ▸</button></div>
     </div>
@@ -398,6 +399,6 @@
   </table>
   <p>trunk 單獨：CV 0.9729／0.9665、Public 0.968（n＝5 0.89）；融合權重開局 3.45、風格 0.68、局部棋形 0.42、原始方向 0.95、參考玩家 1.56、trunk 5.24。不配對時 400 題的 Top-1 已有 398 位不同的人，配對只改 2 題。</p>
   <p>獨立審查：三個審查員（洩漏、官方檔鍵值對齊、統計）各自讀程式，每個發現再由兩人試著反駁。沒有洩漏；唯一成立的是模擬庫約 3% 的讓子局（HD[2–9]）只有 trunk 用實際顏色重播，CV 增益可能高估約 0.002–0.008。官方檔沒有這類局，Public 離線的 400 題全對不受影響。</p>
-  <p>和現行最終檔 fusion3o_ref＋配對比：Public 只改 3 題，正是第 11 章那個 3-環；Private 改 4 題（priv_q_0115、priv_q_0124、priv_q_0207、priv_q_0255）。新檔 results/submission_f3oreft_assign/ 已通過格式檢查，11-07 上傳；Public 若是 1.0000000，就由它取代 upload_fix 成為截止前的最後一筆。</p>
+  <p>和現行最終檔 fusion3o_ref＋配對比：Public 只改 3 題，正是第 11 章那個 3-環；Private 改 4 題（priv_q_0115、priv_q_0124、priv_q_0207、priv_q_0255）。新檔 results/submission_f3oreft_assign/ 已通過格式檢查。（11-06 時的計畫；之後測試集重發，見第 13 章）</p>
   <p class="src">出處：scripts/pid_public_analysis.py、results/probe/public_analysis{,_trunk}.json、results/final/final_cv_{e,trunk}.json、results/trunk/trunk_cv.json、scripts/pid_trunk_extract.py、src/aicup_pid/trunkstyle.py；METHOD_NOTES §2.20、§2.21。</p>
 </section>
