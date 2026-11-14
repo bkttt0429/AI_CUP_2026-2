@@ -121,9 +121,10 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
 
 
 ARCH0 = (m88.D, m88.LAYERS, m88.HEADS, m88.FFN)
-SUP_POOLS = ["/work/u2507115/pid_v2/sup_pools/ply"]  # official pools (scripts/pid_sup_ply_extract.py --pools)
-SUP_TRAIN = ["/work/u2507115/pid_v2/probeb/ply", "/work/u2507115/pid_v2/probec/ply"]  # competition training games
-SUP_STATS = "/work/u2507115/pid_v2/probeb/stats.npz"
+# supervised feature sets by the name a checkpoint records (pid_seq_train.py --sup-name): official pools' parts, competition
+# training games' parts (sim mode), the stats file of the set
+SUP_SETS = {None: (["/work/u2507115/pid_v2/sup_pools/ply"], ["/work/u2507115/pid_v2/probeb/ply", "/work/u2507115/pid_v2/probec/ply"], "/work/u2507115/pid_v2/probeb/stats.npz"),
+            "js": (["/work/u2507115/pid_v2/supj/pools"], ["/work/u2507115/pid_v2/probep/ply_js", "/work/u2507115/pid_v2/supj/comp"], "/work/u2507115/pid_v2/probep/stats_js.npz")}
 
 
 def load_net(ckpt, state="best"):
@@ -246,8 +247,9 @@ def main(argv=None):
         assert not a.mix_fold and not a.mix_original, "the mixing options have no supervised features"
         sys.path.insert(0, str(R2 / "scripts"))
         import pid_sup
-        stores = SUP_TRAIN if a.mode == "sim" else SUP_POOLS
-        idx_s, D_s = pid_sup.dense(pid_sup.load_sup(stores, SUP_STATS), A["key"].tolist(), A["GL"].shape[1])
+        pools_, train_, stats_ = SUP_SETS[net.sup_cfg.get("name")]
+        stores = train_ if a.mode == "sim" else pools_
+        idx_s, D_s = pid_sup.dense(pid_sup.load_sup(stores, stats_), A["key"].tolist(), A["GL"].shape[1])
         if (idx_s < 0).any():
             raise KeyError(f"{int((idx_s < 0).sum())} pool games without supervised per-ply features, e.g. {A['key'][idx_s < 0][:3].tolist()}")
         z_s = D_s[idx_s].astype(np.float32)

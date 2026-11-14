@@ -226,6 +226,7 @@ def main(argv=None):
     ap.add_argument("--sup-dims", type=int, nargs=2, default=None, metavar=("FROM", "TO"), help="put the supervised features into these input dimensions (0 64: in place of the pooled half, 64 128: of the played-point half)")
     ap.add_argument("--sup-only", action="store_true", help="with --sup-dims: every other input dimension is set to its mean")
     ap.add_argument("--sup-require", action="store_true", help="train only on games that have supervised features (the same games for every arm of the probe)")
+    ap.add_argument("--sup-name", default=None, help="name of the supervised feature set, recorded in the checkpoint so that the pool fine-tune reads the matching pool features (None: the first set, METHOD_NOTES 2.88; js: the joint projection with the policy-expected vector + 4 scalars, 2.110)")
     ap.add_argument("--ext-second", nargs="*", default=None, help="second.csv files of scripts/ext_fox_census.py: external games are also read from the other player's side")
     ap.add_argument("--no-second", action="store_true", help="leave the second-side rows out (a control arm inside a job that loaded them)")
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
@@ -486,7 +487,7 @@ def main(argv=None):
                 continue
             sd_ = cpu(model)  # one copy, under both names the loaders know (two separate copies doubled every file)
             torch.save({"best_state": sd_, "net": sd_, "best": {**meta, "step": at, "state": label}, "step": at, "arch": arch,
-                        "sup": ({"dims": list(a.sup_dims), "only": bool(a.sup_only)} if a.sup_dims else None)}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
+                        "sup": ({"dims": list(a.sup_dims), "only": bool(a.sup_only), "name": a.sup_name} if a.sup_dims else None)}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
 
     net.train()
     ar, tl, ta, tc, t_last, every = np.arange(P), 0.0, 0.0, 0.0, time.time(), (50 if a.smoke else 500)
