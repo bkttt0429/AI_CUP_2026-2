@@ -8,17 +8,17 @@
 
 **Tech Stack:** static HTML + JS parts concatenated by `assemble.py`; `check.py` (python3 + node) lints the built page; the checker is python3 standard library only. No framework, no new dependency.
 
-**Spec:** the facts library `/home/u2507115/BK_AICUP_2026-2/reports/pid_report/facts_A.md`, `facts_B.md`, `facts_C.md` (read all three before Task 2) plus the "Content spec" inside each task below. The working notes `/home/u2507115/BK_AICUP_2026-2/METHOD_NOTES.md` are the source of the facts; open them only to resolve a doubt, at the line range a fact cites.
+**Spec:** the facts library `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_A.md`, `facts_B.md`, `facts_C.md` (read all three before Task 2) plus the "Content spec" inside each task below. The working notes `/home/u2507115/BK_AICUP_2026-2/METHOD_NOTES.md` are the source of the facts; open them only to resolve a doubt, at the line range a fact cites.
 
 ## Global Constraints
 
 - Report text is Traditional Chinese (Taiwan usage). No Simplified characters. Internal names (`pid_v2c2_bs.csv`, `o12F`, …) stay in ASCII exactly as in the facts.
 - Every number written into `c08_pid.html`, `c09_pidv2.html` or `a08b_pidv2.js` is copied verbatim from a fact (all digits, sign, interval brackets). Never round, average, sum or otherwise compute a number that no fact states. If a number given in this plan is not found in the facts, do NOT write it: use the facts' value if the same quantity is there, otherwise leave the sentence out and list it in the task report under "not found".
-- Files you may create: `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/c09_pidv2.html`, `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/a08b_pidv2.js`, `/home/u2507115/BK_AICUP_2026-2/reports/pid_report/check_numbers.py`, `/home/u2507115/BK_AICUP_2026-2/reports/pid_report/build_log.md`, `/home/u2507115/.cache/report_audit/job_pid_build.sh`.
-- Files you may edit, and only in the places a task names: `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/c08_pid.html`, `.../parts/a09_terms.js` (append entries only), `/home/u2507115/BK_AICUP_2026-1/reports/go_story/講稿_關鍵.md` (only the part under the heading `## 競賽一　玩家辨識`).
-- Do not edit any other file in `/home/u2507115/BK_AICUP_2026-1` (it belongs to another working session). In particular do not edit `10_num.js`, `c00`–`c07`, `a01`–`a07`, `assemble.py`, `check.py`.
-- No git command in `/home/u2507115/BK_AICUP_2026-1` at all. In `/home/u2507115/BK_AICUP_2026-2` do not commit either; the plan's owner commits after review.
-- Cluster rule: nothing is computed on the login node. `assemble.py`, `check.py` and `check_numbers.py` are run ONLY through the job script of Task 1 (`sbatch ... scripts/nano4/run.sbatch bash ~/.cache/report_audit/job_pid_build.sh`, submitted from `/home/u2507115/BK_AICUP_2026-1`). Editing files and reading logs on the login node is fine.
+- Files you may create: `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/c09_pidv2.html`, `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/a08b_pidv2.js`, `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/check_numbers.py`, `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/build_log.md`, `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/job_pid_build.sh`.
+- Files you may edit, and only in the places a task names: `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/c08_pid.html`, `.../parts/a09_terms.js` (append entries only), `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/講稿_關鍵.md` (only the part under the heading `## 競賽一　玩家辨識`).
+- All work happens in the git worktree `/home/u2507115/.cache/pidrpt_wt` (branch `nano4/pid-report`), which holds a tracked copy of the report sources in `reports/go_story_pid/`. Never touch `/home/u2507115/BK_AICUP_2026-1/reports/go_story` (the live copy, owned by another working session); the plan's owner delivers the finished files there. Inside the copy do not edit `10_num.js`, `c00`–`c07`, `a01`–`a07`, `assemble.py`, `check.py`.
+- Git: commit only inside the worktree `/home/u2507115/.cache/pidrpt_wt`, one commit per task, with `git -c user.name=bkttt0429 -c user.email=ken910429@gmail.com commit -m "report: <what>"`; add only the files the task names. Never push, never switch branch, never run git in `/home/u2507115/BK_AICUP_2026-1` or in `/home/u2507115/BK_AICUP_2026-2`. `build_log.md` is committed with each task.
+- Cluster rule: nothing is computed on the login node. `assemble.py`, `check.py` and `check_numbers.py` are run ONLY through the job script of Task 1 (`sbatch ... scripts/nano4/run.sbatch bash /home/u2507115/.cache/pidrpt_wt/reports/pid_report/job_pid_build.sh`, submitted with the shell's working directory set to `/home/u2507115/BK_AICUP_2026-1` for that one command, because `scripts/nano4/run.sbatch` and the job logs `logs/nano4/` live there; submitting and reading its log is the only thing done in that directory). Editing files and reading logs on the login node is fine.
 - Card limits (the page has a presentation mode that overflowed before): at most 4 bullets in `ul.key`, at most 44 full-width characters per bullet, at most 6 table rows on a card. Longer material goes into the derivation section (`section.lesson`).
 - Status tags: a bullet that states a measured number ends with `<span class="tag t-m">實測</span>`; an interpretation ends with `<span class="tag t-i">推論</span>`; anything that used leaderboard feedback carries `<span class="tag t-p">用了 Public 回饋</span>`.
 - No personal data: no personal names, e-mail addresses, tokens or account identifiers. Do not state a leaderboard rank except in the exact form the facts give it (for example `當時 1／81`).
@@ -37,7 +37,7 @@
 
 ## Shared reference for all tasks
 
-**Page conventions (copy them from an existing card, do not invent markup).** Open `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/c08_pid.html` and use the card `id="card-pid-assign"` together with its `section.lesson id="sec-18"` as the model. A card is:
+**Page conventions (copy them from an existing card, do not invent markup).** Open `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/c08_pid.html` and use the card `id="card-pid-assign"` together with its `section.lesson id="sec-18"` as the model. A card is:
 
 ```html
 <section class="page card" id="card-pid2-NAME" data-sec="N" data-ch="C" data-title="短標題">
@@ -88,22 +88,22 @@ The first card of a chapter also carries `data-chtitle="章名"`. A table on a c
 ### Task 1: Number checker and build job
 
 **Files:**
-- Create: `/home/u2507115/BK_AICUP_2026-2/reports/pid_report/check_numbers.py`
-- Create: `/home/u2507115/.cache/report_audit/job_pid_build.sh`
-- Create: `/home/u2507115/BK_AICUP_2026-2/reports/pid_report/build_log.md` (one line per build: time, job id, result)
+- Create: `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/check_numbers.py`
+- Create: `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/job_pid_build.sh`
+- Create: `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/build_log.md` (one line per build: time, job id, result)
 
 **Interfaces:**
 - Produces: `python3 check_numbers.py [--selftest] [--cards] FILE...` — exit status 0 when every checked number is traceable, 1 otherwise; prints one line per untraceable number: `FILE:LINE: NUMBER not in facts: <30 characters of context>`.
-- Produces: `bash ~/.cache/report_audit/job_pid_build.sh` — runs assemble, check.py and the checker, prints their outputs and a last line `PID_BUILD OK` or `PID_BUILD FAILED`.
+- Produces: `bash /home/u2507115/.cache/pidrpt_wt/reports/pid_report/job_pid_build.sh` — runs assemble, check.py and the checker, prints their outputs and a last line `PID_BUILD OK` or `PID_BUILD FAILED`.
 
 - [ ] **Step 1: Write `check_numbers.py`**
 
 Signature and behaviour (the body is yours):
 
 ```python
-FACTS = ["/home/u2507115/BK_AICUP_2026-2/reports/pid_report/facts_A.md",
-         "/home/u2507115/BK_AICUP_2026-2/reports/pid_report/facts_B.md",
-         "/home/u2507115/BK_AICUP_2026-2/reports/pid_report/facts_C.md"]
+FACTS = ["/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_A.md",
+         "/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_B.md",
+         "/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_C.md"]
 EXTRA = ["+0.0713", "+0.0583", "0.82", "+0.0104", "+0.0148", "+0.0227", "+0.0037", "+0.0068"]  # the corrected calibration totals
 
 def numbers(text: str) -> list[tuple[int, str]]:
@@ -129,7 +129,7 @@ def card_limits(html: str) -> list[str]:
 # Build and lint of the report page with the player-identification checks. Run through run.sbatch only.
 set -uo pipefail
 main() {
-  local G=/home/u2507115/BK_AICUP_2026-1/reports/go_story P=/home/u2507115/BK_AICUP_2026-2/reports/pid_report rc=0
+  local G=/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid P=/home/u2507115/.cache/pidrpt_wt/reports/pid_report rc=0
   python3 $P/check_numbers.py --selftest || { echo "selftest FAILED"; rc=1; }
   python3 $G/assemble.py || rc=1
   python3 $G/check.py || rc=1
@@ -146,7 +146,7 @@ main "$@"; exit $?
 
 - [ ] **Step 3: Run it once before any content change**
 
-Run (from `/home/u2507115/BK_AICUP_2026-1`): `sbatch --parsable -p 8gpus,16gpus --gres=gpu:1 -c 4 -t 00:15:00 -J pid_rpt scripts/nano4/run.sbatch bash /home/u2507115/.cache/report_audit/job_pid_build.sh`, wait until `squeue -j <id>` is empty, read `logs/nano4/pid_rpt-<id>.out`.
+Run (from `/home/u2507115/BK_AICUP_2026-1`): `sbatch --parsable -p 8gpus,16gpus --gres=gpu:1 -c 4 -t 00:15:00 -J pid_rpt scripts/nano4/run.sbatch bash /home/u2507115/.cache/pidrpt_wt/reports/pid_report/job_pid_build.sh`, wait until `squeue -j <id>` is empty, read `logs/nano4/pid_rpt-<id>.out`.
 Expected: `selftest` passes; `check.py` prints `OK` with `anims 18, charts 10` and 0 errors; the checker lists the numbers of the OLD chapter `c08_pid.html` that are not in the facts (this list is the baseline; copy it into `build_log.md` under the heading `baseline`). The last line may be `PID_BUILD FAILED` at this point because of that list; that is the expected "red" state.
 
 ---
@@ -154,7 +154,7 @@ Expected: `selftest` passes; `check.py` prints `OK` with `anims 18, charts 10` a
 ### Task 2: Numbers and charts (`a08b_pidv2.js`)
 
 **Files:**
-- Create: `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/a08b_pidv2.js`
+- Create: `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/a08b_pidv2.js`
 
 **Interfaces:**
 - Consumes: helpers of `01_engine_head.js` (`barRows`, `f4`), the global `CHARTS`.
@@ -169,8 +169,8 @@ Expected: `selftest` passes; `check.py` prints `OK` with `anims 18, charts 10` a
 | `single` | `[家族, 說明, Public 池候選人的單一網路 1 局題分數, Private 池的]` for `o3S`, `o6X`, `o7F`, `o12` B 型, `o12` C 型, `o12` A 型 | `facts_C.md` (METHOD_NOTES §2.110) |
 
 The last five tuples of `climb` must read exactly (check them against the facts):
-`['11-14 00:06', 'pid_v2is_o1.csv', 0.8829460, '第一批含外部帳號的官方網路']`, `['11-14 04:50', 'pid_v2w_n8s.csv', 0.8903230, '棋盤對稱增強的網路']`, `['11-14 13:42', 'pid_v2sl_alls.csv', 0.9016519, '對稱網路 12 個種子＋4 萬步＋加大']`, `['11-14 19:00', 'pid_v2x_ns.csv', 0.9035072, '加長訓練＋有監督輸入（2 萬步快照）']`, `['11-14 21:03', 'pid_v2c2_bs.csv', 0.9069275, '有監督輸入換成 3 萬步完成版']`.
-Write the scores as strings where a trailing zero matters (`'0.8829460'`), and pass `parseFloat` of them to `barRows`.
+`['11-14 00:06', 'pid_v2is_o1.csv', '0.8829460', '第一批含外部帳號的官方網路']`, `['11-14 04:50', 'pid_v2w_n8s.csv', '0.8903230', '棋盤對稱增強的網路']`, `['11-14 13:42', 'pid_v2sl_alls.csv', '0.9016519', '對稱網路 12 個種子＋4 萬步＋加大']`, `['11-14 19:00', 'pid_v2x_ns.csv', '0.9035072', '加長訓練＋有監督輸入（2 萬步快照）']`, `['11-14 21:03', 'pid_v2c2_bs.csv', '0.9069275', '有監督輸入換成 3 萬步完成版']`.
+Every score and gain in `P2` is a STRING (so trailing zeros and signs survive); pass `parseFloat` of it to `barRows` as the bar value and the string itself as the display text.
 
 - [ ] **Step 2: Write the four charts**
 
@@ -188,7 +188,7 @@ Run the job of Task 1. Expected in the log: `check.py` reports 0 errors (its har
 ### Task 3: Chapter 13 — the added pools and the v2 pipeline
 
 **Files:**
-- Create: `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/c09_pidv2.html` (starts with the comment `<!-- ================= 第 13 章：新增題池與 v2 流程（11-14 加） ================= -->`)
+- Create: `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/c09_pidv2.html` (starts with the comment `<!-- ================= 第 13 章：新增題池與 v2 流程（11-14 加） ================= -->`)
 
 **Interfaces:**
 - Consumes: `chart-pid2-arch` from Task 2.
@@ -381,7 +381,7 @@ Content spec:
 ### Task 9: Pinned edits to the old chapters (`c08_pid.html`)
 
 **Files:**
-- Modify: `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/c08_pid.html` (only the elements named below)
+- Modify: `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/c08_pid.html` (only the elements named below)
 
 **Interfaces:**
 - Consumes: facts_A sections 1, 2 and 8 for what happened after 2026-11-06.
@@ -405,8 +405,9 @@ Content spec:
 ### Task 10: Glossary, speaker script, final build
 
 **Files:**
-- Modify (append entries): `/home/u2507115/BK_AICUP_2026-1/reports/go_story/parts/a09_terms.js`
-- Modify (the player-ID part only): `/home/u2507115/BK_AICUP_2026-1/reports/go_story/講稿_關鍵.md`
+- Modify (append entries): `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/parts/a09_terms.js`
+- Modify (the player-ID part only): `/home/u2507115/.cache/pidrpt_wt/reports/go_story_pid/講稿_關鍵.md`
+- Modify (add the `OLD_BASELINE` allow-list only): `/home/u2507115/.cache/pidrpt_wt/reports/pid_report/check_numbers.py`
 
 - [ ] **Step 1: Append glossary entries** to the `TERMS` list in the form the file already uses (`['術語', '一行說明'],`), each at most 40 characters of explanation: 擬題池、題池微調、軟性配對、對稱增強、外部帳號、有監督投影、逐手序列網路、官方網路、EMA、fold. Explanations must agree with the definitions in facts section 3 / 6; do not add a term that is already in the list.
 
@@ -422,8 +423,8 @@ Content spec:
 
 1. Review `c09_pidv2.html` against the facts (a fresh reviewer on the strongest model), read `build_log.md`, resolve the "not found" list.
 2. Ask the participant for the wording of the generative-AI disclosure (Task 7 placeholder) and for approval of the outline.
-3. Tell the other session (it owns the rest of the page) that `c09_pidv2.html`, `a08b_pidv2.js` and the listed edits exist, then republish the artifact from `reports/go_story/index.html`.
-4. Commit `reports/pid_report/` and this plan in `/home/u2507115/BK_AICUP_2026-2`.
+3. Deliver: copy `c09_pidv2.html`, `a08b_pidv2.js`, `c08_pid.html` and the appended `a09_terms.js` entries and the player-ID part of `講稿_關鍵.md` from the worktree copy into the live `/home/u2507115/BK_AICUP_2026-1/reports/go_story/` after telling the other session (it owns the rest of the page); then rebuild there and republish the artifact (publishing needs the participant's word).
+4. Fast-forward `nano4/pid-b3-assign` to the report branch.
 
 ## Appendix B — outline of the organisers' written report (to be written after 2026-11-24 from the facts library; report upload window 2026-11-26 to 2026-12-06)
 
