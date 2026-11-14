@@ -54,7 +54,8 @@ def main(argv=None):
     vecs = lambda f: (lambda z: dict(zip(z["key"].astype(str), z["emb"].astype(np.float32))))(np.load(f))  # noqa: E731
     runs = []
     for v_ in a.folds:
-        V = {k: vecs(ROOT / "data" / "seq" / f"fold{v_}{sfx}.npz") for k, sfx in names.items()}
+        V = {k: [vecs(ROOT / "data" / "seq" / f"fold{v_}{x}.npz") for x in sfx.split("+")] for k, sfx in names.items()}  # name=_na+_nb: the mean of several networks
+        V = {k: (x[0] if len(x) == 1 else x) for k, x in V.items()}
         seq0 = vecs(ROOT / "data" / "seq" / f"fold{v_}.npz")  # the pools of the earlier simulations (same games drawn)
         g = games[(games.fold == v_) & games.game_key.isin(rows.keys()) & games.game_key.isin(seq0.keys())]
         for s in a.seeds:

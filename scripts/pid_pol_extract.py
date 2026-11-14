@@ -73,7 +73,9 @@ def game_rows(X, E, S, pos, ts, lens):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--keys", required=True, help="training game keys (text file)")
-    ap.add_argument("--proj", required=True, help="the existing supervised projection (scripts/pid_sup_fit.py)")
+    ap.add_argument("--proj", default=None, help="the existing supervised projection (scripts/pid_sup_fit.py); not needed with --rows-only")
+    ap.add_argument("--ckpt", default=None, help="another KataGo checkpoint than humanv0 (probe K, METHOD_NOTES 2.119: a strong network as the feature extractor)")
+    ap.add_argument("--rows-only", action="store_true", help="write only the per-game rows (for fitting a projection), no per-ply stores")
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--shard", type=int, default=0)
@@ -83,11 +85,13 @@ def main(argv=None):
     ap.add_argument("--max-parts", type=int, default=0)
     a = ap.parse_args(argv)
     t0 = time.time()
-    P = np.load(a.proj)
-    mu, sd, W = P["mu"].astype(np.float32), P["sd"].astype(np.float32), P["W"].astype(np.float32)
-    C = len(mu) // 2
+    if not a.rows_only:
+        P = np.load(a.proj)
+        mu, sd, W = P["mu"].astype(np.float32), P["sd"].astype(np.float32), P["W"].astype(np.float32)
+        C = len(mu) // 2
+    ckpt = a.ckpt or te.CKPT
     out = Path(a.out)
-    for d in ("rows", "ply_r", "ply_fc", "ply_s"):
+    for d in (("rows",) if a.rows_only else ("rows", "ply_r", "ply_fc", "ply_s")):
         (out / d).mkdir(parents=True, exist_ok=True)
     keys = sorted(set(PT.read_keys(a.keys)))
     mine = keys[a.shard::a.nshards]
@@ -96,7 +100,7 @@ def main(argv=None):
     print(f"shard {a.shard}/{a.nshards}: {len(mine)} of {len(keys)} games, {len(parts)} parts, {len(todo)} to do", flush=True)
     if not todo:
         return 0
-    config = torch.load(te.CKPT, map_location="cpu", weights_only=True)["config"]
+    config = torch.load(str(ckpt), map_location="cpu", weights_only=a.ckpt is None)["config"]  # a foreign checkpoint holds more than tensors (as the rank session's scripts/ai_state_extract.py loads it)
     pool = mp.get_context("fork").Pool(a.workers, initializer=te.init_worker, initargs=(config,))
 
     def save(path, **arrays):
@@ -105,7 +109,7 @@ def main(argv=None):
         os.replace(tmp, path)
 
     try:
-        model, _ = load_humansl(str(te.CKPT), "cuda")
+        model, _ = load_humansl(str(ckpt), "cuda")
         model.eval()
         rows = neutral_rows()
         done_games = bad_all = 0
@@ -118,18 +122,20 @@ def main(argv=None):
             lens, ts = [len(d[3]) for d in done], [d[5] for d in done]
             G, X, E, S, bad = PT.policy_vectors(model, bins, globs, pos, mover, rows, a.batch)
             bad_all += bad
-            z_old = ((np.hstack([G, X]) - mu) / sd) @ W  # the existing supervised features
-            c = (E / sd[C:]) @ W[C:]  # the expected vector through the played-point half (no mean: z_old - c is the projection of [pooled, played - expected])
-            for arr in (z_old, c, S):
+            if not a.rows_only:
+                z_old = ((np.hstack([G, X]) - mu) / sd) @ W  # the existing supervised features
+                c = (E / sd[C:]) @ W[C:]  # the expected vector through the played-point half (no mean: z_old - c is the projection of [pooled, played - expected])
+            for arr in ((S,) if a.rows_only else (z_old, c, S)):
                 if not np.isfinite(arr).all():
                     raise ValueError(f"part {k}: non-finite features")
             full = PT.aggregate_full(G, X, pos, lens)
             pole, pold, pols = game_rows(X, E, S, pos, ts, lens)
             head = dict(keys=np.array([d[0] for d in done]), n=np.array(lens, np.int32), t=np.concatenate(ts).astype(np.int16))
             name = f"sup_s{a.shard:03d}_p{k:04d}.npz"
-            save(out / "ply_r" / name, z=(z_old - c).astype(np.float16), **head)
-            save(out / "ply_fc" / name, z=np.hstack([z_old, c]).astype(np.float16), **head)
-            save(out / "ply_s" / name, z=np.stack([S[:, 0], np.log1p(S[:, 1]), S[:, 2], S[:, 4]], axis=1).astype(np.float16), **head)
+            if not a.rows_only:
+                save(out / "ply_r" / name, z=(z_old - c).astype(np.float16), **head)
+                save(out / "ply_fc" / name, z=np.hstack([z_old, c]).astype(np.float16), **head)
+                save(out / "ply_s" / name, z=np.stack([S[:, 0], np.log1p(S[:, 1]), S[:, 2], S[:, 4]], axis=1).astype(np.float16), **head)
             save(out / "rows" / f"pol_s{a.shard:03d}_p{k:04d}.npz", keys=head["keys"], n_target=np.array(lens, np.int16), full=full.astype(np.float16),
                  pole=pole.astype(np.float16), pold=pold.astype(np.float16), pols=pols)
             done_games += len(part)

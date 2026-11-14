@@ -66,6 +66,7 @@ def main(argv=None):
     ap.add_argument("--select", nargs="+", default=None, help="instead of --keys: external games, the select.csv files of scripts/ext_fox_select.py (game_key, sgf_content, color)")
     ap.add_argument("--max-plies", type=int, default=0, help="with --select: keep only the subject's plies whose ply number is below this (0: all)")
     ap.add_argument("--scalars", action="store_true", help="append four policy scalars to every ply's features: surprisal, log(1 + rank), entropy, distance to the policy's top point (METHOD_NOTES 2.102)")
+    ap.add_argument("--ckpt", default=None, help="another KataGo checkpoint than humanv0 (probe K, METHOD_NOTES 2.119)")
     ap.add_argument("--out2", default=None, help="with --scalars and float parts: also write the same parts WITHOUT the scalars here (two stores from one pass)")
     a = ap.parse_args(argv)
     global MAX_T
@@ -109,10 +110,10 @@ def main(argv=None):
     print(f"shard {a.shard}/{a.nshards}: {len(mine)} of {len(keys)} games, {len(parts)} parts, {len(todo)} to do; projection of {'+'.join(blocks)} to {W.shape[1]} dims" + (" + 4 policy scalars" if a.scalars else ""), flush=True)
     if not todo:
         return 0
-    config = torch.load(te.CKPT, map_location="cpu", weights_only=True)["config"]
+    config = torch.load(str(a.ckpt or te.CKPT), map_location="cpu", weights_only=a.ckpt is None)["config"]
     pool = mp.get_context("fork").Pool(a.workers, initializer=te.init_worker, initargs=(config,))
     try:
-        model, _ = load_humansl(str(te.CKPT), "cuda")
+        model, _ = load_humansl(str(a.ckpt or te.CKPT), "cuda")
         model.eval()
         rows = neutral_rows()
         done_games = empty = 0
