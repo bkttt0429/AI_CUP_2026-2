@@ -102,6 +102,12 @@ def selftest():
             + "<tr><td>x</td></tr>" * 4 + "</table></section>")
     lesson = '<section class="lesson" id="sec-y"><table>' + "<tr><td>x</td></tr>" * 10 + "</table></section>"
     assert not card_limits(card + lesson)
+    long_li = '<section class="page card" id="card-pid2-z"><ul class="key"><li>' + "字" * 65 + "</li></ul></section>"
+    ok_li = '<section class="page card" id="card-pid2-z"><ul class="key"><li>' + "字" * 64 + "</li></ul></section>"
+    assert card_limits(long_li) and not card_limits(ok_li)
+    rows7 = '<section class="page card" id="card-pid2-t"><table><tr><th>h</th></tr>' + "<tr><td>x</td></tr>" * 7 + "</table></section>"
+    rows6 = '<section class="page card" id="card-pid2-t"><table><tr><th>h</th></tr>' + "<tr><td>x</td></tr>" * 6 + "</table></section>"
+    assert card_limits(rows7) and not card_limits(rows6)
     assert old_baseline("/x/parts/c08_pid.html", "+0.0119") and old_baseline("c08_pid.html", "2.4968")
     assert not old_baseline("/x/parts/c09_pidv2.html", "+0.0119") and not old_baseline("c08_pid.html", "0.9136")
     print("selftest OK")

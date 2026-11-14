@@ -7,10 +7,10 @@
   <div class="kpis">
     <div class="kpi"><div class="v">0.9069275</div><div class="l">Public（11-14 的定案檔 pid_v2c2_bs.csv，21:03；v2 測試集）</div></div>
     <div class="kpi"><div class="v">0.9937580</div><div class="l">原始測試集的 Public（11-08 重發前）：模型直接輸出的最佳檔</div></div>
-    <div class="kpi warn"><div class="v">1.0000000</div><div class="l">原始測試集：Public：用排行榜回饋修正 3 題後（只改 Public，第 11 章）</div></div>
-    <div class="kpi"><div class="v">0.2845</div><div class="l">官方 baseline 的 Public 分數</div></div>
+    <div class="kpi warn"><div class="v">1.0000000</div><div class="l">原始測試集的 Public：用排行榜回饋修正 3 題後（只改 Public，第 11 章）</div></div>
+    <div class="kpi"><div class="v">0.2845</div><div class="l">原始測試集：官方 baseline 的 Public 分數</div></div>
   </div>
-  <p class="metaline">2026-11-14 · 程式與紀錄：AI_CUP_2026-2（METHOD_NOTES §2.1–§2.115）；第 8–12 章寫於 11-06（原始測試集），第 13 章起是新增題池</p>
+  <p class="metaline">2026-11-14 · 程式與紀錄：AI_CUP_2026-2（METHOD_NOTES §2.1–§2.117）；第 8–12 章寫於 11-06（原始測試集），第 13 章起是新增題池</p>
 </section>
 
 <!-- ================= 第 8 章：任務與評分 ================= -->
@@ -344,8 +344,7 @@
         <li>trunk 單獨 Public Top-1 <b>0.968</b>、n＝5 0.89，比之前最強的原始座標開局（0.953、0.84）還高 <span class="tag t-m">實測</span></li>
         <li>一人一題加配對的最終 CV：4,000 題錯 24 → <b>2</b>，+0.0048 [+0.0026, +0.0072]，通過</li>
         <li>Public 離線：不配對 2 錯、配對 <b>0 錯 → 1.0000000</b>；探測才解出的 3 題它全答對</li>
-        <li>和現行最終檔比，Private 改 4 題 Top-1；Private 預估從約 0.992 升到 0.997–1.0 <span class="tag t-i">推論</span></li>
-        <li>（11-06 時的計畫；之後測試集重發，見第 13 章）</li>
+        <li>和現行最終檔比，Private 改 4 題 Top-1；Private 預估從約 0.992 升到 0.997–1.0（11-06 時的計畫；之後測試集重發，見第 13 章） <span class="tag t-i">推論</span></li>
       </ul>
       <div class="cause"><span><span class="k">問題</span><b>剩下的錯題計數成分都認不出</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>改用強模型每手的內部向量當風格</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>要 GPU 抽取 30.5 萬局（約 35 分鐘）</b></span><button class="deriv-open" data-sec="21">推導 ▸</button></div>
     </div>

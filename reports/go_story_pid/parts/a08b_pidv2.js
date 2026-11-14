@@ -7,7 +7,7 @@
     climb: [
       ['11-13 00:03', 'pid_v2d_ft.csv', '0.8612697', '五個序列網路＋題池微調 100 步'],
       ['11-13 00:03', 'pid_v2e_ft_emb5.csv', '0.8609492', '嵌入改用五個種子平均'],
-      ['11-13 01:30', 'pid_v2f_ft50_emb3', '0.8554173', '微調 50 步＋嵌入 emb3（退回 v2d）'],
+      ['11-13 01:30', 'pid_v2f_ft50_emb3.csv', '0.8554173', '微調 50 步＋嵌入 emb3（退回 v2d）'],
       ['11-13 10:58', 'pid_v2gs_base_m90.csv', '0.8753896', '20 個網路＋2／3／5 局題軟性配對'],
       ['11-13 11:21', 'pid_v2gs_m90.csv', '0.8777615', '同上，題池微調改 50 步'],
       ['11-14 00:06', 'pid_v2is_o1.csv', '0.8829460', '第一批含外部帳號的官方網路'],
@@ -16,16 +16,13 @@
       ['11-14 19:00', 'pid_v2x_ns.csv', '0.9035072', '加長訓練＋有監督輸入（2 萬步快照）'],
       ['11-14 21:03', 'pid_v2c2_bs.csv', '0.9069275', '有監督輸入換成 3 萬步完成版'],
     ],
-    // 新家族加在線上組成 v2sl_all 之上、權重 ×6 的擬題池增益：o7F、o9D、o8D、o10D 見 facts_C C-R18（§2.108）；
-    //   o11U 見 C-X29（§2.113）；o12K、o12F 見 C-R26（§2.113）；全部是 ×6 的值
+    // 新家族加在線上組成 v2sl_all 之上、權重 ×6 的官方擬題池增益：四列都見 facts_C C-R18（§2.108）；
+    //   o11U、o12K、o12F 的列已移除（它們的基準與 ×6 讀數各見 C-X29、C-R24、C-R26，另列在 15.3）
     fam: [
       ['o7F', '加長訓練（3–4 萬步）', '+0.0038'],
       ['o9D', '各種遮蔽', '+0.0022'],
       ['o8D', '各種設定（5 個）', '+0.0005'],
       ['o10D', '輸入子空間與資料抽樣', '+0.0014'],
-      ['o11U', '有監督輸入、只用競賽棋局', '+0.0043'],
-      ['o12K', '有監督輸入＋外部帳號，2 萬步快照', '+0.0045'],
-      ['o12F', '有監督輸入＋外部帳號，3 萬步完成版', '+0.0087'],
     ],
     // 官方候選人上、微調前的單一網路 1 局題分數（Public 池／Private 池）：o3S、o6X、o7F、o12K 的 B／C／A 型見 facts_C C-R22、C-R23（§2.110）；
     //   o3S 的讀數前後不一（C-Q11），這裡用 C-R22 的 0.505／0.523
@@ -39,13 +36,13 @@
     ],
   };
 
-  CHARTS['chart-pid2-climb'] = () => '<h4>Public 分數（v2 測試集）：每個上傳檔</h4>'
+  CHARTS['chart-pid2-climb'] = () => '<h4>Public 分數（v2 測試集）：每個上傳檔（橫軸從 0.85 起）</h4>'
     + barRows(P2.climb.map(([t, , s, note], i) => [`${t} ${note}`, parseFloat(s), s, i === P2.climb.length - 1 ? 'var(--accent)' : '#8a93a3']), 0.85, 0.91);
 
-  CHARTS['chart-pid2-fam'] = () => '<h4>把一個新家族加進組成，擬題池分數的變化</h4>'
-    + barRows(P2.fam.map(([n, note, g]) => [`${n} ${note}`, parseFloat(g), g, n === 'o12F' || n === 'o7F' ? 'var(--accent)' : '#8a93a3']), 0, 0.01);
+  CHARTS['chart-pid2-fam'] = () => '<h4>把一個新家族加進組成（加在 v2sl_all 之上、權重 ×6，官方擬題池）的分數變化</h4>'
+    + barRows(P2.fam.map(([n, note, g]) => [`${n} ${note}`, parseFloat(g), g, n === 'o7F' ? 'var(--accent)' : '#8a93a3']), 0, 0.01);
 
-  CHARTS['chart-pid2-single'] = () => '<h4>單一網路在官方候選人上的 1 局題分數（微調前）</h4>'
+  CHARTS['chart-pid2-single'] = () => '<h4>單一網路在官方候選人上的 1 局題分數（微調前；Public 池／Private 池；橫軸從 0.45 起）</h4>'
     + barRows(P2.single.map(([n, note, a, b]) => [`${n} ${note}`, parseFloat(a), `${a}／${b}`, n === 'o12 A 型' ? 'var(--accent)' : '#8a93a3']), 0.45, 0.58);
 
   // v2 流程（靜態圖）：題目與候選人 → 九個成分（逐手序列網路最大）→ 加權融合 → 2／3／5 局題軟性配對 → 前 5 名
@@ -57,7 +54,7 @@
     const top = 14, bigH = 64, step = 34, H = top + bigH + 10 + small.length * step + 26, mid = top + (bigH + 10 + small.length * step - 8) / 2;
     let s = box(12, mid - 82, 176, 64, '#fff', '#c9ced6', `<text x="100" y="${mid - 56}" text-anchor="middle" style="${Hd}">題目</text><text x="100" y="${mid - 36}" text-anchor="middle" style="${Sm}">同一人 1–5 局（黑白都有）</text>`)
       + box(12, mid + 18, 176, 64, '#fff', '#c9ced6', `<text x="100" y="${mid + 44}" text-anchor="middle" style="${Hd}">候選人 × 600</text><text x="100" y="${mid + 64}" text-anchor="middle" style="${Sm}">每人 10 局</text>`)
-      + box(214, top, 300, bigH, '#0b6e69', '#0b6e69', `<text x="364" y="${top + 28}" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#fff">逐手序列網路</text><text x="364" y="${top + 48}" text-anchor="middle" style="font-size:11.5px;fill:#e3f1ef">數十個平均，題池微調 50 步</text>`);
+      + box(214, top, 300, bigH, '#0b6e69', '#0b6e69', `<text x="364" y="${top + 28}" text-anchor="middle" style="font-size:14px;font-weight:700;fill:#fff">逐手序列網路</text><text x="364" y="${top + 48}" text-anchor="middle" style="font-size:11.5px;fill:#e3f1ef">多個網路平均，題池微調 50 步</text>`);
     small.forEach((name, i) => {
       const y = top + bigH + 10 + i * step;
       s += box(214, y, 300, 28, '#e3f1ef', '#0b6e69', `<text x="226" y="${y + 19}" style="${Hd}">${name}</text>`);
