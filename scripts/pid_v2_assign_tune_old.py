@@ -29,7 +29,8 @@ from aicup_pid.components import parse_all  # noqa: E402
 from aicup_pid.embed import PlayerEmbedding  # noqa: E402
 from aicup_pid.fusion import Fusion, standardise  # noqa: E402
 from aicup_pid.trunkstyle import load_store  # noqa: E402
-from pid_v2_assign_tune import methods, score  # noqa: E402
+from pid_v2_assign_struct import methods  # noqa: E402  (with the hybrids: soft Top-1 + Sinkhorn order)
+from pid_v2_assign_tune import score  # noqa: E402
 
 SPEC = ((5, 67), (3, 67), (2, 66))
 
