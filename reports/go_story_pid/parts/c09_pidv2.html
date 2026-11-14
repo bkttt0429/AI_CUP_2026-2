@@ -120,3 +120,48 @@
   <p>對照做法：全部題目強制配對在 distinct +0.0170、one_free −0.0397、replace −0.1143；2／3／5 局題硬性配對在 one_free +0.0065、摻 5% −0.0015、摻 15% −0.0162；軟性 λ＝2 在 one_free +0.0074、摻 15% +0.0026、replace −0.0184。增益主要在 2 局題（+0.016）。決定：採用 λ＝1、只配 2／3／5 局題。官方檔 <code>pid_v2gs_m90.csv</code>（md5 95ce91570f32）把 Public 池 13 題（2／3／5 局：6／2／5）、Private 池 18 題（11／5／2）的第一名改掉；預期新增池 +0.006、總分約 +0.003，這個量在排行榜上看不清楚（改動約十題，雜訊約 ±0.002）。</p>
   <p class="src">出處：facts_A A-M21、A-M22、A-M23、A-M25、A-M27、A-M29、A-E04、A-R25、A-R27、A-R30、A-V42、A-X20、A-X21；facts_B B-M05、B-M06、B-R02、B-R03、B-X08、B-P03、B-P04；METHOD_NOTES §2.29、§2.30、§2.32、§2.34、§2.36、§2.37、§2.41、§2.42。</p>
 </section>
+
+<!-- ================= 第 14 章：分數的每一步（11-14 加） ================= -->
+<section class="page card" id="card-pid2-climb" data-sec="27" data-ch="14" data-chtitle="玩家辨識：分數的每一步" data-title="分數的每一步">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 14 章 · 玩家辨識：分數的每一步 · 1／1</div>
+      <h3>Public 0.8612697 → 0.9069275（11-13 至 11-14）：每一步都先在驗證工具上通過才上傳</h3>
+      <ul class="key">
+        <li>11-13：逐手網路加題池微調 0.8612697；20 個網路＋軟性配對 0.8777615 <span class="tag t-m">實測</span></li>
+        <li>11-14 凌晨：含外部帳號的官方網路 0.8829460；對稱增強 0.8903230 <span class="tag t-m">實測</span></li>
+        <li>11-14 下午：12 個種子＋4 萬步＋加大 0.9016519（當時 1／79） <span class="tag t-m">實測</span></li>
+        <li>11-14 晚上：加長訓練＋有監督輸入 0.9035072 → 0.9069275（當時 1／81） <span class="tag t-m">實測</span></li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>一次上傳只回一個數字</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>擬題池先比較，通過才傳</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>單次讀數的雜訊約 ±0.002</b></span><button class="deriv-open" data-sec="27">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="bars" id="chart-pid2-climb"></div>
+      <div class="chips"><span class="chip"><b>來源</b>facts 第 2 節（METHOD_NOTES §2.42、§2.68、§2.104、§2.111、§2.114）</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-27" data-title="14.1 每個上傳檔的組成與讀數">
+  <h3>14.1 每個上傳檔的組成與讀數</h3>
+  <p class="proves">對應報告卡 28：一個數字一個檔，每一步的差別都記下來</p>
+  <h4>11-13 的上傳</h4>
+  <table>
+    <tr><th>日期時間</th><th>檔案</th><th>md5</th><th class="n">Public</th><th>名次／隊數</th><th>組成或和前一個檔的差別</th></tr>
+    <tr><td>11-13 00:03</td><td><code>pid_v2d_ft.csv</code></td><td>7bc80c041961</td><td class="n">0.8612697</td><td>1／64（筆記未指明是 v2d 或 v2e 的名次）</td><td>五個逐手網路各對該候選池微調 100 步；新增那一半 0.7225（原有池以 1.0 計）</td></tr>
+    <tr><td>11-13 00:03</td><td><code>pid_v2e_ft_emb5.csv</code></td><td>966ec9e738c7</td><td class="n">0.8609492</td><td>同上註</td><td>嵌入改用五個種子平均；當時最後上傳、生效中的檔</td></tr>
+    <tr><td>11-13 01:30</td><td><code>pid_v2f_ft50_emb3</code></td><td>c03ec504ae4b</td><td class="n">0.8554173</td><td>未記</td><td>微調 50 步、嵌入 emb3（三個種子平均）；比 v2d 低 0.0059，之後生效檔退回 v2d</td></tr>
+    <tr><td>11-13 10:58</td><td><code>pid_v2gs_base_m90.csv</code></td><td>ae909724fec4</td><td class="n">0.8753896</td><td>當時 1／67</td><td>20 個網路（M88 ×5＋M90 ×15）、微調 100 步、2／3／5 局題軟性配對 λ＝1；比 v2d +0.0141；新增那一半 0.7225 → 0.7508</td></tr>
+    <tr><td>11-13 11:21</td><td><code>pid_v2gs_m90.csv</code></td><td>95ce91570f32</td><td class="n">0.8777615</td><td>當時 1／67</td><td>同上，微調改 50 步；比 100 步版 +0.0024；新增那一半 0.7555；成為定案檔</td></tr>
+  </table>
+  <h4>11-14 的上傳</h4>
+  <table>
+    <tr><th>日期時間</th><th>檔案</th><th>md5</th><th class="n">Public</th><th>名次／隊數</th><th>組成或和前一個檔的差別</th></tr>
+    <tr><td>11-14 00:06</td><td><code>pid_v2is_o1.csv</code></td><td>3060523c59e0</td><td class="n">0.8829460</td><td>當時 2／75</td><td>逐手成分改為 28 個網路等權（加入有外部帳號訓練的網路）、微調 50 步、軟性配對；比 <code>pid_v2gs_m90.csv</code> +0.0051845；新增那一半 0.7555 → 0.7659</td></tr>
+    <tr><td>11-14 04:50</td><td><code>pid_v2w_n8s.csv</code></td><td>6f82ff201b2b</td><td class="n">0.8903230</td><td>未寫</td><td>留出的對稱增強網路；比 <code>pid_v2is_o1.csv</code> +0.0073770；新增那一半 0.7659 → 0.7806；事前估計 0.890–0.892</td></tr>
+    <tr><td>11-14 13:42</td><td><code>pid_v2sl_alls.csv</code></td><td>11b903cd424a</td><td class="n">0.9016519</td><td>當時 1／79</td><td>官方對稱網路 12 個種子＋4 萬步＋加大（對稱增強家族 o3SL×8＋o3S×12＋o4S×4＋o3BS×4 個網路）；比 <code>pid_v2w_n8s.csv</code> +0.0113；事前預估 0.897–0.901</td></tr>
+    <tr><td>11-14 19:00</td><td><code>pid_v2x_ns.csv</code></td><td>b0140f3df4a5c4c346ea6364aca52038</td><td class="n">0.9035072</td><td>未寫</td><td>在 <code>v2sl_all</code> 之上加 o7F×9＋o9D×3＋o12K×6（有監督輸入的 o12 快照、加長訓練的 o7）；比 <code>pid_v2sl_alls.csv</code> +0.0019</td></tr>
+    <tr><td>11-14 21:03</td><td><code>pid_v2c2_bs.csv</code></td><td>cf2ec7465bb8c60471c718a939914118</td><td class="n">0.9069275</td><td>當時 1／81</td><td>o12 換成 3 萬步完成版（o12F×9＋o7F×9＋o9D×3＋o3SL×3＋o3S×3＋o4S×3＋o3BS×3＋py×3＋o1＋o2＋px2＋pb＋px＋m101x）；比 <code>pid_v2x_ns.csv</code> +0.0034，兩檔不同 18 題（Public 池 11 題）</td></tr>
+  </table>
+  <p>最後一個定案檔是 <code>pid_v2c2_bs.csv</code>（Public 0.9069275，當時 1／81），也是線上的最後一次上傳；前一個定案檔是 <code>pid_v2x_ns.csv</code>（0.9035072）。最後一步的換算只有 Public 約 +0.001（Public 池只差 11 題，小於排行榜雜訊）。11-14 一天的路徑，筆記歸納有效的三件事是對稱增強、訓練更久、有監督的逐手輸入。2026-11-14 21:10 使用者指示比賽到 11/24 為止都要繼續找訊號，這份記錄截止時 o13、o14、P7 還在排程系統裡，沒有結果。</p>
+  <p class="src">出處：facts_A A-P17、A-P18、A-T35、A-T36、A-M29；facts_B B-P01–B-P05、B-R03；facts_C C-P05–C-P08、C-T55、C-T56、C-T57、C-R27、C-R31、C-M62；METHOD_NOTES §2.33、§2.35、§2.42、§2.53、§2.68、§2.90、§2.104、§2.111、§2.113、§2.114。</p>
+</section>
