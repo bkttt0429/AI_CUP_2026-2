@@ -4,7 +4,7 @@
 
 ## 3. 方法與成分
 
-- **[D-M01]** 原題池的列在每一個上傳檔都相同（2026-11-15 核對）：產生上傳檔的程式把原題池（10-30 版；Public 與 Private 各 400 題，共 800 列）的列固定取自 `results/submission_old_embt_assign/submission_player.csv`（embt 嵌入＋配對的解法），v2 流程只決定新增題池的 800 列。逐檔核對：`pid_v2d_ft.csv`、`pid_v2gs_m90.csv`、`pid_v2is_o1.csv`、`pid_v2w_n8s.csv`、`pid_v2sl_alls.csv`、`pid_v2x_ns.csv`、`pid_v2c2_bs.csv` 七個上傳檔的原題池 800 列與該固定檔逐字相同（這 800 列的 md5 前 12 碼都是 48aa4f02de26）。所以這七個檔之間 Public 分數的差別全部來自新增的那 400 題。｜出處：`scripts/nano4/pid_v2_make_file.sh` 第 12 行（`--old-submission`）；2026-11-15 逐檔核對 `upload/` 內的檔
+- **[D-M01]** 原題池的列在每一個上傳檔都相同（2026-11-15 核對）：產生上傳檔的程式把原題池（10-30 版；Public 與 Private 各 400 題，共 800 列）的列固定取自 `results/submission_old_embt_assign/submission_player.csv`（embt 嵌入＋配對的解法），v2 流程只決定新增題池的 800 列。逐檔核對：`pid_v2d_ft.csv`、`pid_v2gs_m90.csv`、`pid_v2is_o1.csv`、`pid_v2w_n8s.csv`、`pid_v2sl_alls.csv`、`pid_v2x_ns.csv`、`pid_v2c2_bs.csv` 七個上傳檔的原題池 800 列與該固定檔逐字相同（表頭列加這 800 列的 md5 前 12 碼都是 48aa4f02de26；`upload/` 內其餘的檔也都相同）。所以這七個檔之間 Public 分數的差別全部來自新增的那 400 題。｜出處：`scripts/nano4/pid_v2_make_file.sh` 第 12 行（`--old-submission`）；2026-11-15 逐檔核對 `upload/` 內的檔
 
 ## 4. 通過的比較
 
