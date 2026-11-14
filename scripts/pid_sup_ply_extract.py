@@ -66,6 +66,7 @@ def main(argv=None):
     ap.add_argument("--select", nargs="+", default=None, help="instead of --keys: external games, the select.csv files of scripts/ext_fox_select.py (game_key, sgf_content, color)")
     ap.add_argument("--max-plies", type=int, default=0, help="with --select: keep only the subject's plies whose ply number is below this (0: all)")
     ap.add_argument("--scalars", action="store_true", help="append four policy scalars to every ply's features: surprisal, log(1 + rank), entropy, distance to the policy's top point (METHOD_NOTES 2.102)")
+    ap.add_argument("--out2", default=None, help="with --scalars and float parts: also write the same parts WITHOUT the scalars here (two stores from one pass)")
     a = ap.parse_args(argv)
     global MAX_T
     MAX_T = a.max_plies if a.select else 0
@@ -139,7 +140,15 @@ def main(argv=None):
             path = out / f"sup_s{a.shard:03d}_p{k:04d}.npz"
             tmp = path.with_name(path.name + ".tmp.npz")
             feat = {"z": z.astype(np.float16)} if st is None else {"zq": np.clip(np.rint((z - st["mean"]) / st["sd"] * 20.0), -127, 127).astype(np.int8)}
-            np.savez(tmp, keys=np.array([d[0] for d in done]), n=np.array([len(d[3]) for d in done], np.int32), t=np.concatenate([d[5] for d in done]).astype(np.int16), **feat)
+            head = dict(keys=np.array([d[0] for d in done]), n=np.array([len(d[3]) for d in done], np.int32), t=np.concatenate([d[5] for d in done]).astype(np.int16))
+            if a.out2:  # first, so that a part counts as done only when both stores have it
+                assert a.scalars and st is None, "--out2 goes with --scalars and float parts"
+                p2 = Path(a.out2) / path.name
+                p2.parent.mkdir(parents=True, exist_ok=True)
+                t2 = p2.with_name(p2.name + ".tmp.npz")
+                np.savez(t2, z=z[:, :W.shape[1]].astype(np.float16), **head)
+                os.replace(t2, p2)
+            np.savez(tmp, **head, **feat)
             os.replace(tmp, path)
             done_games += len(part)
             if (k % 10) == 0:
