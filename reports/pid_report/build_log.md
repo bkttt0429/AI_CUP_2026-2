@@ -68,3 +68,4 @@ The other items of section 9 (A-Q01 to A-Q09, A-Q11 to A-Q13, A-Q15 to A-Q20, B-
 ## final review fix wave (2026-11-15)
 
 Applied the final review's Critical 1-3 and Important 1-6, 8-14 (Important 7 and the checker's matching rules deferred by the plan's owner), the node check of Important 15, and the Minor text items. Where a fact differs from the review's proposal: C-E02 gives 182,167 only for o4S and 「18.2 萬」 for o5, o6, o7, o8D, o9D, so sec-33 writes 18.2 萬 for those families and 182,167 for o4S (the final file contains o4S, C-M65). Not changed: the four 「（素材未載）」 cells of the sec-33 resource table (not in the review).
+2026-11-15 02:50 | 779010 | residual edits after the final re-review: selftest OK; charts 14, cards with derivation buttons 35, lessons 35 / OK; no checker line -> PID_BUILD OK
