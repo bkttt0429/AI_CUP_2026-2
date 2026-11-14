@@ -1,4 +1,5 @@
-"""The opponents of a question against the opponents of a candidate (METHOD_NOTES 2.117).
+"""Tail evidence from single reference games (METHOD_NOTES 2.117): the opponents of a question against the opponents of a
+candidate, and its relatives.
 
 A sequence network returns a vector for the side flagged as the subject of a game; with the other colour flagged it describes
 the OPPONENT (scripts/pid_v2_opp_embed.py). A player meets some opponents again, so the opponent of a question game may also
@@ -9,18 +10,19 @@ rare and then decisive, so only the tail counts:
   m[g, c] = the maximum over the reference games of candidate c;  z[g, .] = m standardised over the candidates;
   score[q, c] = sum over the games g of question q of max(z[g, c] - tau, 0).
 The score is added to the fused score with its own weight. It is NOT standardised again: most of its entries are zero.
+The same statistic on the subject's OWN vectors says that one reference game looks like the question game (the prototype
+averages that away), and on the sum of both sides that the same pairing met again.
 """
 import numpy as np
 
 
-def opp_z(cands, questions, opp):
-    """(z [G, C], {question game key: row}) : per question game, the standardised best match of its opponent among each
-    candidate's reference games. cands {player: [(key, colour)]}, questions [[(key, colour)]], opp = one or several
-    {key: opponent-side vector}; candidates in sorted id order. Games without a vector are skipped; a candidate without any
-    takes the row mean (z = 0)."""
+def nearest_z(cands, questions, sides):
+    """(z [G, C], {question game key: row}): per question game and candidate, the best single reference game under the SUM
+    over `sides` of the network-averaged cosines, standardised over the candidates. cands {player: [(key, colour)]},
+    questions [[(key, colour)]], sides = [[{key: vector} per network] per side]; candidates in sorted id order. Games without
+    a vector are skipped; a candidate without any takes the row mean (z = 0)."""
     players = sorted(cands)
-    nets = list(opp) if isinstance(opp, (list, tuple)) else [opp]
-    have = set(nets[0])
+    have = set(sides[0][0])
     ckeys = [k for p in players for k, _ in cands[p] if k in have]
     cidx = np.array([i for i, p in enumerate(players) for k, _ in cands[p] if k in have])
     qkeys = sorted({k for q in questions for k, _ in q if k in have})
@@ -28,9 +30,11 @@ def opp_z(cands, questions, opp):
         raise ValueError("a question game is among the reference games")
     unit = lambda X: X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-12)  # noqa: E731
     cos = np.zeros((len(qkeys), len(ckeys)))
-    for one in nets:
-        cos += unit(np.stack([one[k] for k in qkeys]).astype(np.float64)) @ unit(np.stack([one[k] for k in ckeys]).astype(np.float64)).T
-    cos /= len(nets)
+    for nets in sides:
+        one_side = np.zeros_like(cos)
+        for one in nets:
+            one_side += unit(np.stack([one[k] for k in qkeys]).astype(np.float64)) @ unit(np.stack([one[k] for k in ckeys]).astype(np.float64)).T
+        cos += one_side / len(nets)
     order = np.argsort(cidx, kind="stable")
     sorted_c = cidx[order]
     starts = np.flatnonzero(np.r_[True, sorted_c[1:] != sorted_c[:-1]])
@@ -43,8 +47,13 @@ def opp_z(cands, questions, opp):
     return z, {k: i for i, k in enumerate(qkeys)}
 
 
+def opp_z(cands, questions, opp):
+    """nearest_z for one side: opp = one or several {key: opponent-side vector}."""
+    return nearest_z(cands, questions, [list(opp) if isinstance(opp, (list, tuple)) else [opp]])
+
+
 def opp_scores(cands, questions, opp, tau=3.0, zq=None):
-    """[Q, C]: sum over a question's games of the part of z above tau. zq = opp_z(...) when several tau are wanted."""
+    """[Q, C]: sum over a question's games of the part of z above tau. zq = opp_z(...) / nearest_z(...) when several tau are wanted."""
     z, row = zq if zq is not None else opp_z(cands, questions, opp)
     h = np.maximum(z - tau, 0.0)
     out = np.zeros((len(questions), z.shape[1]))

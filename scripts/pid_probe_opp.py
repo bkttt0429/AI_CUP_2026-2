@@ -41,7 +41,7 @@ SIGNALS = ("S0", "S1", "S1e", "S2", "S3")
 HINGE = (2.0, 3.0, 4.0, 5.0)  # S1h<t>: only the part of the standardised S1e above t counts (a repeated opponent is rare and then decisive)
 
 
-ALL = SIGNALS + tuple(f"S1h{t:g}" for t in HINGE)
+ALL = SIGNALS + tuple(f"S1h{t:g}" for t in HINGE) + tuple(f"P1h{t:g}" for t in HINGE) + tuple(f"U1h{t:g}" for t in HINGE)
 
 
 def load_pool(pool, tests_dir, ply_dir):
@@ -205,8 +205,19 @@ def main(argv=None):
         Y = OOm.clone()
         Y.fill_diagonal_(-2.0)
         Z["S1e"] = zrow(Y.view(G, C, M).max(-1).values.double())  # the same opponent again, on the averaged cosines
+        # the same PAIRING again: one reference game in which both the opponent and the subject look like those of this game
+        # (P1), and as a control the own side alone in its best single reference game (U1)
+        Yp = (OOm + UUm).clone()
+        Yp.fill_diagonal_(-4.0)
+        zp = zrow(Yp.view(G, C, M).max(-1).values.double())
+        Yu = UUm.clone()
+        Yu.fill_diagonal_(-2.0)
+        zu = zrow(Yu.view(G, C, M).max(-1).values.double())
+        del Yp, Yu
         for t in HINGE:
             Z[f"S1h{t:g}"] = torch.relu(Z["S1e"] - t)
+            Z[f"P1h{t:g}"] = torch.relu(zp - t)
+            Z[f"U1h{t:g}"] = torch.relu(zu - t)
         # is the opponent ever a candidate of the pool: row maxima of the opponent side against those of wrong candidates on the own side
         zo, zw = Z["S0"].clone(), Z["own"].clone()
         zo[ar, owner] = -9.0
