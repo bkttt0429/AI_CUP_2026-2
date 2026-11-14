@@ -23,3 +23,4 @@ c08_pid.html:274: 0.865 not in facts: ＝ 0.632 ＋ 0.865 ＋ 1</div>
 
 2026-11-15 00:45 | 778195 | node found; check.py: anims 18, charts 10, cards with derivation buttons 25, lessons 25 / OK; baseline unchanged (11 lines) -> PID_BUILD FAILED
 2026-11-15 00:49 | 778221 | selftest OK (incl. js '<' case); check.py: anims 18, charts 14, cards with derivation buttons 25, lessons 25 / OK; a08b_pidv2.js: no checker line; baseline unchanged (11 lines) -> PID_BUILD FAILED
+2026-11-15 00:55 | 778274 | selftest OK; check.py: charts 14, cards with derivation buttons 28, lessons 28 / OK; c09_pidv2.html and a08b_pidv2.js: no checker line, no card-limit message (bullet limit now 64); baseline unchanged (11 lines) -> PID_BUILD FAILED (chapters 13 and 14 together)

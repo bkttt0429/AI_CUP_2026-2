@@ -1,0 +1,122 @@
+<!-- ================= 第 13 章：新增題池與 v2 流程（11-14 加） ================= -->
+<section class="page card" id="card-pid2-task" data-sec="25" data-ch="13" data-chtitle="玩家辨識：新增題池與 v2 流程" data-title="新增題池">
+  <div class="report">
+    <div class="txt">
+      <div class="num">第 13 章 · 玩家辨識：新增題池與 v2 流程 · 1／2</div>
+      <h3>新增題池：每人只有 10 局、題目 1–5 局、黑白都有——原本的統計式做法不夠用</h3>
+      <ul class="key">
+        <li>新增兩池各 600 位候選人 × 10 局；題目是 1／2／3／5 局，黑白都有 <span class="tag t-m">實測</span></li>
+        <li>原題池每人 100 局；每人 10 局時，第一版流程的模擬只有 0.6246</li>
+        <li>Public 是原題目與新增題目的平均；原有池 800 列在之後比較的檔中相同</li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>每人只有 10 局，四分之一的題目只有 1 局</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>改學「這盤棋像誰下的」的序列網路</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>1 局題仍是最大的失分來源</b></span><button class="deriv-open" data-sec="25">推導 ▸</button></div>
+    </div>
+    <div class="fig">
+      <div class="table-wrap">
+        <table>
+          <tr><th></th><th>原始題池</th><th>新增題池</th></tr>
+          <tr><td>候選人數</td><td>每庫 400 位（兩庫）</td><td>每池 600 位（兩池）</td></tr>
+          <tr><td>每人局數</td><td>100 局</td><td>10 局</td></tr>
+          <tr><td>題目局數</td><td>5／10／15／20 局各 100 題</td><td>1／2／3／5 局各 100 題</td></tr>
+          <tr><td>執色</td><td>只有執黑</td><td>黑白各約一半，過半題目黑白都有</td></tr>
+        </table>
+      </div>
+      <div class="chips"><span class="chip"><b>來源</b>METHOD_NOTES §2.29、§2.37；facts_A 第 0 節</span></div>
+    </div>
+  </div>
+</section>
+<section class="lesson" id="sec-25" data-title="13.1 測試集的變動與新增題池的結構">
+  <h3>13.1 測試集的變動與新增題池的結構</h3>
+  <p class="proves">對應報告卡 26：題目的形狀改了，方法就要跟著改</p>
+  <h4>測試資料釋出與更動的經過</h4>
+  <table>
+    <tr><th>日期</th><th>事件</th><th>內容</th></tr>
+    <tr><td>11-04 14:18</td><td>10-30 版官方檔上到 nano4</td><td>兩庫各 400 位候選人 × 100 局，400 題（5／10／15／20 局各 100 題），只收執黑；題目對候選重複 0、跨庫重複 0</td></tr>
+    <tr><td>11-06</td><td>官方公告（AIdea 競賽頁）</td><td>11/11 11:00 公布新增測試集，更新後的測試集含原有題目與新增題目，理由是提升評測結果的鑑別度；排行榜清空、重新提交</td></tr>
+    <tr><td>11-08</td><td>官方公告重發測試檔</td><td>Public 排行榜歸零、舊上傳不算、每天仍 5 次；當時新檔尚未開放</td></tr>
+    <tr><td>11-12</td><td>使用者上傳 v2 測試集</td><td>原四檔與 10-30 版逐位元相同；新增 <code>candidates2</code>／<code>test2</code>（前綴 <code>pub2_</code>、<code>priv2_</code>）：每池 600 位候選各 10 局、400 題（1／2／3／5 局各 100 題），玩家執黑執白各約一半（候選每人黑棋 0–10 局、中位數 5）</td></tr>
+    <tr><td>11-12</td><td>提交格式改變</td><td>提交改為 1,600 列；Public 分數＝原 400 題與新增 400 題的平均，Private 同理；說明檔寫「同一玩家可能對應多題，候選池中也可能有不對應任何題目的玩家」</td></tr>
+  </table>
+  <p>新增候選人不是原候選池的人；八個檔之間以及與 100 萬局訓練資料之間都沒有相同的棋譜。同一玩家可以對應多題，這一點直接決定了要不要做一對一配對（下一段）。筆記把新增那一半換算成分數時，原有池以 1.0 計；原有池的 800 列在 11-12 第一批檔沿用 embt＋配對，之後比較的檔中該部分相同。</p>
+  <h4>題目擁有者的結構：2／3／5 局題互不重複，1 局題會與別題重複</h4>
+  <p>原題池是一人一題（第 9 章），新增池的說明檔卻說同一玩家可能對應多題。筆記用不需要答案的統計分析（11-13 05:15–05:45）把題目依局數兩兩分格，數「同第一名的題目對數」，並在模擬題池切出四種擁有者結構對照：distinct＝全部互不重複；replace＝每題獨立抽；bysize＝同局數內不重複、跨局數獨立；one_free＝2／3／5 局題互不重複、1 局題獨立抽。</p>
+  <table>
+    <tr><th>比較的格子（同第一名的題目對數）</th><th class="n">distinct</th><th class="n">one_free</th><th>官方</th></tr>
+    <tr><td>2／3／5 局題之間（六格合計）</td><td class="n">22.2（16–30）</td><td class="n">22.2（16–30）</td><td>Public 22／21、Private 26／26</td></tr>
+    <tr><td>1 局題對 5 局題</td><td class="n">7.6</td><td class="n">17.5</td><td>16–19</td></tr>
+    <tr><td>1 局題對 2 局題</td><td class="n">11.5</td><td class="n">17.5</td><td>15–18</td></tr>
+    <tr><td>1 局題之間</td><td class="n">7.0</td><td class="n">11.4</td><td>6–7</td></tr>
+  </table>
+  <ul>
+    <li>2／3／5 局題之間，replace 是 75（70–85）、bysize 是 60（53–70），官方遠低於這兩個；摻 5%／15%／30% 可重複題時為 26.6（21–33）／35.4（30–43）／47.2（39–51），所以官方相容於 0–5%，15% 以上被排除。</li>
+    <li>1 局題的擁有者會和較大題目的擁有者重複（接近獨立抽的比率），1 局題彼此之間看起來不重複。</li>
+    <li>全池不同第一名數（每 400 題）：distinct 347（343–355）、one_free 326（309–333）、replace 284，官方 328–334。十格的 Poisson 對數概似：四個（檔 × 池）都是 one_free 最高，distinct 低 1.7–6.3，bysize 低 13–24，replace 低 23–28。</li>
+    <li>與排行榜一致：11-12 的 v2a 模型下全部強制配對，distinct 預測 +0.0101，one_free 預測 −0.0213，實測 −0.0114，落在 one_free 的範圍內、distinct 的範圍外。</li>
+  </ul>
+  <p>三條線（分格統計、不同第一名數、排行榜）指向同一個結構，所以配對只用在 2／3／5 局題，1 局題都不動（13.2）。</p>
+  <p class="src">出處：facts_A A-K18、A-K20、A-K21、A-K22、A-K23、A-K24、A-T10、A-T24、A-X20、A-P12；facts_B B-V08、B-V09；METHOD_NOTES §2.11、§2.22、§2.27、§2.29、§2.30、§2.37。</p>
+</section>
+
+<section class="page card" id="card-pid2-arch" data-sec="26" data-ch="13" data-title="v2 流程">
+  <div class="report stack">
+    <div class="txt">
+      <div class="num">第 13 章 · 玩家辨識：新增題池與 v2 流程 · 2／2</div>
+      <h3>v2 流程：九個成分各算一張分數表 → 加權融合 → 2／3／5 局題軟性配對；逐手序列網路的權重最大</h3>
+      <ul class="key cols3">
+        <li>九個成分：開局、原座標開局、方向×2、讓子、局部棋形、風格、嵌入、逐手序列</li>
+        <li>逐手序列（seq）融合權重 4.278，是多個網路的平均，用向量內積比對 <span class="tag t-m">實測</span></li>
+        <li>每個題池用自己候選人的棋局微調 50 步：比 100 步 +0.0073 [+0.0033, +0.0113] <span class="tag t-m">實測</span></li>
+        <li>2／3／5 局題軟性一對一配對（λ＝1）：+0.0064 [+0.0035, +0.0095] <span class="tag t-m">實測</span></li>
+      </ul>
+      <div class="cause"><span><span class="k">問題</span><b>10 局撐不起每人一個統計模型</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>共用的序列網路，再對每個題池微調</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>網路沒看過測試玩家</b></span><button class="deriv-open" data-sec="26">推導 ▸</button></div>
+    </div>
+    <div class="pid-fig" id="chart-pid2-arch"></div>
+  </div>
+</section>
+<section class="lesson" id="sec-26" data-title="13.2 成分、融合權重與配對">
+  <h3>13.2 成分、融合權重與配對</h3>
+  <p class="proves">對應報告卡 27：十局撐不起統計模型，就用共用網路加每池微調</p>
+  <h4>九個成分與融合權重</h4>
+  <p>玩家執白時把顏色對調，模型裡的「黑」永遠是該玩家。開局、原座標開局、方向（黑白視角）、讓子四個成分，黑、白視角各建一個模型，題目分數是各局在自己視角模型下的對數分數相加；局部棋形、風格、方向（合併）、嵌入四個成分，候選人的 10 局合用；逐手序列用網路輸出的向量。融合的做法同第 9 章（逐列標準化、softmax 對數似然擬合權重）。</p>
+  <table>
+    <tr><th>成分</th><th>內部名</th><th>10 局怎麼用</th><th class="n">v2 第一版</th><th class="n">v2b（加 seq）</th><th class="n">v2f</th></tr>
+    <tr><td>逐手序列</td><td><code>seq</code></td><td>網路輸出 128 維單位向量；候選人 10 局向量和對題目各局向量和的內積</td><td class="n">—</td><td class="n">2.130</td><td class="n">3.168</td></tr>
+    <tr><td>嵌入</td><td><code>emb</code></td><td>候選人的 10 局合用</td><td class="n">2.619</td><td class="n">1.608</td><td class="n">1.635</td></tr>
+    <tr><td>開局</td><td><code>opening</code></td><td>黑、白視角各一個模型</td><td class="n">0.361</td><td class="n">0.290</td><td class="n">0.238</td></tr>
+    <tr><td>原座標開局</td><td><code>opening_raw</code></td><td>黑、白視角各一個模型</td><td class="n">0.351</td><td class="n">0.242</td><td class="n">0.220</td></tr>
+    <tr><td>方向（黑白視角）</td><td><code>orient4</code></td><td>黑、白視角各一個模型</td><td class="n">0.337</td><td class="n">0.332</td><td class="n">0.354</td></tr>
+  </table>
+  <table>
+    <tr><th>成分</th><th>內部名</th><th>10 局怎麼用</th><th class="n">v2 第一版</th><th class="n">v2b（加 seq）</th><th class="n">v2f</th></tr>
+    <tr><td>方向（合併）</td><td><code>orient4_merged</code></td><td>候選人的 10 局合用</td><td class="n">0.330</td><td class="n">0.119</td><td class="n">0.007</td></tr>
+    <tr><td>讓子</td><td><code>hd</code></td><td>黑、白視角各一個模型</td><td class="n">0.565</td><td class="n">0.511</td><td class="n">0.488</td></tr>
+    <tr><td>局部棋形</td><td><code>local</code></td><td>候選人的 10 局合用</td><td class="n">0.238</td><td class="n">0.192</td><td class="n">0.161</td></tr>
+    <tr><td>風格</td><td><code>style</code></td><td>候選人的 10 局合用</td><td class="n">0.288</td><td class="n">0.143</td><td class="n">0.057</td></tr>
+  </table>
+  <p>三欄權重依序是第一版（8 個成分，6 個模擬題池擬合）、加入 seq 的 v2b（單一網路）、v2f（微調 50 步＋嵌入 emb3 三個種子平均）。多個網路平均之後重擬合的權重更偏向逐手序列：v2ge 的 seq 權重 4.278、嵌入 0.781（單一網路時 seq 2.29、嵌入 1.52），style 與方向（合併）接近 0。單獨的分數（6 個模擬題池）：嵌入 0.39、原座標開局 0.32、開局 0.28、方向 0.27、風格 0.13；在單一 fold 題池上 seq 單獨 0.568。加入 seq 後融合 +0.0747 [+0.0674, +0.0820]，8 個題池全部上升；拿掉嵌入 −0.0447，拿掉全部習慣成分 −0.0806，所以三類成分都留。</p>
+  <h4>逐手序列網路與題池微調</h4>
+  <p>逐手認人網路是棋力預測那邊的 M88／M90：Transformer（d 384、8 層）逐手讀整局前 256 手，輸出要認的那一方的 128 維單位向量；訓練是「候選以自己的棋譜為原型」的回合式交叉熵，只用訓練玩家，沒有任何官方棋局。官方玩家都沒看過，同一個網路對看過的玩家單局 top-1 約 0.21–0.23、沒看過的約 0.15–0.17。</p>
+  <p>題池微調：把網路用該候選池自己的 600 人 × 10 局再訓練，目標函數與原訓練相同（每局當查詢，對回合內各玩家的原型做交叉熵，自己那一局從原型排除）；每步 256 人 × 8 局，AdamW 1e-4、warmup 50，在第 50 步停。不用任何題目棋局；Public 與 Private 兩池各自微調，不混用。</p>
+  <ul>
+    <li>微調 100 步對不微調：+0.0069 [+0.0020, +0.0114]，7／8 個題池上升（模擬分數 0.7079 → 0.7148）。</li>
+    <li>微調縮短到 50 步：細掃（8 池）+0.0073 [+0.0033, +0.0113]，8／8 池；排行榜上 50 步版（0.8777615）比 100 步版（0.8753896）高 +0.0024。</li>
+    <li>按題池校正融合權重不成立：擬合出的權重和文件接近（seq 3.5／3.6 對 4.28），維持文件權重。</li>
+  </ul>
+  <h4>2／3／5 局題的軟性配對</h4>
+  <p>做法是在新增兩池的 2／3／5 局題之間做一對一配對，但為「軟性」：同一候選人被第二題選走要付 λ 的融合分數，所以兩題都遙遙領先同一人時仍可並存；1 局題都不動。λ 取 1，理由是在與官方統計相容的結構中最差的那個最好；硬性配對只要有 5% 重複就賠掉全部增益。下表是 λ＝1 的軟性配對在各種擁有者結構下的增減（多網路模型、新增池分數，配對前約 0.78）。</p>
+  <table>
+    <tr><th>擁有者結構（與官方統計相容）</th><th class="n">軟性配對 λ＝1</th><th class="n">上升的池數</th></tr>
+    <tr><td>distinct</td><td class="n">+0.0064 [+0.0037, +0.0091]</td><td class="n">8／8</td></tr>
+    <tr><td>one_free（官方最像）</td><td class="n">+0.0064 [+0.0035, +0.0095]</td><td class="n">8／8</td></tr>
+    <tr><td>one_free 摻 5% 可重複</td><td class="n">+0.0062 [+0.0033, +0.0092]</td><td class="n">8／8</td></tr>
+    <tr><td>one_free 摻 15% 可重複</td><td class="n">+0.0033 [+0.0004, +0.0061]</td><td class="n">7／8</td></tr>
+  </table>
+  <table>
+    <tr><th>已被官方統計排除的結構</th><th class="n">軟性配對 λ＝1</th></tr>
+    <tr><td>one_free 摻 30% 可重複</td><td class="n">−0.0014 [−0.0047, +0.0015]</td></tr>
+    <tr><td>bysize</td><td class="n">−0.0022</td></tr>
+    <tr><td>replace</td><td class="n">−0.0076</td></tr>
+  </table>
+  <p>對照做法：全部題目強制配對在 distinct +0.0170、one_free −0.0397、replace −0.1143；2／3／5 局題硬性配對在 one_free +0.0065、摻 5% −0.0015、摻 15% −0.0162；軟性 λ＝2 在 one_free +0.0074、摻 15% +0.0026、replace −0.0184。增益主要在 2 局題（+0.016）。決定：採用 λ＝1、只配 2／3／5 局題。官方檔 <code>pid_v2gs_m90.csv</code>（md5 95ce91570f32）把 Public 池 13 題（2／3／5 局：6／2／5）、Private 池 18 題（11／5／2）的第一名改掉；預期新增池 +0.006、總分約 +0.003，這個量在排行榜上看不清楚（改動約十題，雜訊約 ±0.002）。</p>
+  <p class="src">出處：facts_A A-M21、A-M22、A-M23、A-M25、A-M27、A-M29、A-E04、A-R25、A-R27、A-R30、A-V42、A-X20、A-X21；facts_B B-M05、B-M06、B-R02、B-R03、B-X08、B-P03、B-P04；METHOD_NOTES §2.29、§2.30、§2.32、§2.34、§2.36、§2.37、§2.41、§2.42。</p>
+</section>

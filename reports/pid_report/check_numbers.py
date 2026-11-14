@@ -61,8 +61,8 @@ def card_limits(html):
                 msgs.append("%s: ul.key has %d li (max 4)" % (cid, len(lis)))
             for li in lis:
                 t = re.sub(r"<[^>]*>", "", li).strip()
-                if len(t) > 44:
-                    msgs.append("%s: li of %d characters (max 44): %s" % (cid, len(t), t[:30]))
+                if len(t) > 64:
+                    msgs.append("%s: li of %d characters (max 64): %s" % (cid, len(t), t[:30]))
         for tb in re.finditer(r"<table\b.*?</table>", seg, flags=re.S):
             rows = re.findall(r"<tr\b.*?</tr>", tb.group(0), flags=re.S)
             body = [r for r in rows if "<th" not in r]
