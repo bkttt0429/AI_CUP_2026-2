@@ -2,6 +2,13 @@
 
 這個檔收錄 A／B／C 三份素材整理完之後才補進筆記、或筆記漏記而由結果檔核對補上的事實；格式同前。
 
+
+## 0. 任務與規則：使用界線（由計畫負責人核對後補記）
+
+- **[D-K01]** 沒有人工標註測試資料（2026-11-15 核對）：所有上傳檔的答案都由程式產生（原題池 `scripts/predict_pid.py`，新增題池 `scripts/predict_pid_v2.py`）；工作筆記全文沒有任何由人看棋譜決定答案的步驟，唯一一次提到「人工標註測試資料」是決定不用排行榜反推的答案訓練嵌入模型（A-K25）。｜出處：`scripts/predict_pid.py`、`scripts/predict_pid_v2.py`；METHOD_NOTES 全文檢索（只有 §2.23 行 338 一處）
+- **[D-K02]** 由排行榜回饋得知的答案只用於評估，沒有用於訓練（2026-11-15 核對）：原始測試集的 Public 答案是 11-06 由上傳讀數解出的（A-V28），之後用於離線評估與採用新做法前的把關（A-T22、A-T23、A-R19、A-P24、A-P25、A-P26）；沒有用於訓練——以它重擬融合權重的版本沒有採用（A-X10），嵌入模型的訓練沒有用它（A-K25）。新增題池沒有解出任何題目的答案，Public 分數只用來在檔案之間做選擇與校準驗證工具（D-V01）。｜出處：METHOD_NOTES §2.19–§2.23（行 289–349）；D-V01
+
+
 ## 3. 方法與成分
 
 - **[D-M01]** 原題池的列在每一個上傳檔都相同（2026-11-15 核對）：產生上傳檔的程式把原題池（10-30 版；Public 與 Private 各 400 題，共 800 列）的列固定取自 `results/submission_old_embt_assign/submission_player.csv`（embt 嵌入＋配對的解法），v2 流程只決定新增題池的 800 列。逐檔核對：`pid_v2d_ft.csv`、`pid_v2gs_m90.csv`、`pid_v2is_o1.csv`、`pid_v2w_n8s.csv`、`pid_v2sl_alls.csv`、`pid_v2x_ns.csv`、`pid_v2c2_bs.csv` 七個上傳檔的原題池 800 列與該固定檔逐字相同（表頭列加這 800 列的 md5 前 12 碼都是 48aa4f02de26；`upload/` 內其餘的檔也都相同）。所以這七個檔之間 Public 分數的差別全部來自新增的那 400 題。｜出處：`scripts/nano4/pid_v2_make_file.sh` 第 12 行（`--old-submission`）；2026-11-15 逐檔核對 `upload/` 內的檔
@@ -13,6 +20,11 @@
 ## 6. 驗證工具與事先規則
 
 - **[D-V01]** 五次上傳的校準（更正後的加總，2026-11-14 23:30）：擬題池增益 +0.0132、+0.0196、+0.0268、+0.0082、+0.0035，合計 +0.0713；對應的 Public 新增那一半的增益 +0.0104、+0.0148、+0.0227、+0.0037、+0.0068，合計 +0.0583；合計的比例 0.82，單次比例 0.79、0.75、0.85、0.45、1.95。對應的檔案依序是 `pid_v2is_o1.csv`、`pid_v2w_n8s.csv`、`pid_v2sl_alls.csv`、`pid_v2x_ns.csv`、`pid_v2c2_bs.csv`。｜出處：METHOD_NOTES §2.114（校準那一條的更正）
+
+## 7. 外部資源
+
+- **[D-E01]** KataGo 人類風格網路的來源（2026-11-15 查發布頁與磁碟上的檔）：GitHub `lightvector/KataGo` 的發布 v1.15.0（標題 "New Human-like Play and Analysis"）；資產檔名 `b18c384nbt-humanv0.bin.gz`（下載網址 `https://github.com/lightvector/KataGo/releases/download/v1.15.0/b18c384nbt-humanv0.bin.gz`）與給開發者用的 PyTorch 檢查點 `b18c384nbt-humanv0.ckpt`；本隊用的是後者（2026-10-15 取得）。發布頁說這個模型是用大量人類棋譜訓練、預測不同棋力與年代的人類落子；發布頁沒有另外載明模型檔的授權，授權一欄待參賽者核對 KataGo 專案的授權條款後填入。｜出處：發布頁 `https://github.com/lightvector/KataGo/releases/tag/v1.15.0`（2026-11-15 讀取）；檔案 `AI_CUP_2026-1/models/katago/`
+- **[D-E02]** 棋力預測那邊的 M88／M90／M101 網路不是外部資源，是跨競賽沿用：它們是同一位參賽者在另一個競賽（棋力預測）的工作中自己訓練的逐手序列網路，沒有下載來源與授權的問題，但要在報告中說明沿用。它們看過的資料：net −1 不排除任何 fold（含 fold 0），交叉網路各少看一個 fold（訓練程式 `m88_seqid.py` 的條件 `use = ~is_held & (fold != v)`，v = −1 不排除任何 fold）；11-13 的上傳檔平均的 20 個網路裡，4 個是 net −1（M88 一個、M90 三個種子），16 個是交叉網路。M101 的交叉網路看過含 fold 0 的 4 個 fold（B-M16）。｜出處：METHOD_NOTES §2.40（行 553）、§2.47（行 705）
 
 ## 9. 待確認與進行中
 
