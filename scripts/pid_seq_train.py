@@ -85,7 +85,7 @@ PRELOADED = None  # set by main_fork in every forked trainer: the games read onc
 _KEEP = []
 
 
-def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None, ext_second=None):
+def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None, ext_second=None, sup_ply=None):
     """M90's training games as padded arrays (m88_seqid.load_games without the test part). The worker pool starts before any
     large array exists and every part is written straight into preallocated arrays: the compute nodes run with strict
     overcommit, and a pool forked from a large parent exhausted the node's commit limit in the rank session's first run."""
@@ -197,7 +197,13 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
         np.save(share / "key.npy", key); np.save(share / "pid.npy", pid); np.save(share / "fold.npy", fold)
         (share / "DONE").write_text("ok\n")
         log(f"arrays shared in {share}")
-    return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold, second=second)
+    sup_idx, SUPD = np.full(N, -1, np.int32), None
+    if sup_ply:  # METHOD_NOTES 2.88 (probe B): supervised per-ply features of some games, padded like GL and shared the same way
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import pid_sup
+        sup_idx, SUPD = pid_sup.dense(pid_sup.load_sup(sup_ply), key.tolist(), T, alloc=lambda shape, dtype: alloc("SUP", shape, dtype))
+        log(f"supervised per-ply features: {int((sup_idx >= 0).sum())} of {N} games, {SUPD.shape[2]} dimensions ({SUPD.nbytes / 1e9:.1f} GB)")
+    return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold, second=second, sup_idx=sup_idx, SUP=SUPD)
 
 
 def main(argv=None):
@@ -215,6 +221,10 @@ def main(argv=None):
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--ext-ply", nargs="*", default=None, help="one or more directories of external per-ply parts")
     ap.add_argument("--ext-select", nargs="*", default=None, help="the select.csv files that name their accounts")
+    ap.add_argument("--sup-ply", nargs="*", default=None, help="directories of scripts/pid_sup_ply_extract.py parts (supervised per-ply features; METHOD_NOTES 2.88)")
+    ap.add_argument("--sup-dims", type=int, nargs=2, default=None, metavar=("FROM", "TO"), help="put the supervised features into these input dimensions (0 64: in place of the pooled half, 64 128: of the played-point half)")
+    ap.add_argument("--sup-only", action="store_true", help="with --sup-dims: every other input dimension is set to its mean")
+    ap.add_argument("--sup-require", action="store_true", help="train only on games that have supervised features (the same games for every arm of the probe)")
     ap.add_argument("--ext-second", nargs="*", default=None, help="second.csv files of scripts/ext_fox_census.py: external games are also read from the other player's side")
     ap.add_argument("--no-second", action="store_true", help="leave the second-side rows out (a control arm inside a job that loaded them)")
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
@@ -279,7 +289,7 @@ def main(argv=None):
     name = f"{v}_{a.tag}{'_smoke' if a.smoke else ''}"
     dev = "cuda"
     log(f"net {name}: steps {steps} (cosine horizon {horizon}), dropout {a.drop}, ply mask up to {a.mask}, EMA {a.ema}, seed {a.seed}; GPU {torch.cuda.get_device_name(0)}")
-    G = PRELOADED if PRELOADED is not None else load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir, a.ext_second)
+    G = PRELOADED if PRELOADED is not None else load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir, a.ext_second, a.sup_ply)
     if PRELOADED is not None:
         log(f"games shared by the job: {len(G['key'])} ({G['GL'].nbytes / 1e9:.1f} GB, read once; this process holds {_rss_gb():.1f} GB)")
     if a.prepare_only:
@@ -294,6 +304,15 @@ def main(argv=None):
     sec_row = G.get("second", np.zeros(len(fold), bool))
     if a.no_second:
         use &= ~sec_row
+    sup_idx = G.get("sup_idx")
+    if a.sup_dims:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        global pid_sup
+        import pid_sup
+    if a.sup_require:
+        use &= sup_idx >= 0
+    if a.sup_dims or a.sup_require:
+        assert sup_idx is not None and G.get("SUP") is not None, "--sup-dims / --sup-require need --sup-ply"
     if a.m_ep:
         M.M_EP = a.m_ep
     if a.ext_cap or a.ext_accounts:  # fewer external accounts and / or fewer games of each (METHOD_NOTES 2.69)
@@ -395,13 +414,24 @@ def main(argv=None):
         log(f"resumed at step {start}")
     tb = lambda x: torch.as_tensor(x, device=dev)  # noqa: E731
 
+    def sup_in(rows_, gl_):
+        """The batch's input with the supervised features in their dimensions (--sup-dims); unchanged without the option."""
+        if not a.sup_dims:
+            return gl_
+        si = sup_idx[rows_]
+        z = torch.zeros(len(rows_), T, G["SUP"].shape[2], device=dev)
+        has = np.flatnonzero(si >= 0)
+        if len(has):
+            z[torch.as_tensor(has, device=dev)] = tb(G["SUP"][si[has]]).float()
+        return pid_sup.put(gl_.float(), z, net.mu, net.sd, a.sup_dims, a.sup_only)
+
     def embed(model, rows):
         model.eval()
         res = np.zeros((len(rows), M.D_OUT), np.float32)
         with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
             for i in range(0, len(rows), 1024):
                 r = rows[i:i + 1024]
-                res[i:i + 1024] = model(tb(G["GL"][r]), tb(G["POS"][r].astype(np.int64)), tb(G["MOV"][r].astype(np.int64)), tb(G["LEN"][r].astype(np.int64)), tb(G["SUBJ"][r].astype(np.int64))).float().cpu().numpy()
+                res[i:i + 1024] = model(sup_in(r, tb(G["GL"][r])), tb(G["POS"][r].astype(np.int64)), tb(G["MOV"][r].astype(np.int64)), tb(G["LEN"][r].astype(np.int64)), tb(G["SUBJ"][r].astype(np.int64))).float().cpu().numpy()
         return res
 
     # evaluation set: held-out own games of fold v (unseen) and of the training folds (seen); prototypes from non-held games, folds != 0
@@ -454,7 +484,7 @@ def main(argv=None):
         u = rng.random((P, W))
         u[np.arange(W)[None] >= cnt[pl][:, None]] = 2.0
         rows = tab[pl[:, None], np.argsort(u, axis=1)[:, :M.M_EP]].reshape(-1)
-        gl = tb(G["GL"][rows])
+        gl = sup_in(rows, tb(G["GL"][rows]))
         if a.jitter > 0:  # the same game never looks exactly the same twice
             gl = gl + (a.jitter * net.sd.to(gl.dtype))[None, None] * torch.randn_like(gl)
         hide = None
@@ -580,15 +610,16 @@ def main_fork(argv):
     ap.add_argument("--ext-ply", nargs="*", default=None)
     ap.add_argument("--ext-select", nargs="*", default=None)
     ap.add_argument("--ext-second", nargs="*", default=None)
+    ap.add_argument("--sup-ply", nargs="*", default=None)
     a = ap.parse_args(argv)
     t0 = time.time()
     log = lambda s_: print(f"{s_} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
     specs = [shlex.split(line) for line in Path(a.fork).read_text().splitlines() if line.strip() and not line.startswith("#")]
     SHARED_ANON = True
-    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, None, a.ext_second)
+    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, None, a.ext_second, a.sup_ply)
     for k in SHARED:
         G[k].flags.writeable = False  # the trainers only read; a stray write would be seen by all of them
-    data = (["--smoke"] if a.smoke else []) + (["--all-folds"] if a.all_folds else []) + (["--ext-ply", *a.ext_ply] if a.ext_ply else []) + (["--ext-select", *a.ext_select] if a.ext_select else []) + (["--ext-second", *a.ext_second] if a.ext_second else [])
+    data = (["--smoke"] if a.smoke else []) + (["--all-folds"] if a.all_folds else []) + (["--ext-ply", *a.ext_ply] if a.ext_ply else []) + (["--ext-select", *a.ext_select] if a.ext_select else []) + (["--ext-second", *a.ext_second] if a.ext_second else []) + (["--sup-ply", *a.sup_ply] if a.sup_ply else [])
     pids = {}
     for gpu, logfile, *rest in specs:
         sys.stdout.flush()

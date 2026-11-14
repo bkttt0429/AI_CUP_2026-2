@@ -58,6 +58,9 @@ def main(argv=None):
     ap.add_argument("--state", choices=("best", "last"), default="best")
     ap.add_argument("--ckpt-suffix", default="", help="checkpoint file ckpt_<v><suffix>.pt (the rank session's further seeds: _s1, _s2)")
     ap.add_argument("--name", default="", help="folds stage: output fold<v><name>.npz")
+    ap.add_argument("--sup-ply", nargs="*", default=None, help="folds stage: supervised per-ply features (scripts/pid_sup_ply_extract.py; METHOD_NOTES 2.88)")
+    ap.add_argument("--sup-dims", type=int, nargs=2, default=None, help="the input dimensions they replace, as the network was trained (pid_seq_train.py --sup-dims)")
+    ap.add_argument("--sup-only", action="store_true")
     ap.add_argument("--flip", action="store_true", help="vectors of the OTHER side of every game (the subject's opponent; METHOD_NOTES 2.38); give --name / --tag a suffix such as _opp")
     a = ap.parse_args(argv)
     global STATE
@@ -81,14 +84,25 @@ def main(argv=None):
             np.savez(dest, key=keys, emb=embs.astype(np.float16), net=np.array(v), best=np.array(str(best)))
             print(f"official: {len(keys)} games under net {v} (best {best}) -> {dest} ({time.time() - t0:.0f} s)", flush=True)
         return 0
+    sup = None
+    if a.sup_ply and a.sup_dims:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import pid_sup
+        sup = pid_sup.load_sup(a.sup_ply)
     for v in a.folds:
         net, best = load_net(Path(a.ckpt_dir) / f"ckpt_{v}{a.ckpt_suffix}.pt")
+        mu_np, sd_np = net.mu.float().cpu().numpy(), net.sd.float().cpu().numpy()
         files = [f for d in m88.DIRS for f in sorted((d / f"fold{v}").glob("games_s*_p*.csv"))]
         keys, pids, embs = [], [], []
         with mp.get_context("fork").Pool(12) as pool:
             for i in range(0, len(files), 48):
                 for key, pid, GL, POS, MOV, LEN, SUBJ in pool.map(m88.read_part, files[i:i + 48], chunksize=2):
                     keys.append(key); pids.append(pid)
+                    if sup is not None:  # the games without supervised features keep zeros (the mean) there: only the pool games are scored
+                        idx, D = pid_sup.dense(sup, key.tolist(), GL.shape[1])
+                        z = np.zeros((len(key), GL.shape[1], D.shape[2]), np.float32)
+                        z[idx >= 0] = D[idx[idx >= 0]]
+                        GL = pid_sup.put(GL.astype(np.float32), z, mu_np, sd_np, a.sup_dims, a.sup_only)
                     embs.append(embed(net, GL, POS, MOV, LEN, 1 - SUBJ if a.flip else SUBJ))
                 print(f"  fold {v}: {min(i + 48, len(files))}/{len(files)} parts, {sum(len(k) for k in keys)} games ({time.time() - t0:.0f} s)", flush=True)
         keys, pids, embs = np.concatenate(keys), np.concatenate(pids), np.concatenate(embs)
