@@ -9,7 +9,8 @@ import sys
 
 FACTS = ["/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_A.md",
          "/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_B.md",
-         "/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_C.md"]
+         "/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_C.md",
+         "/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_D.md"]
 EXTRA = ["+0.0713", "+0.0583", "0.82", "+0.0104", "+0.0148", "+0.0227", "+0.0037", "+0.0068"]  # the corrected calibration totals
 
 NUM_RE = re.compile(r"[+\-−]?\d+\.\d{3,}")
@@ -52,7 +53,9 @@ def card_limits(html):
     msgs = []
     starts = [m for m in re.finditer(r'id="(card-pid2-[^"]*)"', html)]
     for k, m in enumerate(starts):
-        end = starts[k + 1].start() if k + 1 < len(starts) else len(html)
+        end = html.find("</section>", m.end())  # the card itself only, never the lesson after it
+        if end < 0:
+            end = len(html)
         seg = html[m.end():end]
         cid = m.group(1)
         for ul in re.finditer(r'<ul\b[^>]*class="[^"]*\bkey\b[^"]*"[^>]*>(.*?)</ul>', seg, flags=re.S):
@@ -85,6 +88,10 @@ def selftest():
     assert numbers("<!-- 0.1234 -->\nx 0.5678") == [(2, "0.5678")]
     assert numbers("for(i=0;i<n;i++){v=x>0.1234}", False) == [(1, "0.1234")]
     assert card_limits('<div id="card-pid2-x"><ul class="key">' + "<li>a</li>" * 5 + "</ul></div>")
+    card = ('<section class="page card" id="card-pid2-y"><ul class="key">' + "<li>a</li>" * 3 + "</ul><table>"
+            + "<tr><td>x</td></tr>" * 4 + "</table></section>")
+    lesson = '<section class="lesson" id="sec-y"><table>' + "<tr><td>x</td></tr>" * 10 + "</table></section>"
+    assert not card_limits(card + lesson)
     print("selftest OK")
 
 

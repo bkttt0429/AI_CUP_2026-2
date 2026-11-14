@@ -65,7 +65,7 @@
       <ul class="key cols3">
         <li>九個成分：開局、原座標開局、方向×2、讓子、局部棋形、風格、嵌入、逐手序列</li>
         <li>逐手序列（seq）融合權重 4.278，是多個網路的平均，用向量內積比對 <span class="tag t-m">實測</span></li>
-        <li>每個題池用自己候選人的棋局微調 50 步：比 100 步 +0.0073 [+0.0033, +0.0113] <span class="tag t-m">實測</span></li>
+        <li>微調 50 步對不微調 +0.0117 [+0.0071, +0.0164] <span class="tag t-m">實測</span></li>
         <li>2／3／5 局題軟性一對一配對（λ＝1）：+0.0064 [+0.0035, +0.0095] <span class="tag t-m">實測</span></li>
       </ul>
       <div class="cause"><span><span class="k">問題</span><b>10 局撐不起每人一個統計模型</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>共用的序列網路，再對每個題池微調</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>網路沒看過測試玩家</b></span><button class="deriv-open" data-sec="26">推導 ▸</button></div>
@@ -85,9 +85,6 @@
     <tr><td>開局</td><td><code>opening</code></td><td>黑、白視角各一個模型</td><td class="n">0.361</td><td class="n">0.290</td><td class="n">0.238</td></tr>
     <tr><td>原座標開局</td><td><code>opening_raw</code></td><td>黑、白視角各一個模型</td><td class="n">0.351</td><td class="n">0.242</td><td class="n">0.220</td></tr>
     <tr><td>方向（黑白視角）</td><td><code>orient4</code></td><td>黑、白視角各一個模型</td><td class="n">0.337</td><td class="n">0.332</td><td class="n">0.354</td></tr>
-  </table>
-  <table>
-    <tr><th>成分</th><th>內部名</th><th>10 局怎麼用</th><th class="n">v2 第一版</th><th class="n">v2b（加 seq）</th><th class="n">v2f</th></tr>
     <tr><td>方向（合併）</td><td><code>orient4_merged</code></td><td>候選人的 10 局合用</td><td class="n">0.330</td><td class="n">0.119</td><td class="n">0.007</td></tr>
     <tr><td>讓子</td><td><code>hd</code></td><td>黑、白視角各一個模型</td><td class="n">0.565</td><td class="n">0.511</td><td class="n">0.488</td></tr>
     <tr><td>局部棋形</td><td><code>local</code></td><td>候選人的 10 局合用</td><td class="n">0.238</td><td class="n">0.192</td><td class="n">0.161</td></tr>
@@ -97,28 +94,26 @@
   <h4>逐手序列網路與題池微調</h4>
   <p>逐手認人網路是棋力預測那邊的 M88／M90：Transformer（d 384、8 層）逐手讀整局前 256 手，輸出要認的那一方的 128 維單位向量；訓練是「候選以自己的棋譜為原型」的回合式交叉熵，只用訓練玩家，沒有任何官方棋局。官方玩家都沒看過，同一個網路對看過的玩家單局 top-1 約 0.21–0.23、沒看過的約 0.15–0.17。</p>
   <p>題池微調：把網路用該候選池自己的 600 人 × 10 局再訓練，目標函數與原訓練相同（每局當查詢，對回合內各玩家的原型做交叉熵，自己那一局從原型排除）；每步 256 人 × 8 局，AdamW 1e-4、warmup 50，在第 50 步停。不用任何題目棋局；Public 與 Private 兩池各自微調，不混用。</p>
+  <p>微調 50 步對不微調（官方擬題池，組成 <code>v2sl_all</code>，種子 0 與 1）：兩池合計 +0.0117 [+0.0071, +0.0164]；Public 新增池 +0.0130 [+0.0062, +0.0201]、Private 新增池 +0.0104 [+0.0040, +0.0163]；1／2／3 局題分別 +0.0113／+0.0105／+0.0132。</p>
   <ul>
     <li>微調 100 步對不微調：+0.0069 [+0.0020, +0.0114]，7／8 個題池上升（模擬分數 0.7079 → 0.7148）。</li>
-    <li>微調縮短到 50 步：細掃（8 池）+0.0073 [+0.0033, +0.0113]，8／8 池；排行榜上 50 步版（0.8777615）比 100 步版（0.8753896）高 +0.0024。</li>
+    <li>微調 50 步對 100 步（另一個比較）：細掃（8 池）+0.0073 [+0.0033, +0.0113]，8／8 池；排行榜上 50 步版（0.8777615）比 100 步版（0.8753896）高 +0.0024。</li>
     <li>按題池校正融合權重不成立：擬合出的權重和文件接近（seq 3.5／3.6 對 4.28），維持文件權重。</li>
   </ul>
   <h4>2／3／5 局題的軟性配對</h4>
   <p>做法是在新增兩池的 2／3／5 局題之間做一對一配對，但為「軟性」：同一候選人被第二題選走要付 λ 的融合分數，所以兩題都遙遙領先同一人時仍可並存；1 局題都不動。λ 取 1，理由是在與官方統計相容的結構中最差的那個最好；硬性配對只要有 5% 重複就賠掉全部增益。下表是 λ＝1 的軟性配對在各種擁有者結構下的增減（多網路模型、新增池分數，配對前約 0.78）。</p>
   <table>
-    <tr><th>擁有者結構（與官方統計相容）</th><th class="n">軟性配對 λ＝1</th><th class="n">上升的池數</th></tr>
+    <tr><th>擁有者結構（前四列與官方統計相容，後三列已被排除）</th><th class="n">軟性配對 λ＝1</th><th class="n">上升的池數</th></tr>
     <tr><td>distinct</td><td class="n">+0.0064 [+0.0037, +0.0091]</td><td class="n">8／8</td></tr>
     <tr><td>one_free（官方最像）</td><td class="n">+0.0064 [+0.0035, +0.0095]</td><td class="n">8／8</td></tr>
     <tr><td>one_free 摻 5% 可重複</td><td class="n">+0.0062 [+0.0033, +0.0092]</td><td class="n">8／8</td></tr>
     <tr><td>one_free 摻 15% 可重複</td><td class="n">+0.0033 [+0.0004, +0.0061]</td><td class="n">7／8</td></tr>
-  </table>
-  <table>
-    <tr><th>已被官方統計排除的結構</th><th class="n">軟性配對 λ＝1</th></tr>
-    <tr><td>one_free 摻 30% 可重複</td><td class="n">−0.0014 [−0.0047, +0.0015]</td></tr>
-    <tr><td>bysize</td><td class="n">−0.0022</td></tr>
-    <tr><td>replace</td><td class="n">−0.0076</td></tr>
+    <tr><td>one_free 摻 30% 可重複</td><td class="n">−0.0014 [−0.0047, +0.0015]</td><td class="n">—</td></tr>
+    <tr><td>bysize</td><td class="n">−0.0022</td><td class="n">—</td></tr>
+    <tr><td>replace</td><td class="n">−0.0076</td><td class="n">—</td></tr>
   </table>
   <p>對照做法：全部題目強制配對在 distinct +0.0170、one_free −0.0397、replace −0.1143；2／3／5 局題硬性配對在 one_free +0.0065、摻 5% −0.0015、摻 15% −0.0162；軟性 λ＝2 在 one_free +0.0074、摻 15% +0.0026、replace −0.0184。增益主要在 2 局題（+0.016）。決定：採用 λ＝1、只配 2／3／5 局題。官方檔 <code>pid_v2gs_m90.csv</code>（md5 95ce91570f32）把 Public 池 13 題（2／3／5 局：6／2／5）、Private 池 18 題（11／5／2）的第一名改掉；預期新增池 +0.006、總分約 +0.003，這個量在排行榜上看不清楚（改動約十題，雜訊約 ±0.002）。</p>
-  <p class="src">出處：facts_A A-M21、A-M22、A-M23、A-M25、A-M27、A-M29、A-E04、A-R25、A-R27、A-R30、A-V42、A-X20、A-X21；facts_B B-M05、B-M06、B-R02、B-R03、B-X08、B-P03、B-P04；METHOD_NOTES §2.29、§2.30、§2.32、§2.34、§2.36、§2.37、§2.41、§2.42。</p>
+  <p class="src">出處：facts_A A-M21、A-M22、A-M23、A-M25、A-M27、A-M29、A-E04、A-R25、A-R27、A-R30、A-V42、A-X20、A-X21；facts_D D-R01；facts_B B-M05、B-M06、B-R02、B-R03、B-X08、B-P03、B-P04；METHOD_NOTES §2.29、§2.30、§2.32、§2.34、§2.36、§2.37、§2.41、§2.42、§2.99。</p>
 </section>
 
 <!-- ================= 第 14 章：分數的每一步（11-14 加） ================= -->
@@ -144,7 +139,6 @@
 <section class="lesson" id="sec-27" data-title="14.1 每個上傳檔的組成與讀數">
   <h3>14.1 每個上傳檔的組成與讀數</h3>
   <p class="proves">對應報告卡 28：一個數字一個檔，每一步的差別都記下來</p>
-  <h4>11-13 的上傳</h4>
   <table>
     <tr><th>日期時間</th><th>檔案</th><th>md5</th><th class="n">Public</th><th>名次／隊數</th><th>組成或和前一個檔的差別</th></tr>
     <tr><td>11-13 00:03</td><td><code>pid_v2d_ft.csv</code></td><td>7bc80c041961</td><td class="n">0.8612697</td><td>1／64（筆記未指明是 v2d 或 v2e 的名次）</td><td>五個逐手網路各對該候選池微調 100 步；新增那一半 0.7225（原有池以 1.0 計）</td></tr>
@@ -152,10 +146,6 @@
     <tr><td>11-13 01:30</td><td><code>pid_v2f_ft50_emb3</code></td><td>c03ec504ae4b</td><td class="n">0.8554173</td><td>未記</td><td>微調 50 步、嵌入 emb3（三個種子平均）；比 v2d 低 0.0059，之後生效檔退回 v2d</td></tr>
     <tr><td>11-13 10:58</td><td><code>pid_v2gs_base_m90.csv</code></td><td>ae909724fec4</td><td class="n">0.8753896</td><td>當時 1／67</td><td>20 個網路（M88 ×5＋M90 ×15）、微調 100 步、2／3／5 局題軟性配對 λ＝1；比 v2d +0.0141；新增那一半 0.7225 → 0.7508</td></tr>
     <tr><td>11-13 11:21</td><td><code>pid_v2gs_m90.csv</code></td><td>95ce91570f32</td><td class="n">0.8777615</td><td>當時 1／67</td><td>同上，微調改 50 步；比 100 步版 +0.0024；新增那一半 0.7555；成為定案檔</td></tr>
-  </table>
-  <h4>11-14 的上傳</h4>
-  <table>
-    <tr><th>日期時間</th><th>檔案</th><th>md5</th><th class="n">Public</th><th>名次／隊數</th><th>組成或和前一個檔的差別</th></tr>
     <tr><td>11-14 00:06</td><td><code>pid_v2is_o1.csv</code></td><td>3060523c59e0</td><td class="n">0.8829460</td><td>當時 2／75</td><td>逐手成分改為 28 個網路等權（加入有外部帳號訓練的網路）、微調 50 步、軟性配對；比 <code>pid_v2gs_m90.csv</code> +0.0051845；新增那一半 0.7555 → 0.7659</td></tr>
     <tr><td>11-14 04:50</td><td><code>pid_v2w_n8s.csv</code></td><td>6f82ff201b2b</td><td class="n">0.8903230</td><td>未寫</td><td>留出的對稱增強網路；比 <code>pid_v2is_o1.csv</code> +0.0073770；新增那一半 0.7659 → 0.7806；事前估計 0.890–0.892</td></tr>
     <tr><td>11-14 13:42</td><td><code>pid_v2sl_alls.csv</code></td><td>11b903cd424a</td><td class="n">0.9016519</td><td>當時 1／79</td><td>官方對稱網路 12 個種子＋4 萬步＋加大（對稱增強家族 o3SL×8＋o3S×12＋o4S×4＋o3BS×4 個網路）；比 <code>pid_v2w_n8s.csv</code> +0.0113；事前預估 0.897–0.901</td></tr>
