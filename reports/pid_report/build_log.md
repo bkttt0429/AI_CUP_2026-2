@@ -20,3 +20,5 @@ c08_pid.html:222: 0.928 not in facts: 候選只剩 50 局 0.928；按檔案順�
 c08_pid.html:274: 2.4968 not in facts: 7580 ⇒ 損失 2.4968 分 ＝ 0.632 ＋ 0
 c08_pid.html:274: 0.865 not in facts: ＝ 0.632 ＋ 0.865 ＋ 1</div>
 ```
+
+2026-11-15 00:45 | 778195 | node found; check.py: anims 18, charts 10, cards with derivation buttons 25, lessons 25 / OK; baseline unchanged (11 lines) -> PID_BUILD FAILED
