@@ -1,0 +1,503 @@
+{
+ "components": [
+  "opening",
+  "opening_raw",
+  "orient4",
+  "orient4_merged",
+  "local",
+  "style",
+  "hd",
+  "emb",
+  "seq"
+ ],
+ "weights": [
+  0.1947583255730902,
+  0.14017008956218283,
+  0.34115404615332307,
+  -0.0786909108447048,
+  0.15245866730149243,
+  -0.028592046698920157,
+  0.47389126133901266,
+  0.7814992297812866,
+  4.278044824031477
+ ],
+ "cfg": {
+  "depth": 12,
+  "alpha": 2.0,
+  "beta": 5.0,
+  "shrink": 0.1,
+  "local_alpha": 2.0,
+  "local_beta": 5.0,
+  "local_start": 12,
+  "orient_alpha": 2.0,
+  "orient_beta": 5.0,
+  "orient_depth": 12,
+  "orient_raw": 1,
+  "ref_alpha": 2.0,
+  "ref_beta": 5.0,
+  "ref_min_black": 30,
+  "ref_cap": 40,
+  "ref_orient_raw": 2,
+  "ref_seed": 0,
+  "trunk_feats": "all",
+  "trunk_shrink": 0.1
+ },
+ "emb_model": "results/embed/emb2_final.pt",
+ "seq_official": [
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3SRs3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3SRs3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss4e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss4e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss5e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss5e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss6e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss6e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss7e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss7e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss8e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss8e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss9e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss9e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss10e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss10e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss11e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss11e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss4e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss4e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss5e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss5e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss6e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss6e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss7e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss7e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss8e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss8e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss9e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss9e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss10e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss10e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss11e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss11e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss4e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss4e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss5e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss5e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss6e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss6e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss7e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss7e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss8e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss8e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss9e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss9e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss10e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss10e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss11e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss11e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss4e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss4e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss5e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss5e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss6e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss6e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss7e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss7e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss8e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss8e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss9e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss9e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss10e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss10e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o3Ss11e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o3Ss11e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o4Ss3e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o4Ss3e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net1_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net1_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net2_yse_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net2_yse_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o1s0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o1s0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o1s1e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o1s1e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o1s2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o1s2e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o2s0e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o2s0e_t50.npz"
+  ],
+  [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_pub2_net-1_o2s2e_t50.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_priv2_net-1_o2s2e_t50.npz"
+  ]
+ ],
+ "soft_lam": null,
+ "geometry": {
+  "candidates": 600,
+  "candidate_games": 10,
+  "sizes": [
+   1,
+   2,
+   3,
+   5
+  ]
+ },
+ "fitted_on": [
+  {
+   "eligible": 1033,
+   "skipped_R": 0,
+   "fold": 1,
+   "seed": 0,
+   "questions": 800
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 1,
+   "fold": 1,
+   "seed": 1,
+   "questions": 799
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 0,
+   "fold": 2,
+   "seed": 0,
+   "questions": 800
+  },
+  {
+   "eligible": 1033,
+   "skipped_R": 2,
+   "fold": 2,
+   "seed": 1,
+   "questions": 798
+  },
+  {
+   "eligible": 1031,
+   "skipped_R": 5,
+   "fold": 3,
+   "seed": 0,
+   "questions": 795
+  },
+  {
+   "eligible": 1031,
+   "skipped_R": 1,
+   "fold": 3,
+   "seed": 1,
+   "questions": 799
+  },
+  {
+   "eligible": 1030,
+   "skipped_R": 1,
+   "fold": 4,
+   "seed": 0,
+   "questions": 799
+  },
+  {
+   "eligible": 1030,
+   "skipped_R": 3,
+   "fold": 4,
+   "seed": 1,
+   "questions": 797
+  }
+ ],
+ "questions": 6387,
+ "simulated_score": 0.7792016659519672,
+ "note": "v2 added pools; network composition chosen on the official candidates (scripts/pid_v2_offcand2.py, METHOD_NOTES 2.47)",
+ "seq_model": "composition o3SR*4+o3S*4+o4S*4+py*4+o1+o2 (93 networks), each after 50 steps of the pool fine-tune; mean of the row-standardised matrices; weights of v2ge",
+ "arm": "ft50",
+ "trunk_store": "data/trunk/tests_1111_v2",
+ "composition": [
+  "o3SR*4",
+  "o3S*4",
+  "o4S*4",
+  "py*4",
+  "o1",
+  "o2"
+ ]
+}
