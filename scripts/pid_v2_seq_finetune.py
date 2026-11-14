@@ -120,6 +120,9 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
 
 
 ARCH0 = (m88.D, m88.LAYERS, m88.HEADS, m88.FFN)
+SUP_POOLS = ["/work/u2507115/pid_v2/sup_pools/ply"]  # official pools (scripts/pid_sup_ply_extract.py --pools)
+SUP_TRAIN = ["/work/u2507115/pid_v2/probeb/ply", "/work/u2507115/pid_v2/probec/ply"]  # competition training games
+SUP_STATS = "/work/u2507115/pid_v2/probeb/stats.npz"
 
 
 def load_net(ckpt, state="best"):
@@ -128,6 +131,7 @@ def load_net(ckpt, state="best"):
     net = m88.build_model()
     m88.D, m88.LAYERS, m88.HEADS, m88.FFN = ARCH0
     net.load_state_dict(st["best_state" if state == "best" else "net"])
+    net.sup_cfg = st.get("sup")  # pid_seq_train.py --sup-dims: the input dimensions that carry the supervised features (METHOD_NOTES 2.98)
     return net.cuda()
 
 
@@ -237,6 +241,17 @@ def main(argv=None):
     owner = np.array([own.get(k, -1) for k in A["key"]])
     log(f"{tag}: {len(owner)} games ({int((owner >= 0).sum())} candidate games of {len(players)} players, {int((owner < 0).sum())} question games); network {ckpt.name}")
     net = load_net(ckpt, a.state)
+    if net.sup_cfg:  # the pool's games get the same supervised features the network was trained on
+        assert not a.mix_fold and not a.mix_original, "the mixing options have no supervised features"
+        sys.path.insert(0, str(R2 / "scripts"))
+        import pid_sup
+        stores = SUP_TRAIN if a.mode == "sim" else SUP_POOLS
+        idx_s, D_s = pid_sup.dense(pid_sup.load_sup(stores, SUP_STATS), A["key"].tolist(), A["GL"].shape[1])
+        if (idx_s < 0).any():
+            raise KeyError(f"{int((idx_s < 0).sum())} pool games without supervised per-ply features, e.g. {A['key'][idx_s < 0][:3].tolist()}")
+        z_s = D_s[idx_s].astype(np.float32)
+        A["GL"] = pid_sup.put(A["GL"].astype(np.float32), z_s, net.mu.float().cpu().numpy(), net.sd.float().cpu().numpy(), tuple(net.sup_cfg["dims"]), bool(net.sup_cfg["only"]))
+        log(f"supervised features in input dimensions {net.sup_cfg['dims']}{' (alone)' if net.sup_cfg['only'] else ''} for all {len(idx_s)} games")
 
     def save(step, vec, view=""):
         np.savez(out / f"{tag}{view}_t{step}.npz", key=A["key"], emb=vec.astype(np.float16), step=np.array(step))

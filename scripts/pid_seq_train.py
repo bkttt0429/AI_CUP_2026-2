@@ -485,7 +485,8 @@ def main(argv=None):
             if a.ema_only and sfx == "":
                 continue
             sd_ = cpu(model)  # one copy, under both names the loaders know (two separate copies doubled every file)
-            torch.save({"best_state": sd_, "net": sd_, "best": {**meta, "step": at, "state": label}, "step": at, "arch": arch}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
+            torch.save({"best_state": sd_, "net": sd_, "best": {**meta, "step": at, "state": label}, "step": at, "arch": arch,
+                        "sup": ({"dims": list(a.sup_dims), "only": bool(a.sup_only)} if a.sup_dims else None)}, out / f"ckpt_{v}_{tag}{sfx}{'_smoke' if a.smoke else ''}.pt")
 
     net.train()
     ar, tl, ta, tc, t_last, every = np.arange(P), 0.0, 0.0, 0.0, time.time(), (50 if a.smoke else 500)

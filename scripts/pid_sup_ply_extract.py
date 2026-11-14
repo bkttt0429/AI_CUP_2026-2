@@ -30,7 +30,9 @@ te = PT.te
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--keys", required=True)
+    ap.add_argument("--keys", default=None, help="training game keys (text file)")
+    ap.add_argument("--pools", default=None, help="instead of --keys: the official pools of this tests folder - every game of the added pools, and the games of the original pools that have per-ply vectors in --original-ply")
+    ap.add_argument("--original-ply", default="/work/u2507115/pid_v2/ply_original")
     ap.add_argument("--proj", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--workers", type=int, default=10)
@@ -47,7 +49,19 @@ def main(argv=None):
     mu, sd, W = P["mu"].astype(np.float32), P["sd"].astype(np.float32), P["W"].astype(np.float32)
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    keys = sorted(set(PT.read_keys(a.keys)) - (set(PT.read_keys(a.skip_keys)) if a.skip_keys else set()))
+    tasks_all = None
+    if a.pools:
+        import glob
+        tasks_all = PT.official2_tasks(a.pools)
+        want = set()
+        for f in glob.glob(f"{a.original_ply}/ply_*.npz"):
+            if not f.endswith(".tmp.npz"):
+                want.update(np.load(f)["key"].astype(str).tolist())
+        old = PT.official_tasks(a.pools)
+        tasks_all.update({k: v for k, v in old.items() if k in want})
+        keys = sorted(tasks_all)
+    else:
+        keys = sorted(set(PT.read_keys(a.keys)) - (set(PT.read_keys(a.skip_keys)) if a.skip_keys else set()))
     st = np.load(a.stats) if a.stats else None
     mine = keys[a.shard::a.nshards]
     parts = [mine[i:i + a.part_size] for i in range(0, len(mine), a.part_size)]
@@ -63,7 +77,7 @@ def main(argv=None):
         rows = neutral_rows()
         done_games = 0
         for k, part in todo:
-            sgf = load_games(part, aicup_pid.TRAIN_DIR)
+            sgf = {q: tasks_all[q] for q in part} if tasks_all is not None else load_games(part, aicup_pid.TRAIN_DIR)
             done = list(pool.imap(PT.replay_target, [(q, *sgf[q]) for q in part], chunksize=1))
             some = [d for d in done if len(d[3])]
             bins, globs = np.concatenate([d[1] for d in some]), np.concatenate([d[2] for d in some])
