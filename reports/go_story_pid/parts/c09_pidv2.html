@@ -6,8 +6,8 @@
       <h3>新增題池：每人只有 10 局、題目 1–5 局、黑白都有——原本的統計式做法不夠用</h3>
       <ul class="key">
         <li>新增兩池各 600 位候選人 × 10 局；題目是 1／2／3／5 局，黑白都有 <span class="tag t-m">實測</span></li>
-        <li>原題池每人 100 局；每人 10 局時，第一版流程的模擬只有 0.6246</li>
-        <li>Public 是原題目與新增題目的平均；原有池 800 列在之後比較的檔中相同</li>
+        <li>原題池每人 100 局，用嵌入＋配對解；10 局時第一版流程模擬只有 0.6246 <span class="tag t-m">實測</span></li>
+        <li>Public 是原題與新增題的平均；原題池 800 列在每個上傳檔都相同 <span class="tag t-m">實測</span></li>
       </ul>
       <div class="cause"><span><span class="k">問題</span><b>每人只有 10 局，四分之一的題目只有 1 局</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>改學「這盤棋像誰下的」的序列網路</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>1 局題仍是最大的失分來源</b></span><button class="deriv-open" data-sec="25">推導 ▸</button></div>
     </div>
@@ -37,7 +37,7 @@
     <tr><td>11-12</td><td>使用者上傳 v2 測試集</td><td>原四檔與 10-30 版逐位元相同；新增 <code>candidates2</code>／<code>test2</code>（前綴 <code>pub2_</code>、<code>priv2_</code>）：每池 600 位候選各 10 局、400 題（1／2／3／5 局各 100 題），玩家執黑執白各約一半（候選每人黑棋 0–10 局、中位數 5）</td></tr>
     <tr><td>11-12</td><td>提交格式改變</td><td>提交改為 1,600 列；Public 分數＝原 400 題與新增 400 題的平均，Private 同理；說明檔寫「同一玩家可能對應多題，候選池中也可能有不對應任何題目的玩家」</td></tr>
   </table>
-  <p>新增候選人不是原候選池的人；八個檔之間以及與 100 萬局訓練資料之間都沒有相同的棋譜。同一玩家可以對應多題，這一點直接決定了要不要做一對一配對（下一段）。筆記把新增那一半換算成分數時，原有池以 1.0 計；原有池的 800 列在 11-12 第一批檔沿用 embt＋配對，之後比較的檔中該部分相同。</p>
+  <p>新增候選人不是原候選池的人；八個檔之間以及與 100 萬局訓練資料之間都沒有相同的棋譜。同一玩家可以對應多題，這一點直接決定了要不要做一對一配對（下一段）。筆記把新增那一半換算成分數時，原有池以 1.0 計；原有池的 800 列固定取自 embt 嵌入＋配對的解法（<code>results/submission_old_embt_assign/submission_player.csv</code>），v2 流程只決定新增題池的 800 列；逐檔核對 <code>pid_v2d_ft.csv</code>、<code>pid_v2gs_m90.csv</code>、<code>pid_v2is_o1.csv</code>、<code>pid_v2w_n8s.csv</code>、<code>pid_v2sl_alls.csv</code>、<code>pid_v2x_ns.csv</code>、<code>pid_v2c2_bs.csv</code> 七個上傳檔，原題池 800 列與該固定檔逐字相同（md5 前 12 碼 48aa4f02de26），所以這七個檔之間 Public 分數的差別全部來自新增的那 400 題。</p>
   <h4>題目擁有者的結構：2／3／5 局題互不重複，1 局題會與別題重複</h4>
   <p>原題池是一人一題（第 9 章），新增池的說明檔卻說同一玩家可能對應多題。筆記用不需要答案的統計分析（11-13 05:15–05:45）把題目依局數兩兩分格，數「同第一名的題目對數」，並在模擬題池切出四種擁有者結構對照：distinct＝全部互不重複；replace＝每題獨立抽；bysize＝同局數內不重複、跨局數獨立；one_free＝2／3／5 局題互不重複、1 局題獨立抽。</p>
   <table>
@@ -54,7 +54,7 @@
     <li>與排行榜一致：11-12 的 v2a 模型下全部強制配對，distinct 預測 +0.0101，one_free 預測 −0.0213，實測 −0.0114，落在 one_free 的範圍內、distinct 的範圍外。</li>
   </ul>
   <p>三條線（分格統計、不同第一名數、排行榜）指向同一個結構，所以配對只用在 2／3／5 局題，1 局題都不動（13.2）。</p>
-  <p class="src">出處：facts_A A-K18、A-K20、A-K21、A-K22、A-K23、A-K24、A-T10、A-T24、A-X20、A-P12；facts_B B-V08、B-V09；METHOD_NOTES §2.11、§2.22、§2.27、§2.29、§2.30、§2.37。</p>
+  <p class="src">出處：facts_A A-K18、A-K20、A-K21、A-K22、A-K23、A-K24、A-T10、A-T24、A-X20、A-P12；facts_B B-V08、B-V09；facts_D D-M01；METHOD_NOTES §2.11、§2.22、§2.27、§2.29、§2.30、§2.37。</p>
 </section>
 
 <section class="page card" id="card-pid2-arch" data-sec="26" data-ch="13" data-title="v2 流程">
@@ -64,9 +64,9 @@
       <h3>v2 流程：九個成分各算一張分數表 → 加權融合 → 2／3／5 局題軟性配對；逐手序列網路的權重最大</h3>
       <ul class="key cols3">
         <li>九個成分：開局、原座標開局、方向×2、讓子、局部棋形、風格、嵌入、逐手序列</li>
-        <li>逐手序列（seq）融合權重 4.278，是多個網路的平均，用向量內積比對 <span class="tag t-m">實測</span></li>
-        <li>微調 50 步對不微調 +0.0117 [+0.0071, +0.0164] <span class="tag t-m">實測</span></li>
-        <li>2／3／5 局題軟性一對一配對（λ＝1）：+0.0064 [+0.0035, +0.0095] <span class="tag t-m">實測</span></li>
+        <li>逐手序列（seq）融合權重 4.278（20 個網路的 v2ge），是網路平均 <span class="tag t-m">實測</span></li>
+        <li>微調 50 步對不微調（官方擬題池）+0.0117 [+0.0071, +0.0164] <span class="tag t-m">實測</span></li>
+        <li>2／3／5 局題軟性一對一配對（λ＝1，模擬題池）：+0.0064 [+0.0035, +0.0095] <span class="tag t-m">實測</span></li>
       </ul>
       <div class="cause"><span><span class="k">問題</span><b>10 局撐不起每人一個統計模型</b></span><span class="arrow">→</span><span><span class="k go">作法</span><b>共用的序列網路，再對每個題池微調</b></span><span class="arrow">→</span><span><span class="k stuck">限制</span><b>網路沒看過測試玩家</b></span><button class="deriv-open" data-sec="26">推導 ▸</button></div>
     </div>
@@ -121,7 +121,7 @@
   <div class="report">
     <div class="txt">
       <div class="num">第 14 章 · 玩家辨識：分數的每一步 · 1／1</div>
-      <h3>Public 0.8612697 → 0.9069275（11-13 至 11-14）：每一步都先在驗證工具上通過才上傳</h3>
+      <h3>Public 0.8612697 → 0.9069275（11-13 至 11-14）：十次上傳的每一步與它的依據</h3>
       <ul class="key">
         <li>11-13：逐手網路加題池微調 0.8612697；20 個網路＋軟性配對 0.8777615 <span class="tag t-m">實測</span></li>
         <li>11-14 凌晨：含外部帳號的官方網路 0.8829460；對稱增強 0.8903230 <span class="tag t-m">實測</span></li>
@@ -152,6 +152,6 @@
     <tr><td>11-14 19:00</td><td><code>pid_v2x_ns.csv</code></td><td>b0140f3df4a5c4c346ea6364aca52038</td><td class="n">0.9035072</td><td>未寫</td><td>在 <code>v2sl_all</code> 之上加 o7F×9＋o9D×3＋o12K×6（有監督輸入的 o12 快照、加長訓練的 o7）；比 <code>pid_v2sl_alls.csv</code> +0.0019</td></tr>
     <tr><td>11-14 21:03</td><td><code>pid_v2c2_bs.csv</code></td><td>cf2ec7465bb8c60471c718a939914118</td><td class="n">0.9069275</td><td>當時 1／81</td><td>o12 換成 3 萬步完成版（o12F×9＋o7F×9＋o9D×3＋o3SL×3＋o3S×3＋o4S×3＋o3BS×3＋py×3＋o1＋o2＋px2＋pb＋px＋m101x）；比 <code>pid_v2x_ns.csv</code> +0.0034，兩檔不同 18 題（Public 池 11 題）</td></tr>
   </table>
-  <p>最後一個定案檔是 <code>pid_v2c2_bs.csv</code>（Public 0.9069275，當時 1／81），也是線上的最後一次上傳；前一個定案檔是 <code>pid_v2x_ns.csv</code>（0.9035072）。最後一步的換算只有 Public 約 +0.001（Public 池只差 11 題，小於排行榜雜訊）。11-14 一天的路徑，筆記歸納有效的三件事是對稱增強、訓練更久、有監督的逐手輸入。2026-11-14 21:10 使用者指示比賽到 11/24 為止都要繼續找訊號，這份記錄截止時 o13、o14、P7 還在排程系統裡，沒有結果。</p>
+  <p>最後一個定案檔是 <code>pid_v2c2_bs.csv</code>（Public 0.9069275，當時 1／81），也是線上的最後一次上傳；前一個定案檔是 <code>pid_v2x_ns.csv</code>（0.9035072）。最後一步在上傳前的換算是 Public 約 +0.001（Public 池只差 11 題，小於排行榜雜訊），實際讀數是 +0.0034（C-T55）。11-14 一天的路徑，筆記歸納有效的三件事是對稱增強、訓練更久、有監督的逐手輸入。2026-11-14 21:10 使用者指示比賽到 11/24 為止都要繼續找訊號，這份記錄截止時 o13、o14、P7 還在排程系統裡，沒有結果。</p>
   <p class="src">出處：facts_A A-P17、A-P18、A-T35、A-T36、A-M29；facts_B B-P01–B-P05、B-R03；facts_C C-P05–C-P08、C-T55、C-T56、C-T57、C-R27、C-R31、C-M62；METHOD_NOTES §2.33、§2.35、§2.42、§2.53、§2.68、§2.90、§2.104、§2.111、§2.113、§2.114。</p>
 </section>
