@@ -4,12 +4,16 @@ played-point vectors at the SUBJECT's plies (replay of scripts/pid_trunk_extract
 scripts/pid_sup_fit.py instead of the random one. Parts <out>/sup_s<shard>_p<k>.npz: keys, n (plies per game), t (ply numbers),
 z ([plies, K] float16, unstandardised). Resumable per part; shards as pid_trunk_extract.py.
   bash scripts/nano4/shards.sh 8 python -I <this> --keys keys.txt --proj proj.npz --out DIR --workers 10
+--select: the external games of the selections of scripts/ext_fox_select.py instead (METHOD_NOTES 2.101; the subject is the
+selection's colour; a record the replay cannot follow is stored without plies; a shard is the games whose key hashes to it, so
+a process only holds its own share of the records).
 """
 import argparse
 import multiprocessing as mp
 import os
 import sys
 import time
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -26,6 +30,22 @@ from aicup.l1b import neutral_rows  # noqa: E402
 from aicup.scoring import load_games  # noqa: E402
 
 te = PT.te
+MAX_T = 0  # --max-plies (set before the worker pool is forked)
+
+
+def replay_external(task):
+    """PT.replay_target for an external record: one the replay cannot follow counts as a game without plies; only the plies
+    with a number below MAX_T are kept (the sequence networks read the first 256 plies)."""
+    try:
+        d = PT.replay_target(task)
+    except Exception:  # noqa: BLE001
+        return task[0], None, None, np.zeros(0, np.int16), np.zeros(0, np.int8), np.zeros(0, np.int64)
+    if MAX_T and len(d[3]):
+        ok = d[5] < MAX_T
+        if not ok.any():
+            return d[0], None, None, np.zeros(0, np.int16), np.zeros(0, np.int8), np.zeros(0, np.int64)
+        d = (d[0], d[1][ok], d[2][ok], d[3][ok], d[4][ok], d[5][ok])
+    return d
 
 
 def main(argv=None):
@@ -43,7 +63,11 @@ def main(argv=None):
     ap.add_argument("--max-parts", type=int, default=0)
     ap.add_argument("--stats", default=None, help="npz (mean, sd) of pid_sup.write_stats: the parts are written as int8 `zq` = standardised value x 20 (half the size)")
     ap.add_argument("--skip-keys", default=None, help="a key list whose games are left out (already extracted elsewhere)")
+    ap.add_argument("--select", nargs="+", default=None, help="instead of --keys: external games, the select.csv files of scripts/ext_fox_select.py (game_key, sgf_content, color)")
+    ap.add_argument("--max-plies", type=int, default=0, help="with --select: keep only the subject's plies whose ply number is below this (0: all)")
     a = ap.parse_args(argv)
+    global MAX_T
+    MAX_T = a.max_plies if a.select else 0
     t0 = time.time()
     P = np.load(a.proj)
     mu, sd, W = P["mu"].astype(np.float32), P["sd"].astype(np.float32), P["W"].astype(np.float32)
@@ -60,10 +84,22 @@ def main(argv=None):
         old = PT.official_tasks(a.pools)
         tasks_all.update({k: v for k, v in old.items() if k in want})
         keys = sorted(tasks_all)
+    elif a.select:
+        import csv
+        csv.field_size_limit(10 ** 9)
+        tasks_all, n_rows = {}, 0
+        for f in a.select:
+            with open(f, newline="") as fh:
+                for r in csv.DictReader(fh):
+                    n_rows += 1
+                    if zlib.crc32(r["game_key"].encode()) % a.nshards == a.shard:
+                        tasks_all[r["game_key"]] = (r["sgf_content"], r["color"])
+        keys = sorted(tasks_all)
+        print(f"{n_rows} records in {len(a.select)} selections, {len(keys)} in this shard ({time.time() - t0:.0f} s)", flush=True)
     else:
         keys = sorted(set(PT.read_keys(a.keys)) - (set(PT.read_keys(a.skip_keys)) if a.skip_keys else set()))
     st = np.load(a.stats) if a.stats else None
-    mine = keys[a.shard::a.nshards]
+    mine = keys if a.select else keys[a.shard::a.nshards]
     parts = [mine[i:i + a.part_size] for i in range(0, len(mine), a.part_size)]
     todo = [(k, p) for k, p in enumerate(parts) if not (out / f"sup_s{a.shard:03d}_p{k:04d}.npz").exists()]
     print(f"shard {a.shard}/{a.nshards}: {len(mine)} of {len(keys)} games, {len(parts)} parts, {len(todo)} to do; projection to {W.shape[1]} dims", flush=True)
@@ -75,15 +111,19 @@ def main(argv=None):
         model, _ = load_humansl(str(te.CKPT), "cuda")
         model.eval()
         rows = neutral_rows()
-        done_games = 0
+        done_games = empty = 0
         for k, part in todo:
             sgf = {q: tasks_all[q] for q in part} if tasks_all is not None else load_games(part, aicup_pid.TRAIN_DIR)
-            done = list(pool.imap(PT.replay_target, [(q, *sgf[q]) for q in part], chunksize=1))
+            done = list(pool.imap(replay_external if a.select else PT.replay_target, [(q, *sgf[q]) for q in part], chunksize=1))
             some = [d for d in done if len(d[3])]
-            bins, globs = np.concatenate([d[1] for d in some]), np.concatenate([d[2] for d in some])
-            pos, mover = np.concatenate([d[3] for d in done]), np.concatenate([d[4] for d in done])
-            fg, fl = PT.full_vectors(model, bins, globs, pos, mover, rows, a.batch)
-            z = ((np.hstack([fg, fl]) - mu) / sd) @ W
+            empty += len(done) - len(some)
+            if some:
+                bins, globs = np.concatenate([d[1] for d in some]), np.concatenate([d[2] for d in some])
+                pos, mover = np.concatenate([d[3] for d in done]), np.concatenate([d[4] for d in done])
+                fg, fl = PT.full_vectors(model, bins, globs, pos, mover, rows, a.batch)
+                z = ((np.hstack([fg, fl]) - mu) / sd) @ W
+            else:
+                z = np.zeros((0, W.shape[1]), np.float32)
             if not np.isfinite(z).all():
                 raise ValueError(f"part {k}: non-finite features")
             path = out / f"sup_s{a.shard:03d}_p{k:04d}.npz"
@@ -93,7 +133,7 @@ def main(argv=None):
             os.replace(tmp, path)
             done_games += len(part)
             if (k % 10) == 0:
-                print(f"part {k + 1}/{len(parts)}: {done_games} games, {done_games / (time.time() - t0):.1f} games/s", flush=True)
+                print(f"part {k + 1}/{len(parts)}: {done_games} games, {done_games / (time.time() - t0):.1f} games/s" + (f", {empty} without plies" if empty else ""), flush=True)
             if a.max_parts and done_games >= a.max_parts * a.part_size:
                 break
     finally:
