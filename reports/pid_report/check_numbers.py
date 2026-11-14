@@ -13,6 +13,11 @@ FACTS = ["/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_A.md",
          "/home/u2507115/.cache/pidrpt_wt/reports/pid_report/facts_D.md"]
 EXTRA = ["+0.0713", "+0.0583", "0.82", "+0.0104", "+0.0148", "+0.0227", "+0.0037", "+0.0068"]  # the corrected calibration totals
 
+# The 11 baseline lines of c08_pid.html (the 11-06 text that predates the facts library); numbers only, nothing new
+# may be added here. They are skipped for c08_pid.html and for no other file (see build_log.md).
+OLD_BASELINE = ["0.913", "0.924", "0.343", "+0.0119", "+0.089", "+0.0260", "+0.0178", "0.928", "2.4968", "0.865"]
+OLD_BASELINE_FILE = "c08_pid.html"
+
 NUM_RE = re.compile(r"[+\-−]?\d+\.\d{3,}")
 
 
@@ -46,6 +51,11 @@ def traceable(token, facts_text):
     bare = token.lstrip("+-−")
     hay = facts_text + "\n" + "\n".join(EXTRA)
     return re.search(r"(?<![\d.])" + re.escape(bare) + r"(?!\d)", hay) is not None
+
+
+def old_baseline(path, token):
+    """True when the token is one of the old baseline numbers AND the file is c08_pid.html."""
+    return path.replace("\\", "/").split("/")[-1] == OLD_BASELINE_FILE and token in OLD_BASELINE
 
 
 def card_limits(html):
@@ -92,6 +102,8 @@ def selftest():
             + "<tr><td>x</td></tr>" * 4 + "</table></section>")
     lesson = '<section class="lesson" id="sec-y"><table>' + "<tr><td>x</td></tr>" * 10 + "</table></section>"
     assert not card_limits(card + lesson)
+    assert old_baseline("/x/parts/c08_pid.html", "+0.0119") and old_baseline("c08_pid.html", "2.4968")
+    assert not old_baseline("/x/parts/c09_pidv2.html", "+0.0119") and not old_baseline("c08_pid.html", "0.9136")
     print("selftest OK")
 
 
@@ -111,7 +123,7 @@ def main(argv):
             text = fh.read()
         lines = text.split("\n")
         for ln, tok in numbers(text, path.endswith(".html")):
-            if not traceable(tok, facts):
+            if not traceable(tok, facts) and not old_baseline(path, tok):
                 ctx = lines[ln - 1]
                 i = ctx.find(tok.lstrip("+-−"))
                 print("%s:%d: %s not in facts: %s" % (path, ln, tok, ctx[max(i - 10, 0):max(i - 10, 0) + 30].strip()))

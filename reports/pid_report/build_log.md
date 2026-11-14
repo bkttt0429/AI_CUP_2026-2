@@ -27,3 +27,38 @@ c08_pid.html:274: 0.865 not in facts: ＝ 0.632 ＋ 0.865 ＋ 1</div>
 2026-11-15 00:56 | 778277 | final state of chapters 13 and 14: selftest OK; check.py OK, cards with derivation buttons 28, lessons 28, charts 14; no checker line for c09_pidv2.html / a08b_pidv2.js; baseline unchanged (11 lines) -> PID_BUILD FAILED
 2026-11-15 00:58 | 778292 | fix round 1: selftest OK (new card/lesson scope assertion); check.py OK, cards with derivation buttons 28, lessons 28, charts 14; no checker line for c09_pidv2.html / a08b_pidv2.js, no card-limit message; baseline unchanged (11 lines) -> PID_BUILD FAILED
 2026-11-15 01:59 | 778777 | task 9 (old chapters marked 原始測試集, stale 11-07 sentences replaced by the fallback sentence because facts A-Q10 does not say whether the upload happened): selftest OK; check.py OK, charts 14, cards with derivation buttons 35, lessons 35; checker lines for c08_pid.html = the same 11 baseline lines (line numbers +1 from the new KPI), no new line -> PID_BUILD FAILED (expected until OLD_BASELINE exists)
+2026-11-15 02:01 | 778789 | task 10 final build (glossary 11 entries, speaker script chapters 13-19, OLD_BASELINE in check_numbers.py, a08b_pidv2.js o9D label, c09_pidv2.html card-pid2-ext bullet 3): selftest OK (incl. the OLD_BASELINE assertions); check.py: anims 18, charts 14, cards with derivation buttons 35, lessons 35 / OK; no checker line at all -> PID_BUILD OK
+
+## OLD_BASELINE
+
+check_numbers.py holds `OLD_BASELINE` = the numbers of the 11 baseline lines above (10 distinct numbers; 0.343 occurs twice on one line): 0.913, 0.924, 0.343, +0.0119, +0.089, +0.0260, +0.0178, 0.928, 2.4968, 0.865. They are skipped only when the file name is `c08_pid.html`; every other file, and every other number in c08_pid.html, still has to trace to the facts. The numbers added to c08_pid.html in Task 9 (0.9069275 and the counts) are in the facts and are not on the list.
+
+## not found (numbers or sentences of the plan that the facts did not contain, and what was done)
+
+State at the end of the update (earlier tasks' lists, checked against the files now):
+- Fine-tune gain "+0.0117 [+0.0071, +0.0164]": missing from the facts in Task 3, later added as D-R01; card-pid2-arch now uses it with its instrument (官方擬題池).
+- "0.5898 對 0.5819" (Task 5): 0.5819 is in no facts file; the clause is left out (card shows only what C-R18 gives).
+- "沒有人工標註測試資料" and "排行榜回饋只用於評估" (Task 6): first not found, later supported by D-K01 / D-K02; the card says 「排行榜得知的答案不用於訓練」, the lesson states the two uses (offline evaluation; the 11-06 correction file for 3 Public rows).
+- KataGo humanv0 source URL and licence (A-Q14, B-Q07): the source is D-E01 (release v1.15.0); the licence is not stated on the release page and is written 「發布頁未載明，待確認」.
+- "數十個網路" (Task 3): the facts give 20, 28 and more, no single figure; the card writes 「多個網路的平均」. The diagram label in a08b_pidv2.js still says 數十個 (labels only; not changed).
+- Whether the 11-07 upload of results/submission_f3oreft_assign/ happened (A-Q10): not in the facts; the two sentences in chapter 12 and sec-21 now read 「（11-06 時的計畫；之後測試集重發，見第 13 章）」.
+- Rank of the 0.9035072 file: no rank in the facts; none written. Ranks elsewhere only in the forms the facts give.
+- o9D label in a08b_pidv2.js (P2.fam): was 「多種設定的網路」, fact C-C09 says o9D = 各種遮蔽; changed to 「各種遮蔽」.
+- check.py "WARN node not found" on the compute node (Task 1): the job script looks up the node binary from the VS Code server directory (job_pid_build.sh), since 778195.
+
+## cells marked 「（素材未載）」
+
+All in lesson sec-33 (資源表), none on a card: 官方 Tutorial 與資料集 repo 的授權; 第三方函式與演算法的來源網址 and 授權 (2 cells); 2023 AI CUP 公開專案的授權. 4 cells in 3 rows. (Resolved since Task 6: the M88/M90/M101 rows left the table, ct9 is described in a paragraph; the KataGo row has URL and version, licence 「待確認」.)
+
+## section 9 (待確認) items of the facts files that touched a card
+
+- A-Q10 (was the 11-07 upload made?): chapter 12 / sec-21 of the old chapters, fallback sentence (Task 9).
+- A-Q14 and B-Q07 (KataGo humanv0 source and licence; B-Q07 is cited in the sources of sec-33, A-Q14 only by its content): card-pid2-ext and sec-33 resource table; licence cell 「發布頁未載明，待確認」.
+- B-Q10 (fold 0 in the official networks; cited in sec-32 and sec-33): card-pid2-ext bullet 4 and sec-33: own training never reads fold 0; the borrowed M88/M90/M101 networks do (D-E02).
+- C-Q01 (notes changed during the work, new section §2.116): sec-34 (chapter 19) states the 11-14 status and name the later section without giving results.
+- C-Q10 (member codes py, px2, pb, px, m101x undefined): sec-33 (sources and text) says the mapping of m101x to M101 is by name only.
+- C-Q13 (the +0.0583 total versus the sum of its five numbers, +0.0584): sec-31 (and the card-pid2-valid numbers) follow the notes (+0.0583) and say so.
+- C-Q15 (is the external-account saturation really too short training?): sec-32 (chapter 17) table row says the notes do not answer.
+- C-Q22 (tie rule between two notes): cited in the sources of sec-31 only.
+- D-Q01 (opponent-side signals re-tested with stronger networks, 11-15): sec-32 (chapter 17) table row, not adopted.
+The other items of section 9 (A-Q01 to A-Q09, A-Q11 to A-Q13, A-Q15 to A-Q20, B-Q01 to B-Q06, B-Q08, B-Q09, B-Q11, B-Q12, C-Q02 to C-Q09, C-Q11, C-Q12, C-Q14, C-Q16 to C-Q21, C-Q23) are not cited by any card or lesson.
