@@ -50,6 +50,8 @@ def main(argv=None):
     ap.add_argument("--joint", action="store_true", help="count an account's games over ALL folders and choose once: an account met in two folders (its rank changed) stays one player")
     ap.add_argument("--by-account", action="store_true", help="write the rows account by account (accounts in random order): any prefix of the file holds whole accounts")
     ap.add_argument("--skip", nargs="*", default=[], help="select.csv files of earlier selections: their accounts and their games are left out")
+    ap.add_argument("--deepen", action="store_true", help="choose among the accounts of --skip instead of leaving them out: MORE games of accounts that were selected before "
+                                                          "(their earlier games stay left out; METHOD_NOTES 2.126)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -91,7 +93,10 @@ def main(argv=None):
             acc, cnt = np.unique(np.concatenate([pb[idx], pw[idx]]), return_counts=True)
             cap = np.percentile(cnt, 100 - a.cap_pct)
             pool = acc[(cnt >= a.need) & (cnt <= cap)]
-            pool = pool[~np.isin(pool, np.fromiter(skip_acc, np.uint64, len(skip_acc)))] if skip_acc else pool
+            if a.deepen:
+                pool = pool[np.isin(pool, np.fromiter(skip_acc, np.uint64, len(skip_acc)))]
+            else:
+                pool = pool[~np.isin(pool, np.fromiter(skip_acc, np.uint64, len(skip_acc)))] if skip_acc else pool
             chosen = rng.choice(pool, min(a.accounts, len(pool)), replace=False)
             need = dict.fromkeys(chosen.tolist(), a.games)
             got = dict.fromkeys(chosen.tolist(), 0)

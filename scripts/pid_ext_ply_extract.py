@@ -47,6 +47,8 @@ def main():
     ap.add_argument("--start", type=int, default=0, help="rows [start, stop) of the selection (applied before the shards), for a selection extracted in stages")
     ap.add_argument("--stop", type=int, default=0)
     ap.add_argument("--max-plies", type=int, default=T_MAX, help="store (and run the trunk on) only the first this many plies of a game (METHOD_NOTES 2.70; default 256)")
+    ap.add_argument("--light", action="store_true", help="no trunk: the parts hold the plies' points and movers only, GLQ is zero (the mean after de-quantisation). For games that only "
+                                                         "networks reading the supervised features alone (--sup-only) will train on (METHOD_NOTES 2.126); no GPU is used")
     ap.add_argument("--account-games", type=int, nargs=2, default=None, metavar=("FROM", "TO"),
                     help="only the games number FROM .. TO-1 of every account, in the selection's order (0 4: the first four of each; a later run with 4 8 adds the rest)")
     a = ap.parse_args()
@@ -73,8 +75,10 @@ def main():
     config = torch.load(te.CKPT, map_location="cpu", weights_only=True)["config"]
     pool = mp.get_context("fork").Pool(a.workers, initializer=te.init_worker, initargs=(config,))
     try:
-        model, _ = load_humansl(str(te.CKPT), "cuda")
-        model.eval()
+        model = None
+        if not a.light:
+            model, _ = load_humansl(str(te.CKPT), "cuda")
+            model.eval()
         nrows, proj, plies, skipped, t1 = neutral_rows(), None, 0, 0, time.time()
         for k, start in enumerate(range(0, len(tasks), a.part)):
             path = out / f"ply_x_s{a.shard}of{a.nshards}_p{k:05d}.npz"
@@ -85,22 +89,26 @@ def main():
             skipped += len(res) - len(done)
             if not done:
                 continue
-            if proj is None:
+            if proj is None and not a.light:
                 with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
                     trunk, _, _, _ = trunk_features(model, torch.as_tensor(done[0][1][:1]).cuda(), torch.as_tensor(done[0][2][:1]).cuda(), torch.as_tensor(done[0][4][:1]).cuda().long(), nrows)
                 proj = te.projections(trunk.shape[1], trunk.device)
             lens = np.array([len(d[3]) for d in done])
-            bins, globs = np.concatenate([d[1] for d in done]), np.concatenate([d[2] for d in done])
             pos, mover = np.concatenate([d[3] for d in done]), np.concatenate([d[4] for d in done])
             keep = np.concatenate([np.arange(n) for n in lens]) < a.max_plies
-            if a.max_plies < T_MAX:  # the trunk only sees the plies that are stored (every position is computed on its own)
-                bins, globs, pos, mover = bins[keep], globs[keep], pos[keep], mover[keep]
-                keep = np.ones(len(pos), bool)
-            g, l = te.vectors(model, bins, globs, pos, mover, proj[0], proj[1], nrows, a.batch)
-            q = np.clip(np.rint((np.hstack([g, l])[keep].astype(np.float32) - mu) / sd * Q), -127, 127).astype(np.int8)
+            if a.light:  # the points and movers alone; zero is the mean of every dimension after de-quantisation
+                q = np.zeros((int(keep.sum()), len(mu)), np.int8)
+            else:
+                bins, globs = np.concatenate([d[1] for d in done]), np.concatenate([d[2] for d in done])
+                if a.max_plies < T_MAX:  # the trunk only sees the plies that are stored (every position is computed on its own)
+                    bins, globs, pos, mover = bins[keep], globs[keep], pos[keep], mover[keep]
+                    keep = np.ones(len(pos), bool)
+                g, l = te.vectors(model, bins, globs, pos, mover, proj[0], proj[1], nrows, a.batch)
+                q = np.clip(np.rint((np.hstack([g, l])[keep].astype(np.float32) - mu) / sd * Q), -127, 127).astype(np.int8)
             subj = np.array([int(d[4][d[5]][0]) if d[5].any() else 0 for d in done], np.int8)
             tmp = path.with_name(path.name + ".tmp.npz")
-            np.savez(tmp, key=np.array([d[0] for d in done]), LEN=np.minimum(lens, a.max_plies).astype(np.int16), SUBJ=subj, POS=pos[keep].astype(np.int16), MOV=mover[keep].astype(np.int8), GLQ=q)
+            (np.savez_compressed if a.light else np.savez)(tmp, key=np.array([d[0] for d in done]), LEN=np.minimum(lens, a.max_plies).astype(np.int16), SUBJ=subj, POS=pos[keep].astype(np.int16),
+                                                           MOV=mover[keep].astype(np.int8), GLQ=q)
             os.replace(tmp, path)
             plies += int(lens.sum())
             if k % 20 == 0:

@@ -85,7 +85,7 @@ PRELOADED = None  # set by main_fork in every forked trainer: the games read onc
 _KEEP = []
 
 
-def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None, ext_second=None, sup_ply=None, sup_stats=None):
+def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share_dir=None, ext_second=None, sup_ply=None, sup_stats=None, ext_deep=None):
     """M90's training games as padded arrays (m88_seqid.load_games without the test part). The worker pool starts before any
     large array exists and every part is written straight into preallocated arrays: the compute nodes run with strict
     overcommit, and a pool forked from a large parent exhausted the node's commit limit in the rank session's first run."""
@@ -133,6 +133,11 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
         for sel in ext_select:
             with open(sel, newline="") as fh:
                 ext_own.update((r["game_key"], "x:" + r["account"]) for r in csv.DictReader(fh))
+    deep_keys = set()  # METHOD_NOTES 2.126: selections (also named in --ext-select) that add MORE games to accounts selected before; a trainer drops them with --no-deep
+    if ext_ply and ext_deep:
+        for sel in ext_deep:
+            with open(sel, newline="") as fh:
+                deep_keys.update(r["game_key"] for r in csv.DictReader(fh))
     sec = {}  # METHOD_NOTES 2.73: the OTHER player of an external game, when that account trains too: game key -> (player, colour 0 / 1)
     if ext_ply and ext_second:
         for f in ext_second:
@@ -203,7 +208,10 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
         import pid_sup
         sup_idx, SUPD = pid_sup.dense(pid_sup.load_sup(sup_ply, sup_stats), key.tolist(), T, alloc=lambda shape, dtype: alloc("SUP", shape, dtype))
         log(f"supervised per-ply features: {int((sup_idx >= 0).sum())} of {N} games, {SUPD.shape[2]} dimensions ({SUPD.nbytes / 1e9:.1f} GB)")
-    return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold, second=second, sup_idx=sup_idx, SUP=SUPD)
+    deep = np.fromiter((k in deep_keys for k in key.tolist()), bool, len(key)) if deep_keys else np.zeros(len(key), bool)
+    if deep_keys:
+        log(f"deeper selections: {int(deep.sum())} of the loaded games ({len(set(pid[deep].tolist()))} accounts)")
+    return dict(key=key, pid=pid, GL=GL, POS=POS, MOV=MOV, LEN=LEN, SUBJ=SUBJ, fold=fold, second=second, sup_idx=sup_idx, SUP=SUPD, deep=deep)
 
 
 def main(argv=None):
@@ -229,6 +237,8 @@ def main(argv=None):
     ap.add_argument("--sup-name", default=None, help="name of the supervised feature set, recorded in the checkpoint so that the pool fine-tune reads the matching pool features (None: the first set, METHOD_NOTES 2.88; js: the joint projection with the policy-expected vector + 4 scalars, 2.110)")
     ap.add_argument("--ext-second", nargs="*", default=None, help="second.csv files of scripts/ext_fox_census.py: external games are also read from the other player's side")
     ap.add_argument("--no-second", action="store_true", help="leave the second-side rows out (a control arm inside a job that loaded them)")
+    ap.add_argument("--ext-deep", nargs="*", default=None, help="select.csv files (also given in --ext-select) of DEEPER selections: more games of accounts selected before (METHOD_NOTES 2.126)")
+    ap.add_argument("--no-deep", action="store_true", help="leave the games of the deeper selections out (a control arm inside a job that loaded them)")
     ap.add_argument("--ext-share", type=float, default=None, help="share of an episode's players that are external (default: no quota)")
     ap.add_argument("--arch", default=None, help="D,LAYERS,HEADS,FFN of the transformer (M90: 384,8,8,1536); stored in the checkpoint, the loaders rebuild the same network")
     ap.add_argument("--sym-aug", action="store_true")
@@ -302,7 +312,7 @@ def main(argv=None):
     name = f"{v}_{a.tag}{'_smoke' if a.smoke else ''}"
     dev = "cuda"
     log(f"net {name}: steps {steps} (cosine horizon {horizon}), dropout {a.drop}, ply mask up to {a.mask}, EMA {a.ema}, seed {a.seed}; GPU {torch.cuda.get_device_name(0)}")
-    G = PRELOADED if PRELOADED is not None else load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir, a.ext_second, a.sup_ply, a.sup_stats)
+    G = PRELOADED if PRELOADED is not None else load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, a.share_dir, a.ext_second, a.sup_ply, a.sup_stats, a.ext_deep)
     if PRELOADED is not None:
         log(f"games shared by the job: {len(G['key'])} ({G['GL'].nbytes / 1e9:.1f} GB, read once; this process holds {_rss_gb():.1f} GB)")
     if a.prepare_only:
@@ -319,6 +329,8 @@ def main(argv=None):
     sec_row = G.get("second", np.zeros(len(fold), bool))
     if a.no_second:
         use &= ~sec_row
+    if a.no_deep:
+        use &= ~G.get("deep", np.zeros(len(fold), bool))
     sup_idx = G.get("sup_idx")
     if a.sup_dims:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -657,15 +669,16 @@ def main_fork(argv):
     ap.add_argument("--ext-second", nargs="*", default=None)
     ap.add_argument("--sup-ply", nargs="*", default=None)
     ap.add_argument("--sup-stats", default=None)
+    ap.add_argument("--ext-deep", nargs="*", default=None)
     a = ap.parse_args(argv)
     t0 = time.time()
     log = lambda s_: print(f"{s_} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
     specs = [shlex.split(line) for line in Path(a.fork).read_text().splitlines() if line.strip() and not line.startswith("#")]
     SHARED_ANON = True
-    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, None, a.ext_second, a.sup_ply, a.sup_stats)
+    G = load_games(a.smoke, log, a.all_folds, a.ext_ply, a.ext_select, None, a.ext_second, a.sup_ply, a.sup_stats, a.ext_deep)
     for k in SHARED:
         G[k].flags.writeable = False  # the trainers only read; a stray write would be seen by all of them
-    data = (["--smoke"] if a.smoke else []) + (["--all-folds"] if a.all_folds else []) + (["--ext-ply", *a.ext_ply] if a.ext_ply else []) + (["--ext-select", *a.ext_select] if a.ext_select else []) + (["--ext-second", *a.ext_second] if a.ext_second else []) + (["--sup-ply", *a.sup_ply] if a.sup_ply else []) + (["--sup-stats", a.sup_stats] if a.sup_stats else [])
+    data = (["--smoke"] if a.smoke else []) + (["--all-folds"] if a.all_folds else []) + (["--ext-ply", *a.ext_ply] if a.ext_ply else []) + (["--ext-select", *a.ext_select] if a.ext_select else []) + (["--ext-second", *a.ext_second] if a.ext_second else []) + (["--sup-ply", *a.sup_ply] if a.sup_ply else []) + (["--sup-stats", a.sup_stats] if a.sup_stats else []) + (["--ext-deep", *a.ext_deep] if a.ext_deep else [])
     pids = {}
     for gpu, logfile, *rest in specs:
         sys.stdout.flush()
