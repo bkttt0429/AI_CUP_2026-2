@@ -160,7 +160,8 @@ def main(argv=None):
         key = tuple(x) if isinstance(x, list) else (x,)
         nets[key] = nets.get(key, 0) + 1
     doc = {"cfg": raw["cfg"], "comps": raw["components"], "weights": raw["weights"], "nets": nets}
-    emb = PlayerEmbedding.from_state(torch.load(str(ROOT / raw["emb_model"]), map_location="cpu", weights_only=False))
+    torch.set_num_threads(1)  # the workers are forked: no CUDA and no thread pool in the parent
+    emb = PlayerEmbedding.from_state(torch.load(str(ROOT / raw["emb_model"]), map_location="cpu", weights_only=False), device="cpu")
     store = load_store(str(ROOT / raw["trunk_store"]))
     rng = np.random.default_rng(9777)
     out = {"doc": a.doc, "m0": a.m0, "pools": {}}

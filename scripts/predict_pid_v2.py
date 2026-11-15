@@ -32,7 +32,7 @@ from aicup_pid.fusion import Fusion, topk  # noqa: E402
 from aicup_pid.trunkstyle import load_store  # noqa: E402
 
 
-def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print, seq=None, big_lam=None, big_tau=None):
+def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print, seq=None, big_lam=None, big_tau=None, lend=None, prior3=None):
     cands, questions, qids, sgfs = v2.official_pool(cand_path, q_path)
     colour = {k: c for games in (*cands.values(), *questions) for k, c in games}
     need_rows = "emb" in doc["components"]
@@ -63,6 +63,35 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
             idx[rows_big] = assign_topk(F[rows_big], pools.TOP_K) if big_lam is None else assign_soft(F[rows_big], big_lam, pools.TOP_K)
     else:
         idx = assign_soft(F, doc["soft_lam"], pools.TOP_K) if (applied and assign == "soft") else assign_topk(F, pools.TOP_K) if applied else base
+    pri = None
+    if prior3 is not None:  # METHOD_NOTES 2.123 (probe S3): the owner of a 1-game question is (almost) never the owner of a 3-game question
+        if assign != "big" or lend is not None:
+            raise ValueError("--one-prior3 needs --assign big and excludes --lend-margin")
+        w3, temp = prior3
+        rows3, rows_one = np.flatnonzero(n == 3), np.flatnonzero(n == 1)
+        in3 = np.zeros(len(players), dtype=bool)
+        in3[idx[rows3, 0]] = True  # the candidates the 3-game questions are assigned to
+        lp = np.where(in3, np.log(w3 / in3.sum()), np.log((1.0 - w3) / (len(players) - in3.sum())))
+        new = topk(F[rows_one] + temp * lp[None, :], pools.TOP_K)
+        pri = {"w": w3, "T": temp, "candidates_of_3_game_questions": int(in3.sum()), "one_game_top1_in_them_before": int(in3[idx[rows_one, 0]].sum()),
+               "one_game_top1_in_them_after": int(in3[new[:, 0]].sum()), "one_game_top1_changed": int((new[:, 0] != idx[rows_one, 0]).sum()),
+               "one_game_top5_changed": int((new != idx[rows_one]).any(axis=1).sum())}
+        idx[rows_one] = new
+    lent = None
+    if lend is not None:  # METHOD_NOTES 2.123: the confidently assigned multi-game questions lend their games to their Top-1 candidate; the 1-game questions are re-scored
+        if assign != "big":
+            raise ValueError("--lend-margin needs --assign big")
+        rows_big, rows_one = np.flatnonzero(n > 1), np.flatnonzero(n == 1)
+        top2 = np.sort(F[rows_big], axis=1)[:, -2:]
+        ok = (top2[:, 1] - top2[:, 0]) >= lend
+        aug = {p: list(g) for p, g in cands.items()}
+        for r in rows_big[ok]:
+            aug[players[idx[r, 0]]] = aug[players[idx[r, 0]]] + list(q_use[usable[r]])
+        S2 = v2.components(aug, [q_use[usable[r]] for r in rows_one], moves, sgfs, doc["cfg"], store, emb, which=doc["components"], seq=seq)
+        new = topk(fus.scores([S2[c] for c in doc["components"]]), pools.TOP_K)
+        lent = {"margin": lend, "questions_lent": int(ok.sum()), "one_game_top1_changed": int((new[:, 0] != idx[rows_one, 0]).sum()),
+                "one_game_top5_changed": int((new != idx[rows_one]).any(axis=1).sum())}
+        idx[rows_one] = new
     rows, j = [], 0
     for i, qid in enumerate(qids):
         if i in set(usable):
@@ -76,7 +105,13 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
            "assign": {"mode": assign, "applied": applied, "big_lam": big_lam, "big_tau": big_tau, "n_top1_changed": int((idx[:, 0] != base[:, 0]).sum()),
                       "top1_changed_by_n": {str(m): int((idx[:, 0] != base[:, 0])[n == m].sum()) for m in sorted(set(n.tolist()))}, "top1_collisions": col},
            "median_top1_margin": float(np.median(top[:, -1] - top[:, -2])), "margin_by_n": {str(m): float(np.median((top[:, -1] - top[:, -2])[n == m])) for m in sorted(set(n.tolist()))},
-           "distinct_top1": int(len(set(base[:, 0].tolist())))}
+           "distinct_top1": int(len(set(base[:, 0].tolist()))), "lend": lent, "prior3": pri}
+    if pri is not None:
+        log(f"  prior on the 1-game questions (w {w3:g}, T {temp:g}): {pri['candidates_of_3_game_questions']} candidates hold a 3-game question; 1-game Top-1 among them "
+            f"{pri['one_game_top1_in_them_before']} -> {pri['one_game_top1_in_them_after']}; 1-game questions with a new Top-1 {pri['one_game_top1_changed']}, with a new Top-5 {pri['one_game_top5_changed']}", flush=True)
+    if lent is not None:
+        log(f"  lending (margin >= {lend:g}): {lent['questions_lent']} multi-game questions lent their games; 1-game questions with a new Top-1 {lent['one_game_top1_changed']}, "
+            f"with a new Top-5 {lent['one_game_top5_changed']}", flush=True)
     log(f"{Path(q_path).name}: {len(players)} candidates, {len(qids)} questions ({len(rep['fallback_questions'])} fallback); distinct Top-1 {rep['distinct_top1']}; "
         f"confident-half distinct {col['confident_distinct']:.3f}; assignment {'applied' if applied else 'not applied'} (changed {rep['assign']['n_top1_changed']}); "
         f"median margin by n {({k: round(v, 2) for k, v in rep['margin_by_n'].items()})}", flush=True)
@@ -93,6 +128,11 @@ def main(argv=None):
                     help="soft = aicup_pid.assign.assign_soft with the document's soft_lam (off when it has none); big = one-to-one over the questions of two or more games only (2.37)")
     ap.add_argument("--big-lam", type=float, default=None, help="--assign big: soft assignment with this penalty instead of the hard one")
     ap.add_argument("--big-tau", type=float, default=None, help="--assign big: Sinkhorn prices with this temperature (aicup_pid.assign.assign_sinkhorn; METHOD_NOTES 2.122); with --big-lam the Top-1 stays the soft assignment's")
+    ap.add_argument("--one-prior3", type=float, default=None, help="--assign big: prior of the 1-game questions (METHOD_NOTES 2.123, probe S3): the candidates assigned to the 3-game questions "
+                    "share this probability of owning a 1-game question (independent draws would give them 1/6; estimated 0.014 [0.001, 0.062]); default: off")
+    ap.add_argument("--prior-T", type=float, default=1.6, help="--one-prior3: temperature of the fused scores (fitted on the pseudo-pools' 1-game questions: 1.64 / 1.56)")
+    ap.add_argument("--lend-margin", type=float, default=None, help="--assign big: every multi-game question whose Top-1 leads its second choice by at least this much (fused score) lends its games "
+                    "to its assigned candidate, and the 1-game questions are re-scored against the enlarged reference sets (METHOD_NOTES 2.123); default: off")
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
@@ -122,7 +162,8 @@ def main(argv=None):
         print(f"sequence identity vectors: {len(paths)} network(s), {len(seqs[0])} games", flush=True)
     new, reports, cand_ids = {}, [], {}
     for tag, prefix in (("public", "pub2_"), ("private", "priv2_")):
-        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq, big_lam=a.big_lam, big_tau=a.big_tau)
+        rows, rep, players = predict_pool(T / f"player_identification_candidates2_{tag}.csv", T / f"player_identification_test2_{tag}.csv", doc, emb, store, a.assign, a.workers, seq=seq, big_lam=a.big_lam, big_tau=a.big_tau, lend=a.lend_margin,
+                                          prior3=None if a.one_prior3 is None else (a.one_prior3, a.prior_T))
         new.update({q: top for q, top in rows})
         reports.append(rep)
         cand_ids[prefix] = players
