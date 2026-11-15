@@ -117,7 +117,8 @@ def main(argv=None):
                 Z[("seq", t)] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=by_t[t])["seq"])
             if alt is not None:
                 seqs = [load(Path(a.ft_dir) / f"offsim_{pool}_h{a.holdout}s{s}_net{v}{tg}_t{a.alt_step}.npz") for v, tg in nets_of(alt)]
-                Z[("seq", "alt")] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=seqs)["seq"])
+                cfg_alt = {**doc["cfg"], **({"seq_near": alt["cfg"]["seq_near"]} if "seq_near" in alt.get("cfg", {}) else {})}  # the alternative's own nearest-game setting (METHOD_NOTES 2.141)
+                Z[("seq", "alt")] = standardise(v2.components(ref, questions, moves, sgfs, cfg_alt, which=("seq",), seq=seqs)["seq"])
             if a.mix:
                 Z[("seq", "mix")] = standardise(v2.components(ref, questions, moves, sgfs, doc["cfg"], which=("seq",), seq=[x for t in a.mix for x in by_t[t]])["seq"])
             runs.append({"pool": pool, "seed": s, "Z": Z, "truth": truth, "n": n, "primary": primary})

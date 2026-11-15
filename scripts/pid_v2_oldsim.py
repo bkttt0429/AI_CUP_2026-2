@@ -102,7 +102,8 @@ def main(argv=None):
                     if f not in cache:
                         cache[f] = load(f)
                     vecs.append(cache[f])
-                seq[name] = standardise(v2.components(cands, questions, moves, sgfs, ref["cfg"], which=("seq",), seq=vecs)["seq"])
+                cfg_ = {**ref["cfg"], **({"seq_near": d_["cfg"]["seq_near"]} if "seq_near" in d_.get("cfg", {}) else {})}  # the document's own nearest-game setting (METHOD_NOTES 2.141)
+                seq[name] = standardise(v2.components(cands, questions, moves, sgfs, cfg_, which=("seq",), seq=vecs)["seq"])
             cache.clear()
             runs.append({"side": side, "seed": s, "Z": Z, "seq": seq, "truth": truth, "n": n})
             print(f"{side} split {s}: {len(players)} candidates, {len(questions)} questions; sequence component alone: "

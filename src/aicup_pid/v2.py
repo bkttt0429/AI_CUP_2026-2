@@ -104,15 +104,42 @@ def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=No
     if "seq" in which and seq is not None:  # prototype = normalised sum of the game vectors, as the model was trained
         unit = lambda X: X / (np.linalg.norm(X, axis=1, keepdims=True) + 1e-12)  # noqa: E731
         mats = []
+        # METHOD_NOTES 2.141: cfg["seq_near"] = {"k": 3, "weight": 0.5} adds, per network, the question's games against the candidate's
+        # SINGLE reference games (mean cosine of the k most similar ones, averaged over the question's games), row-standardised
+        near, nears, done = cfg.get("seq_near"), [], {}
+        if near:
+            c_games = [k for p in players for k, _ in cands[p]]
+            c_len = np.array([len(cands[p]) for p in players])
+            c_start = np.concatenate([[0], np.cumsum(c_len)[:-1]])
+            q_games = [k for q in questions for k, _ in q]
+            q_of = np.repeat(np.arange(len(questions)), [len(q) for q in questions])
+            q_cnt = np.bincount(q_of, minlength=len(questions)).astype(np.float64)
+            kk = int(near.get("k", 3))
         for one in (seq if isinstance(seq, (list, tuple)) else [seq]):  # several networks: mean of their row-standardised matrices
             C = unit(np.stack([np.sum([one[k] for k, _ in cands[p]], axis=0) for p in players]).astype(np.float64))
             Q = unit(np.stack([np.sum([one[k] for k, _ in q], axis=0) for q in questions]).astype(np.float64))
             mats.append(Q @ C.T)
+            if near:
+                G_ = np.stack([one[k] for k in c_games])
+                mark = (G_[0].tobytes(), G_[-1].tobytes())  # a document lists a network once per unit of weight: compute it once
+                if mark not in done:
+                    X = unit(np.stack([one[k] for k in q_games]).astype(np.float64)) @ unit(G_.astype(np.float64)).T  # [question games, reference games]
+                    if (c_len == c_len[0]).all():
+                        m_ = min(kk, int(c_len[0]))
+                        per = -np.partition(-X.reshape(len(q_games), len(players), int(c_len[0])), m_ - 1, axis=2)[:, :, :m_].mean(2)
+                    else:
+                        per = np.stack([np.sort(X[:, s_:s_ + n_], axis=1)[:, -min(kk, int(n_)):].mean(1) for s_, n_ in zip(c_start, c_len)], axis=1)
+                    Nq = np.zeros((len(questions), len(players)))
+                    np.add.at(Nq, q_of, per)
+                    done[mark] = Nq / q_cnt[:, None]
+                nears.append(done[mark])
         if len(mats) == 1:
             S["seq"] = mats[0]
         else:
             from aicup_pid.fusion import standardise
             S["seq"] = np.mean([standardise(m) for m in mats], axis=0)
+            if near:
+                S["seq"] = S["seq"] + float(near.get("weight", 0.5)) * np.mean([standardise(m) for m in nears], axis=0)
     return S
 
 
