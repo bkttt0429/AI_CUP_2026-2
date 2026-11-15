@@ -283,6 +283,9 @@ def main(argv=None):
     ap.add_argument("--own-by-games", choices=("linear", "sqrt"), default=None,
                     help="with --ext-share: the competition players of an episode are drawn with probability proportional to their number of usable games (linear) or to its "
                          "square root, instead of uniformly; the external accounts stay uniform (METHOD_NOTES 2.124; the rank session's M161)")
+    ap.add_argument("--ext-by-games", choices=("linear", "sqrt"), default=None,
+                    help="with --ext-share: the external accounts of an episode are drawn by their number of usable games as well (METHOD_NOTES 2.126; "
+                         "their depths differ once --ext-second or deeper selections are loaded)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
     import torch
@@ -362,6 +365,15 @@ def main(argv=None):
         top = np.sort(p_own)[::-1]
         log(f"competition players drawn by games ({a.own_by_games}): games per player 10/50/90/99% {np.percentile(cnt[tp_own], [10, 50, 90, 99]).round().astype(int).tolist()}; "
             f"the busiest 10% of the players get {top[:max(len(top) // 10, 1)].sum():.2f} of the draws (uniform: 0.10)")
+    p_ext = None
+    if a.ext_by_games:
+        assert a.ext_share is not None and not a.rank_ep and len(tp_ext), "--ext-by-games needs --ext-share and external accounts, and excludes --rank-ep"
+        w_ext = cnt[tp_ext].astype(np.float64)
+        w_ext = w_ext if a.ext_by_games == "linear" else np.sqrt(w_ext)
+        p_ext = w_ext / w_ext.sum()
+        top = np.sort(p_ext)[::-1]
+        log(f"external accounts drawn by games ({a.ext_by_games}): games per account 10/50/90/99% {np.percentile(cnt[tp_ext], [10, 50, 90, 99]).round().astype(int).tolist()}; "
+            f"the busiest 10% of the accounts get {top[:max(len(top) // 10, 1)].sum():.2f} of the draws (uniform: 0.10)")
     log(f"training on {int(use.sum())} games of {len(tp)} players (folds {sorted(set(fold[use].tolist()))}; external players {len(tp_ext)} with {int((use & is_ext[owner]).sum())} games"
         f"{'' if a.ext_share is None else f', {n_ext} of every episode'}); episodes of {P} players x {M.M_EP} games")
     strata = None
@@ -509,7 +521,7 @@ def main(argv=None):
         if strata is not None and rng.random() < a.rank_ep_share:
             pl = rank_draw("own", P) if a.ext_share is None or n_ext == 0 else np.concatenate([rank_draw("ext", n_ext), rank_draw("own", P - n_ext)])
         else:
-            pl = rng.choice(tp, P, replace=False) if a.ext_share is None else np.concatenate([rng.choice(tp_ext, n_ext, replace=False), rng.choice(tp_own, P - n_ext, replace=False, p=p_own)])
+            pl = rng.choice(tp, P, replace=False) if a.ext_share is None else np.concatenate([rng.choice(tp_ext, n_ext, replace=False, p=p_ext), rng.choice(tp_own, P - n_ext, replace=False, p=p_own)])
         u = rng.random((P, W))
         u[np.arange(W)[None] >= cnt[pl][:, None]] = 2.0
         rows = tab[pl[:, None], np.argsort(u, axis=1)[:, :M.M_EP]].reshape(-1)
