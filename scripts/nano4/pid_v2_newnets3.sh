@@ -85,13 +85,15 @@ bash $R2/scripts/nano4/pid_exp_oldsim.sh "$grp" "$ref ${names[*]}" "$out" || ech
 pids=()
 for n in "${names[@]}"; do
   ( bash $R2/scripts/nano4/pid_v2_make_file2.sh "$n" "pid_${n}s.csv" 1 && bash $R2/scripts/nano4/pid_v2_make_file2.sh "$n" "pid_${n}_a2k.csv" 2 0.5 \
-      && python -I $R2/scripts/pid_diff_files.py $R2/upload/pid_v2o13c_9_a2k.csv $R2/upload/pid_${n}_a2k.csv ) > logs/nano4/newnets-$J-file-$n.log 2>&1 &
+      && python -I $R2/scripts/pid_diff_files.py $R2/upload/pid_v2o13c_9_a2k.csv $R2/upload/pid_${n}_a2k.csv \
+      && bash $R2/scripts/nano4/pid_v2_make_file4.sh "$n" "pid_${n}_a2k_p3.csv" 2 0.5 0.05 1.6 pid_v2o16c_b_a2k_p3.csv ) > logs/nano4/newnets-$J-file-$n.log 2>&1 &
   pids+=($!)
 done
 for p in "${pids[@]}"; do wait "$p" || echo "a file was not built (logs/nano4/newnets-$J-file-*.log)"; done
 for n in "${names[@]}"; do
   echo "== file pid_${n}s.csv (lam 1) vs pid_v2o13c_9s.csv: $(grep -E 'questions with a different Top-1' logs/nano4/newnets-$J-file-$n.log | sed -n 1p) | md5 $(md5sum $R2/upload/pid_${n}s.csv 2>/dev/null | cut -c1-32)"
-  echo "== file pid_${n}_a2k.csv (lam 2, tau 0.5) vs pid_v2o13c_9_a2k.csv: $(grep -E 'questions with a different Top-1' logs/nano4/newnets-$J-file-$n.log | tail -1) | md5 $(md5sum $R2/upload/pid_${n}_a2k.csv 2>/dev/null | cut -c1-32)"
+  echo "== file pid_${n}_a2k.csv (lam 2, tau 0.5) vs pid_v2o13c_9_a2k.csv: $(grep -E 'questions with a different Top-1' logs/nano4/newnets-$J-file-$n.log | sed -n 5p) | md5 $(md5sum $R2/upload/pid_${n}_a2k.csv 2>/dev/null | cut -c1-32)"
+  echo "== file pid_${n}_a2k_p3.csv (+ prior of the 1-game questions, w 0.05) vs pid_v2o16c_b_a2k_p3.csv: $(grep -E 'questions with a different Top-1' logs/nano4/newnets-$J-file-$n.log | tail -1) | md5 $(md5sum $R2/upload/pid_${n}_a2k_p3.csv 2>/dev/null | cut -c1-32)"
 done
 }
 main "$@"; exit $?
