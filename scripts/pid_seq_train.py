@@ -286,6 +286,8 @@ def main(argv=None):
     ap.add_argument("--ext-by-games", choices=("linear", "sqrt"), default=None,
                     help="with --ext-share: the external accounts of an episode are drawn by their number of usable games as well (METHOD_NOTES 2.126; "
                          "their depths differ once --ext-second or deeper selections are loaded)")
+    ap.add_argument("--drop-fold", type=int, nargs="*", default=[], help="competition folds left out of the training in addition to the held-out one "
+                                                                         "(a measurement of what one more fold of competition players is worth; METHOD_NOTES 2.131)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
     a = ap.parse_args(argv)
     import torch
@@ -312,6 +314,8 @@ def main(argv=None):
     allowed = np.ones(len(fold), bool) if a.all_folds else fold != 0
     is_ext = np.char.startswith(players.astype(str), "x:")  # per player
     use = ~is_held & allowed & (fold != v)
+    if a.drop_fold:
+        use &= ~np.isin(fold, a.drop_fold)
     sec_row = G.get("second", np.zeros(len(fold), bool))
     if a.no_second:
         use &= ~sec_row
