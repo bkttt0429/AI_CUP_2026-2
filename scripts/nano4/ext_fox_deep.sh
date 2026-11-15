@@ -17,6 +17,9 @@ main() {
   local PY="$X/tools_venv/bin/python -I" name=$1 accounts=$2 games=$3 need=$4 seed=$5 r named=() pids=() rc=0
   shift 5
   df -h /work/u2507115 /home/u2507115 | awk 'NR>1{print "free:", $4, $6}'
+  # the options added for this line have not run yet: fail here, not after the extraction, if one of the scripts does not load
+  python -I -m py_compile $R2/scripts/pid_seq_train.py $R2/scripts/pid_ext_ply_extract.py $R2/scripts/ext_fox_select.py || { echo "a script does not compile"; return 1; }
+  python -I $R2/scripts/pid_seq_train.py --help | grep -cE -- '--(ext-deep|no-deep|ext-by-games|drop-fold)' || { echo "the trainer does not show the new options"; return 1; }
   for r in "$@"; do
     named+=("$r=$X/parts_$r")
     if [ -d "$X/raw_$r" ]; then
