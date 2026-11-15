@@ -296,6 +296,10 @@ def main(argv=None):
     ap.add_argument("--ext-by-games", choices=("linear", "sqrt"), default=None,
                     help="with --ext-share: the external accounts of an episode are drawn by their number of usable games as well (METHOD_NOTES 2.126; "
                          "their depths differ once --ext-second or deeper selections are loaded)")
+    ap.add_argument("--nn-ep", type=float, default=0.0, help="share of the steps whose competition players are LOOK-ALIKE clusters (METHOD_NOTES 2.140): seeds drawn as usual, "
+                                                             "each joined by its nearest competition players by the prototypes of their last visit; the external accounts stay random")
+    ap.add_argument("--nn-k", type=int, default=8, help="--nn-ep: players per cluster (the seed and its k - 1 nearest)")
+    ap.add_argument("--nn-start", type=int, default=4000, help="--nn-ep: first step that may draw clusters (the prototypes are collected from step 0)")
     ap.add_argument("--drop-fold", type=int, nargs="*", default=[], help="competition folds left out of the training in addition to the held-out one "
                                                                          "(a measurement of what one more fold of competition players is worth; METHOD_NOTES 2.131)")
     ap.add_argument("--all-folds", action="store_true", help="read and train on fold 0 as well (needs the user's consent; METHOD_NOTES 2.40)")
@@ -450,6 +454,13 @@ def main(argv=None):
         bcol[torch.as_tensor(tp, device=dev)] = torch.arange(len(tp), device=dev)
         log(f"cross-batch memory: {len(tp)} slots, used from step {a.bank_start}{f', top {a.bank_topk} per game' if a.bank_topk else ''}"
             f"{', entries from the EMA network' if a.bank_ema else ''}{f', entries up to {a.bank_age} steps old' if a.bank_age else ''}{f', ramp over {a.bank_ramp} steps' if a.bank_ramp else ''}; margin {a.margin}")
+    nn_proto = nn_ok = None
+    if a.nn_ep > 0:  # the last prototype of every competition player, to find who looks like whom
+        assert a.ext_share is not None and not a.rank_ep, "--nn-ep needs --ext-share and excludes --rank-ep"
+        nn_proto = torch.zeros(C, M.D_OUT, device=dev)
+        nn_ok = np.zeros(C, bool)
+        log(f"look-alike episodes: {a.nn_ep:g} of the steps from step {a.nn_start}, clusters of {a.nn_k} among {len(tp_own)} competition players")
+    nn_steps = 0
     centres = col = None
     if a.cls_loss != "none":  # one centre per training player; the centres are not part of the saved network
         centres = torch.nn.Parameter(torch.randn(len(tp), M.D_OUT, device=dev) * 0.01)
@@ -536,6 +547,25 @@ def main(argv=None):
             n_ext = min(int(round(P * (a.ext_share + (a.ext_share_end - a.ext_share) * step / max(steps - 1, 1)))), len(tp_ext))
         if strata is not None and rng.random() < a.rank_ep_share:
             pl = rank_draw("own", P) if a.ext_share is None or n_ext == 0 else np.concatenate([rank_draw("ext", n_ext), rank_draw("own", P - n_ext)])
+        elif nn_proto is not None and step >= a.nn_start and rng.random() < a.nn_ep and int(nn_ok[tp_own].sum()) >= 4 * (P - n_ext):
+            n_own = P - n_ext
+            okm = nn_ok[tp_own]
+            valid = tp_own[okm]
+            seeds = rng.choice(valid, n_own // a.nn_k, replace=False, p=None if p_own is None else p_own[okm] / p_own[okm].sum())
+            sim = (nn_proto[tb(seeds)] @ nn_proto[tb(valid)].T).cpu().numpy()
+            used = np.zeros(C, bool)
+            used[seeds] = True
+            chosen = []
+            for i_, sd_ in enumerate(seeds):  # the seed and its nearest players that no earlier cluster has taken
+                near = valid[np.argsort(-sim[i_])[:4 * a.nn_k + len(seeds)]]
+                near = near[~used[near]][:a.nn_k - 1]
+                used[near] = True
+                chosen += [sd_, *near.tolist()]
+            if len(chosen) < n_own:
+                free = tp_own[~used[tp_own]]
+                chosen += rng.choice(free, n_own - len(chosen), replace=False).tolist()
+            pl = np.concatenate([rng.choice(tp_ext, n_ext, replace=False, p=p_ext), np.array(chosen, dtype=tp_own.dtype)])
+            nn_steps += 1
         else:
             pl = rng.choice(tp, P, replace=False) if a.ext_share is None else np.concatenate([rng.choice(tp_ext, n_ext, replace=False, p=p_ext), rng.choice(tp_own, P - n_ext, replace=False, p=p_own)])
         u = rng.random((P, W))
@@ -629,6 +659,10 @@ def main(argv=None):
                 bank[bslots] = F.normalize(zb.sum(1), dim=-1)
                 bank_ok[bslots] = True
                 bank_step[bslots] = step
+            if nn_proto is not None:
+                own_m = ~is_ext[pl]
+                nn_proto[tb(pl[own_m])] = F.normalize(z.detach().sum(1)[tb(np.flatnonzero(own_m))], dim=-1)
+                nn_ok[pl[own_m]] = True
         tl += float(loss.detach())
         ta += float((logits.argmax(1) == tgt).float().mean())
         if (step + 1) % every == 0:
