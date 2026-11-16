@@ -175,6 +175,8 @@ sbatch --parsable --export=ALL \
 
 ## 計畫自查與執行前狀態
 
+下列為執行前留下的歷史狀態，不是目前進度。原版實作、抽取與baseline重現已完成；正式reference稽核失敗後依規則停止，未進效果評估。精確計分後續獨立記錄於2026-11-16-choice-exact-followup.md；Slurm與測試明細見本worktree的.superpowers/sdd/2026-11-16-choice-signal/progress.md。
+
 - 本輪完成的只有：現存實驗／程式／結果去重、spec、實作計畫與獨立設計審查。以上 checkbox 全部未執行。
 - Spec §2 的舊路線均有明確對照或排除，尤其 P6 **已通過且在用**、PLDA **已做且無融合增益**。
 - 新訊號只歸因於實際選項 covariance 或經 A2perm 證實的情境對應，不把重做殘差、更多參數或更好的校正當成新資訊。
