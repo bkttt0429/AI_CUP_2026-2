@@ -1,0 +1,16 @@
+{
+  "status": "real_data_extraction_running_training_queued",
+  "run_dir": "/work/u2507115/behavior_probe_20261116",
+  "branch": "research/conditional-behavior-20261116",
+  "implementation_commit": "a93ed67",
+  "project_tests": {"passed": 106, "existing_warnings": 2},
+  "synthetic_gate": {"passed": true, "queries": 2048, "accuracy": 0.91455078125, "correct_reference_margin": 0.9327459139858547},
+  "jobs": {"failed_toy": "788253", "passed_toy": "788305", "extraction": "788310", "training": "788326"},
+  "training_dependency": "afterok:788310",
+  "split_players": {"train": 64, "validation": 16, "test": 20},
+  "arms": ["background", "global", "contextual"],
+  "training_seeds": [20261116, 20261117],
+  "limits": {"simultaneous_gpus": 1, "total_gpu_minutes": 60, "cache_gib": 5.5},
+  "expected_result": "/work/u2507115/behavior_probe_20261116/result.json",
+  "scope": "Synthetic result verifies learning mechanism only. Real Go results are pending; no R1 rank or open-set gain established. Test players are unseen by this model but part of an earlier explored calibration population."
+}
