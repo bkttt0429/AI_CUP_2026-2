@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import numpy as np
 import pytest
 from behavior_data import immutable_json, validate_features
@@ -50,3 +51,30 @@ def test_bootstrap_keeps_seeds_paired_and_gate_requires_all_mechanisms():
     assert r.mechanism_verdict(positive, positive, [.1, .1], [.1, .1]) == 'mechanism_supported_in_pilot'
     assert r.mechanism_verdict(positive, positive, [.1, -.1], [.1, .1]) == 'personalization_without_context_binding'
     assert r.mechanism_verdict({'mean': 0., 'ci95': [-.1, .1]}, positive, [.1, .1], [.1, .1]) == 'not_supported'
+
+
+def test_toy_result_serializes_numpy_derived_gate():
+    r = runner()
+    result = r.toy_report([True]*8 + [False]*2, np.array([.1]*10))
+    assert json.loads(json.dumps(result))['passed'] is True
+    assert result['accuracy'] == .8
+    assert r.toy_report([False]*10, np.array([.1]*10))['passed'] is False
+
+
+def test_extraction_samples_beyond_old_256_ply_boundary():
+    from pid_behavior_extract import init_worker, replay
+    init_worker({'version': 15})
+    # A legal long all-pass fixture isolates full-game traversal without captures.
+    sgf = '(;GM[1]FF[4]SZ[19]' + ';B[];W[]'*150 + ')'
+    r = replay({'sgf': sgf, 'color': 'W'})
+    assert len(r['t']) == 16 and r['t'][-1] == 299
+    assert (r['played'] == 361).all()
+
+
+def test_budget_counts_failures_and_reserves_running_jobs():
+    assert importlib.util.find_spec('pid_behavior_submit'), 'bounded launcher missing'
+    from pid_behavior_submit import available_seconds
+    # Failed allocations are charged; a running allocation reserves its full limit.
+    assert available_seconds([('FAILED', 12, 300), ('COMPLETED', 48, 300)]) == 3540
+    assert available_seconds([('FAILED', 12, 300), ('RUNNING', 10, 1200)]) == 2388
+    with pytest.raises(ValueError): available_seconds([('UNKNOWN', 0, 0)])

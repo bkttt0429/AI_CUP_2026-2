@@ -11,6 +11,7 @@ import sys
 import time
 import numpy as np
 from behavior_data import digest, immutable_json, player_split, position_indices, prefix_history, validate_features
+from pid_behavior_submit import assert_allocation
 
 SOURCE = Path('/work/u2507115/pid_v2/choice_probe_20261116/2993db0b3ed8/manifest.json')
 LEGACY = Path('/home/u2507115/.cache/pidchoice_wt')
@@ -29,9 +30,10 @@ def prepare(root):
     for g in rows:
         assert hashlib.sha256(g['sgf'].encode()).hexdigest() == g['sgf_sha256']
     sources = {str(p): digest(p) for p in [SOURCE, Path(__file__), ROOT/'scripts/behavior_data.py',
-               LEGACY/'scripts/pid_choice_extract.py', LEGACY/'scripts/pid_choice_data_audit.py', LEGACY/'scripts/pid_trunk_extract.py']}
+               ROOT/'scripts/pid_behavior_submit.py', LEGACY/'scripts/pid_choice_extract.py',
+               LEGACY/'scripts/pid_choice_data_audit.py', LEGACY/'scripts/pid_trunk_extract.py']}
     protocol = {'schema': 1, 'split': split, 'rows': rows, 'sources': sources,
-                'checkpoint': m['assets']['checkpoint'], 'positions_per_game': 16,
+                'checkpoint': m['assets']['checkpoint'], 'positions_per_game': 16, 'max_ply': None,
                 'feature_channels': 385, 'legality': 'simple ko, no superko',
                 'seeds': [20261116, 20261117], 'arms': ['background', 'global', 'contextual'],
                 'steps': 1200, 'validation_interval': 200, 'reference_games': 3,
@@ -44,23 +46,23 @@ def prepare(root):
 
 
 def init_worker(config):
-    sys.path[:0] = [str(LEGACY/'scripts'), str(LEGACY/'src')]
-    from pid_choice_extract import te
+    r1 = Path(os.environ.get('AICUP1_ROOT', '/home/u2507115/BK_AICUP_2026-1'))
+    sys.path[:0] = [str(r1/'scripts'), str(r1/'src')]
+    import trunk_extract as te
     te.init_worker(config)
 
 
 def replay(g):
-    from pid_choice_extract import te
-    from pid_choice_data_audit import validate_turn_order
-    validate_turn_order(g['sgf'])
+    import trunk_extract as te
     stones, moves = te.setup_and_moves(g['sgf'])
-    moves = moves[:256]
     own = [t for t, (c, _, _) in enumerate(moves) if c == g['color']]
     selected = {own[i] for i in position_indices(len(own))}
     gs = te.start_state(stones, te.RULES)
     out = {k: [] for k in ('bins', 'globs', 'played', 'mover', 't', 'legal', 'history')}
     for t, (c, x, y) in enumerate(moves):
         pla = te.Board.BLACK if c == 'B' else te.Board.WHITE
+        if pla != gs.board.pla:
+            raise ValueError('recorded color does not match board turn')
         loc = te.Board.PASS_LOC if x is None else gs.board.loc(x, y)
         if not gs.board.would_be_legal(pla, loc):
             raise ValueError('illegal actual move')
@@ -85,6 +87,7 @@ def replay(g):
 def extract(root):
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('use a bounded Slurm allocation')
+    assert_allocation(root, 'extract')
     p = json.loads((root/'protocol.json').read_text())
     for path, sha in p['sources'].items():
         assert digest(path) == sha, path
@@ -132,6 +135,11 @@ def extract(root):
                           'state': state.cpu().numpy(), 'history': r['history'], 'ref_value': rv.cpu().numpy(),
                           'played': r['played'].astype(np.int64), 't': r['t']}
                 validate_features(arrays)
+                next_bytes = sum(a.nbytes for a in arrays.values()) + 4096
+                if sum(rec['bytes'] for rec in records) + next_bytes > p['max_cache_bytes']:
+                    raise RuntimeError('next record would exceed cache limit')
+                if shutil.disk_usage(root).free < p['min_free_bytes'] + next_bytes:
+                    raise RuntimeError('insufficient headroom before next write')
                 path = directory/f'{i:04d}.npz'; tmp = path.with_suffix('.tmp')
                 with open(tmp, 'wb') as f:
                     np.savez(f, **arrays)

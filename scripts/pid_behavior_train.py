@@ -9,6 +9,7 @@ import torch
 import torch.nn.functional as F
 from behavior_model import BehaviorPolicy
 from behavior_data import digest, episode_games, immutable_json, validate_features
+from pid_behavior_submit import assert_allocation
 
 
 def player_metrics(scores, truth):
@@ -62,7 +63,14 @@ def toy_batch(rng, device, candidates=8):
     return [torch.tensor(a, device=device) for a in arrays], torch.tensor(yq.reshape(-1), device=device), torch.arange(candidates, device=device).repeat_interleave(8)
 
 
+def toy_report(hits, margins):
+    return {'accuracy': float(np.mean(hits)), 'correct_reference_margin': float(np.mean(margins)),
+            'queries': len(hits), 'passed': bool(np.mean(hits) >= .70 and np.mean(margins) > 0),
+            'scope': 'Controlled synthetic mechanism, not Go performance'}
+
+
 def toy_probe(root):
+    assert_allocation(root, 'toy')
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.set_num_threads(1); torch.manual_seed(817)
     net = BehaviorPolicy('contextual').to(device); opt = torch.optim.AdamW(net.parameters(), lr=.001)
@@ -81,9 +89,7 @@ def toy_probe(root):
             wrong = lp[torch.arange(len(y), device=device), (who+1)%8]
             hits.extend((own.argmax(-1) == y).cpu().tolist())
             margins.extend((own.gather(1, y[:, None]) - wrong.gather(1, y[:, None])).flatten().cpu().tolist())
-    result = {'accuracy': float(np.mean(hits)), 'correct_reference_margin': float(np.mean(margins)),
-              'queries': len(hits), 'passed': np.mean(hits) >= .70 and np.mean(margins) > 0,
-              'scope': 'Controlled synthetic mechanism, not Go performance'}
+    result = toy_report(hits, margins)
     root.mkdir(parents=True, exist_ok=True)
     (root/'toy.json').write_text(json.dumps(result, indent=2)+'\n')
     print('Toy', result, flush=True)
@@ -148,6 +154,7 @@ def evaluate(net, data, rows, owners, ablation=None):
 def train(root):
     if not os.environ.get('SLURM_JOB_ID'):
         raise RuntimeError('use bounded Slurm allocation')
+    assert_allocation(root, 'train')
     if not json.loads((root/'toy.json').read_text())['passed']:
         raise RuntimeError('toy prerequisite missing')
     p = json.loads((root/'protocol.json').read_text())
