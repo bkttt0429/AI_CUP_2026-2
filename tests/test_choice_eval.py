@@ -94,3 +94,11 @@ def test_positive_primary_result_requires_robustness_before_final_verdict():
     a.seeds = (2, 3)
     report = m.bootstrap_procedure({"pub2": a}, seeds=(2, 3), draws=10)
     assert report["verdict"] == "promising_pending_robustness"
+def test_robustness_rejects_negative_seed_hidden_by_average():
+    import pid_choice_eval as m
+    primary = {"verdict": "promising_pending_robustness"}
+    report = {"pools": {"pub2": {"by_seed": {"4": {"A2": -.001}, "5": {"A2": .009}}},
+                        "priv2": {"by_seed": {"4": {"A2": .001}, "5": {"A2": .001}}}}}
+    assert m.robustness_verdict(primary, report) == "robustness_not_confirmed"
+    report["pools"]["pub2"]["by_seed"]["4"]["A2"] = .001
+    assert m.robustness_verdict(primary, report) == "promising"

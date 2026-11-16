@@ -127,6 +127,7 @@ def bootstrap_procedure(pools, *, seeds, draws=5000, rng_seed=20261116):
                                                      "ci95": np.quantile(boot[a] - boot[b], [.025, .975]).tolist()}
     for p, out in points.items():
         report["pools"][p] = {"delta": out["delta"], "selection": out["selection"],
+                               "by_seed": {str(seed): {a: float(d[si].mean()) for a, d in out["per_owner_delta"].items()} for si, seed in enumerate(seeds)},
                                "by_size": {a: d.mean(axis=(0, 1)).tolist() for a, d in out["per_owner_delta"].items()}}
     main = report["arms"].get("A2")
     if main:

@@ -49,3 +49,14 @@ def test_turn_order_guard_rejects_repeated_colour_and_supports_handicap():
         m.validate_turn_order("(;SZ[19];B[dd];B[pp])")
     with pytest.raises(ValueError, match="turn"):
         m.validate_turn_order("(;SZ[19];W[pp])")
+def test_diagnostics_include_harm_color_length_and_question_size():
+    import pid_choice_eval as m
+    q = [["a"], ["a", "b"], ["c"]]
+    games = {"a": {"color": "B"}, "b": {"color": "W"}, "c": {"color": "W"}}
+    rows = {"a": {"n": 50}, "b": {"n": 100}, "c": {"n": 110}}
+    groups = m.question_groups(q, games, rows)
+    out = m.group_diagnostics(np.array([1, 0, 2]), np.array([0, 1, 2]), groups)
+    assert out["color"]["B"]["recovered_top1"] == 1
+    assert out["color"]["mixed"]["broken_top1"] == 1
+    assert out["mean_own_moves"]["96+"]["questions"] == 1
+    assert out["size"]["2"]["rank_score_delta"] < 0

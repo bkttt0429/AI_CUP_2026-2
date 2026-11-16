@@ -74,6 +74,26 @@ def owner_size_scores(score, owner, sizes, count):
     return out
 
 
+def question_groups(questions, games, moments):
+    colors, lengths = [], []
+    for q in questions:
+        cs = {games[k]["color"] for k in q}
+        colors.append(next(iter(cs)) if len(cs) == 1 else "mixed")
+        n = np.mean([moments[k]["n"] for k in q])
+        lengths.append("<64" if n < 64 else "64-95" if n < 96 else "96+")
+    return {"color": np.array(colors), "mean_own_moves": np.array(lengths), "size": np.array([str(len(q)) for q in questions])}
+
+
+def group_diagnostics(baseline_rank, new_rank, groups):
+    sc = lambda r: np.where(r < 5, np.exp(-r.astype(float)), 0.)
+    delta = sc(new_rank) - sc(baseline_rank)
+    return {name: {label: {"questions": int((labels == label).sum()),
+                          "rank_score_delta": float(delta[labels == label].mean()),
+                          "recovered_top1": int(((labels == label) & (baseline_rank > 0) & (new_rank == 0)).sum()),
+                          "broken_top1": int(((labels == label) & (baseline_rank == 0) & (new_rank > 0)).sum())}
+                   for label in sorted(set(labels.tolist()))} for name, labels in groups.items()}
+
+
 def load_baseline_inputs(manifest, pool, seed):
     """Deliberately does not use Pool, official_pool or any question loader."""
     root = Path(manifest["source_root"])
@@ -222,6 +242,7 @@ def evaluate_seed(run_dir, manifest, pool, seed):
     atomic_json(root / f"selection_{pool}_s{seed}.json", {"run_id": manifest["run_id"], "pool": pool, "seed": seed, "locks": locks, "code_sha256": digest_file(__file__)})
     raw_rank = np.stack(rank_grid)
     baseline_rank = ranks(base, truth)
+    groups = question_groups(qs, {g["key"]: g for g in manifest["games"]}, rows)
     diag = {}
     for arm, sels in selected["selection"].items():
         rr = np.empty_like(baseline_rank)
@@ -229,12 +250,18 @@ def evaluate_seed(run_dir, manifest, pool, seed):
             mask = halves[truth] == h
             rr[mask] = raw_rank[index, mask]
         diag[arm] = {"recovered_top1": int(((baseline_rank > 0) & (rr == 0)).sum()), "broken_top1": int(((baseline_rank == 0) & (rr > 0)).sum()),
+                     "strata": group_diagnostics(baseline_rank, rr, groups),
                      "by_original_rank": {str(lo) + "-" + str(hi): {"questions": int(((baseline_rank >= lo) & (baseline_rank <= hi)).sum()),
                          "new_top1": int(((baseline_rank >= lo) & (baseline_rank <= hi) & (rr == 0)).sum())} for lo, hi in [(0, 0), (1, 4), (5, 19), (20, 599)]}}
     atomic_json(root / f"diagnostics_{pool}_s{seed}.json", diag)
     with open(root / f"grid_{pool}_s{seed}.npz", "wb") as f:
         np.savez_compressed(f, score=data.score, base=data.base, halves=halves, owners=np.array(owners), configs=np.array(json.dumps([asdict(c) for c in configs])), ranks=raw_rank, baseline_rank=baseline_rank)
     return data
+
+
+def robustness_verdict(primary, report):
+    agrees = all(p["by_seed"][str(seed)]["A2"] > 0 for p in report["pools"].values() for seed in (4, 5))
+    return "promising" if primary["verdict"] == "promising_pending_robustness" and agrees else "robustness_not_confirmed"
 
 
 def evaluate(run_dir, seeds, draws=5000):
@@ -249,9 +276,8 @@ def evaluate(run_dir, seeds, draws=5000):
     report["code_sha256"] = digest_file(__file__)
     if tuple(seeds) == (4, 5):
         primary = json.loads((Path(run_dir) / "eval_s2_3.json").read_text())
-        agrees = all(p["delta"]["A2"] > 0 for p in report["pools"].values())
         report["robustness_role"] = "same players and games, new holdout splits only"
-        report["verdict"] = "promising" if primary["verdict"] == "promising_pending_robustness" and agrees else "robustness_not_confirmed"
+        report["verdict"] = robustness_verdict(primary, report)
     atomic_json(Path(run_dir) / ("eval_s" + "_".join(map(str, seeds)) + ".json"), report)
     print(json.dumps(report), flush=True)
     return report
