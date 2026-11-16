@@ -187,19 +187,25 @@ def _sum_moments(rows, sets, suffix, scale):
     return u, f, n
 
 
-def evaluate_seed(run_dir, manifest, pool, seed):
+def evaluate_seed(run_dir, manifest, pool, seed, method="quadratic"):
     root = Path(run_dir)
+    if method not in ("quadratic", "exact"):
+        raise ValueError("unknown choice score method")
+    prefix = "exact_" if method == "exact" else ""
     input_gate = json.loads((root / "audit_input.json").read_text())
     if input_gate["verdict"] != "passed" or input_gate["run_id"] != manifest["run_id"] or input_gate["games"] != len(manifest["games"]):
         raise ValueError("complete input turn-order audit must pass")
     if json.loads((root / "baseline_check.json").read_text())["verdict"] != "passed":
         raise ValueError("baseline reproduction must pass")
-    if json.loads((root / f"audit_reference_{pool}_s{seed}.json").read_text())["verdict"] != "passed":
+    if method == "quadratic" and json.loads((root / f"audit_reference_{pool}_s{seed}.json").read_text())["verdict"] != "passed":
         raise ValueError("reference numerical audit must pass")
     scale, fbar, ridges = load_calibration(root)
     rows, _ = load_moments(root, manifest, pool)
     split = seed_split(manifest, pool, seed)
     owners = sorted(split["reference"])
+    if method == "exact":
+        from pid_choice_exact import CONFIGS, aggregate_evidence, load_evidence
+        exact = load_evidence(root, manifest, pool, seed, owners)
     qs, truth, sizes = questions_from_split(split, owners)
     path = root / f"baseline_{pool}_s{seed}.npz"
     provenance = json.loads(path.with_suffix(".json").read_text())
@@ -219,6 +225,8 @@ def evaluate_seed(run_dir, manifest, pool, seed):
             if arm == "R":
                 unit = lambda x: x / (np.linalg.norm(x, axis=-1, keepdims=True) + 1e-12)
                 evidence = unit(uq / nq[:, None]) @ unit(ur / nr[:, None]).T
+            elif method == "exact" and arm in ("A1", "A2", "A2perm"):
+                evidence = aggregate_evidence(exact, qs, CONFIGS.index((arm, ridge)))
             else:
                 fr_used = nr[:, None, None] * fbar if arm == "A0" else fr
                 fq_used = nq[:, None, None] * fbar if arm == "A0" else fq
@@ -239,7 +247,7 @@ def evaluate_seed(run_dir, manifest, pool, seed):
             source = data.score[0, :, data.halves != h, :]
             locks[arm].append({"evaluated_half": h, "config": asdict(configs[index]), "grid_index": index,
                                "source_grid_sha256": hashlib.sha256(source.tobytes()).hexdigest()})
-    atomic_json(root / f"selection_{pool}_s{seed}.json", {"run_id": manifest["run_id"], "pool": pool, "seed": seed, "locks": locks, "code_sha256": digest_file(__file__)})
+    atomic_json(root / f"{prefix}selection_{pool}_s{seed}.json", {"run_id": manifest["run_id"], "method": method, "pool": pool, "seed": seed, "locks": locks, "code_sha256": digest_file(__file__)})
     raw_rank = np.stack(rank_grid)
     baseline_rank = ranks(base, truth)
     groups = question_groups(qs, {g["key"]: g for g in manifest["games"]}, rows)
@@ -253,8 +261,8 @@ def evaluate_seed(run_dir, manifest, pool, seed):
                      "strata": group_diagnostics(baseline_rank, rr, groups),
                      "by_original_rank": {str(lo) + "-" + str(hi): {"questions": int(((baseline_rank >= lo) & (baseline_rank <= hi)).sum()),
                          "new_top1": int(((baseline_rank >= lo) & (baseline_rank <= hi) & (rr == 0)).sum())} for lo, hi in [(0, 0), (1, 4), (5, 19), (20, 599)]}}
-    atomic_json(root / f"diagnostics_{pool}_s{seed}.json", diag)
-    with open(root / f"grid_{pool}_s{seed}.npz", "wb") as f:
+    atomic_json(root / f"{prefix}diagnostics_{pool}_s{seed}.json", diag)
+    with open(root / f"{prefix}grid_{pool}_s{seed}.npz", "wb") as f:
         np.savez_compressed(f, score=data.score, base=data.base, halves=halves, owners=np.array(owners), configs=np.array(json.dumps([asdict(c) for c in configs])), ranks=raw_rank, baseline_rank=baseline_rank)
     return data
 
@@ -264,21 +272,29 @@ def robustness_verdict(primary, report):
     return "promising" if primary["verdict"] == "promising_pending_robustness" and agrees else "robustness_not_confirmed"
 
 
-def evaluate(run_dir, seeds, draws=5000):
+def evaluate(run_dir, seeds, draws=5000, method="quadratic"):
     m = read_manifest(run_dir)
+    prefix = "exact_" if method == "exact" else ""
     pools = {}
     for pool in ("pub2", "priv2"):
-        pieces = [evaluate_seed(run_dir, m, pool, s) for s in seeds]
+        pieces = [evaluate_seed(run_dir, m, pool, s, method) for s in seeds]
         p = pieces[0]
         pools[pool] = GridScores(pool, tuple(seeds), p.owners, p.halves, p.configs, np.concatenate([x.score for x in pieces]), np.concatenate([x.base for x in pieces]))
     report = bootstrap_procedure(pools, seeds=tuple(seeds), draws=draws)
     report["run_id"] = m["run_id"]
     report["code_sha256"] = digest_file(__file__)
+    report["method"] = method
+    if method == "exact":
+        from pid_choice_exact import read_protocol
+        protocol = read_protocol(run_dir)
+        report["protocol_id"] = protocol["protocol_id"]
+        report["contrast_limit"] = protocol["contrast_limit"]
+        report["revision_basis"] = protocol["revision_basis"]
     if tuple(seeds) == (4, 5):
-        primary = json.loads((Path(run_dir) / "eval_s2_3.json").read_text())
+        primary = json.loads((Path(run_dir) / f"{prefix}eval_s2_3.json").read_text())
         report["robustness_role"] = "same players and games, new holdout splits only"
         report["verdict"] = robustness_verdict(primary, report)
-    atomic_json(Path(run_dir) / ("eval_s" + "_".join(map(str, seeds)) + ".json"), report)
+    atomic_json(Path(run_dir) / (prefix + "eval_s" + "_".join(map(str, seeds)) + ".json"), report)
     print(json.dumps(report), flush=True)
     return report
 
@@ -289,9 +305,10 @@ if __name__ == "__main__":
     p.add_argument("--stage", choices=("baseline-check", "baseline-extra", "evaluate"), required=True)
     p.add_argument("--seeds", nargs="+", type=int, default=[2, 3])
     p.add_argument("--draws", type=int, default=5000)
+    p.add_argument("--method", choices=("quadratic", "exact"), default="quadratic")
     a = p.parse_args()
     if not os.environ.get("SLURM_JOB_ID"):
         raise RuntimeError("use Slurm")
     torch.set_num_threads(1)
-    result = baseline_check(a.run_dir) if a.stage == "baseline-check" else baseline_check(a.run_dir, a.seeds) if a.stage == "baseline-extra" else evaluate(a.run_dir, a.seeds, a.draws)
+    result = baseline_check(a.run_dir) if a.stage == "baseline-check" else baseline_check(a.run_dir, a.seeds) if a.stage == "baseline-extra" else evaluate(a.run_dir, a.seeds, a.draws, a.method)
     print(json.dumps(result), flush=True)

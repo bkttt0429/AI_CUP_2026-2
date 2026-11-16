@@ -12,6 +12,16 @@ budget() {
 }
 budget
 case "$stage" in
+  exact-pilot)
+    "$study_python" -I -m pytest -q "$study/tests"
+    "$study_python" -I "$study/scripts/pid_choice_exact.py" --run-dir "$run_dir" --stage protocol
+    "$study_python" -I "$study/scripts/pid_choice_exact.py" --run-dir "$run_dir" --stage pilot --pool "$1"
+    ;;
+  exact-extract)
+    pool=$1
+    shift
+    "$study_python" -I "$study/scripts/pid_choice_exact.py" --run-dir "$run_dir" --stage extract --pool "$pool" "$@"
+    ;;
   reference)
     pool=$1
     shift
