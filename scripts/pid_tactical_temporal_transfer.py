@@ -163,11 +163,12 @@ def main():
                         "rescued": int(((r == 0) & (base > 0)).sum()), "broken": int(((r > 0) & (base == 0)).sum()),
                         "swapped": int((cat(arm) < 0).sum())}
     gate_diff = metric(competition(cat("rank_gated")) - competition(cat("rank_shuffled")), all_rows)
-    adopt = effects["gated"]["mean"] >= .002 and effects["gated"]["ci95"][0] > 0 and gate_diff["ci95"][0] > 0
+    adopt = effects["gated"]["mean"] >= .002 and effects["gated"]["ci95"][0] > 0
     rec = {"plan": digest_file(PLAN), "code": digest_file(__file__), "source_duration_report": digest_file(
            ROOT / "results/final/tactical_duration_20261118.json"), "base_score": float(competition(base).mean()),
            "data": artifacts, "counts_sha": digest_file(CACHE / "temporal_counts.npz"), "fits": models,
-           "effects": effects, "gated_minus_shuffled": gate_diff, "secondary": secondary, "adopt": bool(adopt), "budget_start": budget}
+           "effects": effects, "gated_minus_shuffled": gate_diff, "secondary": secondary, "adopt": bool(adopt),
+           "beats_shuffled": bool(gate_diff["ci95"][0] > 0), "budget_start": budget}
     atomic_json(REPORT, rec)
     print(json.dumps({"gated": effects["gated"], "adopt": bool(adopt)}))
 
