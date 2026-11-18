@@ -116,8 +116,25 @@ def test_sampled_replay_matches_audited_replay_including_capture_and_pass():
     game = {"key": "capture", "color": "B", "sgf": "(;SZ[19];B[ba];W[aa];B[ab];W[qp]" + ";B[];W[]" * 39 + ")"}
     original = replay(game)
     sampled = replay_positions(game)
-    for name in sampled:
+    for name in ("bins", "globs", "played", "mover", "t", "legal"):
         np.testing.assert_array_equal(sampled[name], original[name])
+
+
+def test_chinese_simple_ko_rejects_chain_suicide_but_allows_capture():
+    from pid_local_choice_features import legal_choice
+    from pid_reference_policy import te
+    for history, allowed in [
+        ("(;SZ[19];B[aa];W[ba];B[qq];W[bb];B[rr];W[ac])", False),
+        ("(;SZ[19];B[aa];W[ba];B[ad];W[bb];B[bc];W[ac])", True),
+    ]:
+        stones, moves = te.setup_and_moves(history)
+        state = te.start_state(stones, te.RULES)
+        for color, x, y in moves:
+            state.play(te.Board.BLACK if color == "B" else te.Board.WHITE, state.board.loc(x, y))
+        board = state.board
+        assert board.would_be_legal(board.pla, board.loc(0, 1))
+        assert legal_choice(board, board.pla, board.loc(0, 1)) == allowed
+        assert legal_choice(board, board.pla, te.Board.PASS_LOC)
 
 
 def test_matching_context_resolves_identical_marginal_choices():
@@ -137,7 +154,11 @@ def test_matching_context_resolves_identical_marginal_choices():
         opt.zero_grad()
         loss.backward()
         opt.step()
-    assert target.exp().min() > .8
+    held_query = torch.tensor([[.91, .08], [.06, .93]])
+    held_features = torch.tensor([[[1.02, -.02], [-.01, .98]]]).expand(2, -1, -1)
+    pred, _ = model(held_query, held_features, base, refctx, values)
+    held_target = torch.stack([pred[0, 0, 0], pred[1, 0, 1], pred[0, 1, 1], pred[1, 1, 0]])
+    assert held_target.exp().min() > .8
     uniform = ConditionalChoice(2, 2, hidden=4, uniform=True)
     lp, _ = uniform(query, features, base, refctx, values)
     torch.testing.assert_close(lp[:, 0], lp[:, 1])

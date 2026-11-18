@@ -22,16 +22,15 @@ class Arm:
         self.values = data["residual", self.products]
         self.model = ConditionalChoice(self.context.size(-1), len(self.scale), uniform=arm == "U").cuda()
 
-    def predict(self, data, game_ids, turns, keys, values):
+    def predict(self, data, game_ids, turns, keys, values, *, describe=False):
         features = get_basis(data, game_ids, turns, self.products) / self.scale
         base = data["base"][game_ids, turns]
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            lp, null = self.model(self.context[game_ids, turns], features, base, keys, values)
-        return lp, null
+            return self.model(self.context[game_ids, turns], features, base, keys, values, describe=describe)
 
 
 @torch.no_grad()
-def evaluate(arm, data, indices, ablation="intact"):
+def evaluate(arm, data, indices, ablation="intact", *, describe=False):
     """One score per candidate and query game, using the same seven supports in all arms."""
     arm.model.eval()
     p = len(indices)
@@ -48,12 +47,22 @@ def evaluate(arm, data, indices, ablation="intact"):
         raise ValueError("unknown ablation")
     qgames = indices[:, 7:].ravel()
     scores, base_scores, null_mass = [], [], []
+    phase_summary = np.zeros((3, 8))
     for i in range(0, len(qgames), 2):
         games = torch.as_tensor(qgames[i:i + 2], device="cuda")
         ids = games.repeat_interleave(32)
         turns = torch.arange(32, device="cuda").repeat(len(games))
         y = data["played"][ids, turns]
-        lp, null = arm.predict(data, ids, turns, keys, values)
+        output = arm.predict(data, ids, turns, keys, values, describe=describe)
+        lp, null = output[:2]
+        if describe:
+            # Candidate scores are already formed when true owner indexes this diagnostic.
+            qowner = (torch.arange(i, i + len(games), device="cuda") // 3).repeat_interleave(32)
+            row = torch.arange(len(ids), device="cuda")
+            bands = (data["t"][ids, turns] // 32).cpu().numpy()
+            phase_summary[0] += np.bincount(bands, minlength=8)
+            for k, statistic in enumerate((null, output[2]), 1):
+                phase_summary[k] += np.bincount(bands, statistic[row, qowner].cpu().numpy(), minlength=8)
         observed = played_scores(lp, y)
         baseline = data["base"][ids, turns].gather(1, y[:, None])
         scores.append((observed - baseline).reshape(len(games), 32, p).mean(1).cpu().numpy())
@@ -70,6 +79,11 @@ def evaluate(arm, data, indices, ablation="intact"):
     ce = F.cross_entropy(torch.tensor(score.mean(1)) * 10, torch.arange(p))
     metrics.update(move_nll=float(nll), base_nll=float(-base_ll.mean()), null=float(np.mean(null_mass)),
                    objective=float(ce.item() + .1 * nll))
+    if describe:
+        metrics["own_retrieval_by_32_ply_band"] = {
+            str(band): {"positions": int(count), "null": float(phase_summary[1, band] / count),
+                        "effective_tokens_per_reference_game": float(phase_summary[2, band] / count)}
+            for band, count in enumerate(phase_summary[0]) if count}
     return score, per, metrics, base_ll
 
 
@@ -175,7 +189,7 @@ def experiment(data, games, dest, protocol):
         arm.model.load_state_dict(ck["state"])
         for mode in (("intact", "permute", "zero") if ck["arm"] == "L" else ("intact",)):
             name = path.stem if mode == "intact" else path.stem + "_" + mode
-            score, _, metrics, base_ll = evaluate(arm, data, test, mode)
+            score, _, metrics, base_ll = evaluate(arm, data, test, mode, describe=mode == "intact")
             scores[name] = score
             runs[name] = {"checkpoint_step": ck["step"], "parameters": sum(p.numel() for p in arm.model.parameters()),
                           "metrics": metrics, "own_minus_cyclic_ll": interval((score[idx, :, idx] - score[idx, :, (idx + 1) % len(idx)]).mean(1)),
@@ -191,8 +205,11 @@ def experiment(data, games, dest, protocol):
     verdict = "local_retrieval_supported" if ok else "personalization_only" if personalized else "mechanism_not_established"
     turns = data["t"][torch.as_tensor(test[:, :7], device="cuda")].cpu().numpy()
     perm = phase_permutation(turns, 509)
+    moved = perm != np.arange(32)
     np.savez_compressed(dest / "scores.npz", **scores, base_ll=base_ll, rivals=rivals, owners=np.array(owners))
     return {"protocol": protocol["id"], "data_id": protocol["data_id"], "scope": protocol["scope"],
             "verdict": verdict, "owner_counts": [len(train), len(dev), len(test)],
-            "fraction_reference_tokens_permuted": float((perm != np.arange(32)).mean()),
+            "fraction_reference_tokens_permuted": float(moved.mean()),
+            "permutation_by_32_ply_band": {str(b): {"tokens": int((turns // 32 == b).sum()),
+                                                    "moved": int(moved[turns // 32 == b].sum())} for b in range(8)},
             "checkpoints": [source_record(path) for path in paths], "runs": runs, "comparisons": comparisons}

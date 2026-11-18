@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import sys
 import time
+from importlib.util import find_spec
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pid_local_choice_data import DEST, LEDGER, ROOT, RUN, atomic_json, check, read_data, source_record, stable_hash
@@ -12,6 +13,8 @@ from pid_reference_policy import AICUP1
 import json
 import numpy as np
 import torch
+
+OUTPUT = DEST / "simple_ko_v2"
 
 
 def protocol(m):
@@ -26,12 +29,14 @@ def protocol(m):
                                     "scripts/trunk_extract.py", "repo/KataGo/python/katago/game/board.py",
                                     "repo/KataGo/python/katago/game/gamestate.py", "repo/KataGo/python/katago/game/features.py",
                                     "repo/KataGo/python/katago/train/model_pytorch.py")]
+    files += [Path(find_spec(name).origin) for name in ("katago.game.sgfmetadata", "katago.train.load_model",
+                                                        "katago.train.modelconfigs")]
     body = {"data_id": m["id"], "code": [source_record(path) for path in files], "p0": m["checkpoint"],
             "arms": ["U", "G", "L", "A"], "seeds": [17, 29], "steps": 4000,
             "rank_gate": "both seeds: L-G, L-U and L-permutation paired rank CI lower bound > 0",
             "scope": "100 fresh adapter test players, unknown humanv0 pretraining overlap"}
     body["id"] = stable_hash(json.dumps(body, sort_keys=True))[:12]
-    path = DEST / "protocol.json"
+    path = OUTPUT / "protocol.json"
     if path.exists() and json.loads(path.read_text()) != body:
         raise ValueError("protocol changed after registration")
     if not path.exists():
@@ -48,6 +53,7 @@ def main():
     torch.set_num_threads(1)
     check(RUN, LEDGER)
     m = read_data()
+    OUTPUT.mkdir(parents=True, exist_ok=True)
     start = time.monotonic()
     if stage == "smoke":
         data, norm = extract({**m, "games": m["games"][:32]})
@@ -56,24 +62,25 @@ def main():
         stats = {"train_games": 32, "data_id": m["id"], "key_width": data["local_key"].size(-1),
                  "action_width": data["scale", True].numel(), "seconds": time.monotonic() - start,
                  "peak_cuda_bytes": torch.cuda.max_memory_allocated()}
-        atomic_json(DEST / "smoke.json", stats)
+        atomic_json(OUTPUT / "smoke.json", stats)
         print(stats, flush=True)
         return
     import pid_local_choice_fit as fit
     registration = protocol(m)
-    if (DEST / "report.json").exists():
+    if (OUTPUT / "report.json").exists():
         raise FileExistsError("a test report already exists")
     print(f"registered {registration['id']} for data {m['id']}", flush=True)
     data, norm = extract(m)
-    np.savez(DEST / "normalizer.npz", **norm)
-    extraction = {"seconds": time.monotonic() - start, "peak_cuda_bytes": torch.cuda.max_memory_allocated()}
-    report = fit.experiment(data, m["games"], DEST, registration)
+    np.savez(OUTPUT / "normalizer.npz", **norm)
+    extraction = {"seconds": time.monotonic() - start, "peak_cuda_bytes": torch.cuda.max_memory_allocated(),
+                  "mask_audit": data["mask_audit"]}
+    report = fit.experiment(data, m["games"], OUTPUT, registration)
     if protocol(m)["id"] != registration["id"]:
         raise ValueError("source changed during run")
     report.update(extraction=extraction, seconds=time.monotonic() - start, data_audit=m["audit"],
                   job_id=os.environ["SLURM_JOB_ID"])
     check(RUN, LEDGER)
-    atomic_json(DEST / "report.json", report)
+    atomic_json(OUTPUT / "report.json", report)
     print(f"saved report for {registration['id']} with verdict {report['verdict']}", flush=True)
 
 

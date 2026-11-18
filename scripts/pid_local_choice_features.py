@@ -11,30 +11,44 @@ from pid_reference_policy import _GraphExtraOutputs, load_humansl, neutral_rows,
 from aicup_pid.local_choice import action_basis, local_geometry
 
 
+def legal_choice(board, player, loc):
+    if loc == te.Board.PASS_LOC:
+        return True
+    return (board.is_on_board(loc) and board.board[loc] == te.Board.EMPTY and loc != board.simple_ko_point
+            and not board.would_be_suicide(player, loc))
+
+
 def replay_positions(game):
     """Check every recorded move, compute full KataGo features only for the 32 selected states."""
     stones, moves = te.setup_and_moves(game["sgf"])
+    if te.RULES["koRule"] != "KO_SIMPLE" or te.RULES["multiStoneSuicideLegal"]:
+        raise ValueError("unexpected KataGo replay rules")
     moves = moves[:256]
     turns = [i for i, (color, _, _) in enumerate(moves) if color == game["color"]]
     selected = {turns[i] for i in position_indices(len(turns))}
     state = te.start_state(stones, te.RULES)
     locations = [state.board.loc(x, y) for y in range(19) for x in range(19)]
-    rows = {name: [] for name in ("bins", "globs", "legal", "played", "mover", "t")}
+    rows = {name: [] for name in ("bins", "globs", "legal", "legacy_extra", "played", "mover", "t")}
     for t, (color, x, y) in enumerate(moves):
         board = state.board
         player = te.Board.BLACK if color == "B" else te.Board.WHITE
         loc = te.Board.PASS_LOC if x is None else board.loc(x, y)
-        if board.pla != player or not board.would_be_legal(player, loc):
+        if board.pla != player or not legal_choice(board, player, loc):
             raise ValueError(f"{game['key']}: invalid recorded turn at {t}")
         if t in selected:
             planes, glob = state.get_input_features(te._FEATURES)
-            legal = np.asarray([board.would_be_legal(player, loc_a) for loc_a in locations] + [True], dtype=bool)
+            legal = np.asarray([legal_choice(board, player, loc_a) for loc_a in locations] + [True], dtype=bool)
+            empty = (planes[0, 1] + planes[0, 2]).reshape(-1) == 0
+            extra = np.zeros(362, dtype=bool)
+            for pos in np.flatnonzero(empty & ~legal[:361]):
+                extra[pos] = board.would_be_legal(player, locations[pos])
             action = te._FEATURES.loc_to_tensor_pos(loc, board)
             if not legal[action]:
                 raise ValueError("played point is masked")
             rows["bins"].append(planes[0].astype(np.uint8))
             rows["globs"].append(glob[0])
             rows["legal"].append(legal)
+            rows["legacy_extra"].append(extra)
             rows["played"].append(action)
             rows["mover"].append(int(color == "W"))
             rows["t"].append(t)
@@ -78,6 +92,8 @@ def extract(m, device="cuda"):
     backbone.eval()
     profiles = torch.as_tensor(neutral_rows(), device=device, dtype=torch.float32)
     config = backbone.config
+    old_mask_states = old_mask_actions = 0
+    old_mass_sum = old_mass_max = 0.
     with ProcessPoolExecutor(max_workers=8, mp_context=mp.get_context("spawn"),
                              initializer=te.init_worker, initargs=(config,)) as pool:
         for start_g in range(0, n, 64):
@@ -101,6 +117,14 @@ def extract(m, device="cuda"):
                 trunk[:, 361, -1] = 1
                 base = F.log_softmax(post[0][:, 0].float().masked_fill(~inputs["legal"], -torch.inf), -1)
                 prob = base.exp()
+                extra_legal = inputs["legacy_extra"]
+                if extra_legal.any():
+                    legacy_policy = F.softmax(post[0][:, 0].float().masked_fill(~(inputs["legal"] | extra_legal), -torch.inf), -1)
+                    legacy_mass = (legacy_policy * extra_legal).sum(-1)
+                    old_mask_states += int(extra_legal.any(-1).sum())
+                    old_mask_actions += int(extra_legal.sum())
+                    old_mass_sum += legacy_mass.sum().item()
+                    old_mass_max = max(old_mass_max, legacy_mass.max().item())
                 shape, previous, relative, summary = local_geometry(planes, prob)
                 win = F.softmax(post[1].float(), -1)
                 entropy = -(prob * base.masked_fill(~inputs["legal"], 0)).sum(-1)
@@ -140,4 +164,7 @@ def extract(m, device="cuda"):
     norm["fixed_global_projection"] = projection
     data["global_key"] = torch.cat([gz, control], -1)
     data["local_key"] = torch.cat([gz, lz], -1)
+    data["mask_audit"] = {"states": n * 32, "states_with_old_extra": old_mask_states,
+                          "old_extra_actions": old_mask_actions, "old_extra_mass_mean_all_states": old_mass_sum / (n * 32),
+                          "old_extra_mass_max": old_mass_max}
     return data, {k: v.cpu().numpy() for k, v in norm.items()}

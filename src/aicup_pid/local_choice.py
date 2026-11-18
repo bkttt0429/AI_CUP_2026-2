@@ -64,7 +64,7 @@ class ConditionalChoice(nn.Module):
         if not uniform:
             self.key = nn.Sequential(nn.Linear(context_dim, hidden), nn.GELU(), nn.Linear(hidden, hidden))
 
-    def forward(self, context, actions, baseline, reference_context, reference_residual):
+    def forward(self, context, actions, baseline, reference_context, reference_residual, *, describe=False):
         # Reference games are independent units. Within each game there is one null key.
         n, games, positions = reference_residual.shape[:3]
         if min(n, games, positions) < 1:
@@ -73,13 +73,18 @@ class ConditionalChoice(nn.Module):
         if self.uniform:
             memory = (values.sum(2) / (positions + 1)).mean(1).expand(len(context), -1, -1)
             null = context.new_full((len(context), n), 1 / (positions + 1))
+            if describe:
+                effective = torch.full_like(null, positions)
         else:
             logits = torch.einsum("qd,cgtd->qcgt", self.key(context), self.key(reference_context)) / math.sqrt(self.hidden)
             weights = F.softmax(F.pad(logits.float(), (0, 1)), -1)
             memory = torch.einsum("qcgt,cgtd->qcd", weights[..., :-1].to(values.dtype), values) / games
             null = weights[..., -1].mean(2)
+            if describe:
+                effective = logits.float().softmax(-1).square().sum(-1).reciprocal().mean(2)
         correction = torch.einsum("qad,qcd->qca", self.embed(actions), memory) / math.sqrt(self.hidden)
-        return F.log_softmax(baseline.float()[:, None] + 2 * torch.tanh(correction.float()), -1), null
+        lp = F.log_softmax(baseline.float()[:, None] + 2 * torch.tanh(correction.float()), -1)
+        return (lp, null, effective) if describe else (lp, null)
 
 
 def phase_permutation(plies, seed):

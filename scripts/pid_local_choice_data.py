@@ -15,6 +15,7 @@ from pid_reference_policy import (
 
 RUN = Path("/work/u2507115/pid_v2/choice_probe_20261116/2993db0b3ed8")
 DEST = RUN / "local_choice_20261118"
+DATA_FILE = DEST / "source_verified_data.json"
 SIZES = {"train": 200, "dev": 50, "test": 100}
 
 
@@ -46,7 +47,7 @@ def data_id(manifest):
 
 
 def read_data():
-    m = json.loads((DEST / "data.json").read_text())
+    m = json.loads(DATA_FILE.read_text())
     if data_id(m) != m["id"]:
         raise ValueError("modified data manifest")
     verify_source(m["checkpoint"])
@@ -56,12 +57,16 @@ def read_data():
 
 
 def prepare():
-    if (DEST / "data.json").exists():
+    if DATA_FILE.exists():
         return read_data()
     old = read_protocol(RUN)
     archive = read_manifest(RUN, verify=False)
     if old["id"] != "7b991b270173" or archive["run_id"] != old["parent_run"]:
         raise ValueError("wrong parent source")
+    files = sorted(TRAIN_DIR.glob("train_*.csv"))
+    actual_sources = [source_record(path) for path in [FOLDS_CSV, *files]]
+    if actual_sources != old["sources"]:
+        raise ValueError("training CSVs or player fold table differ from registered inputs")
     past_rows = old["games"] + archive["games"]
     blocked = {g["owner"] for g in past_rows}
     seen = {physical_signature(g) for g in past_rows}
@@ -71,7 +76,7 @@ def prepare():
                        int(r["n_games"]) >= 10 and r["player_id"] not in blocked}, key=stable_order)
     selected_pool = set(eligible[:300])
     candidates = defaultdict(list)
-    for path in sorted(TRAIN_DIR.glob("train_*.csv")):
+    for path in files:
         with open(path) as file:
             for r in csv.DictReader(file):
                 if r["player_id"] in selected_pool:
@@ -110,10 +115,13 @@ def prepare():
     counts.update(eligible_by_fold_table=len(eligible), prior_physical_games=len({physical_signature(g) for g in past_rows}))
     manifest = {"games": rows, "audit": dict(counts), "sizes": SIZES, "checkpoint": old["checkpoint"],
                 "prior_data": [source_record(RUN / "manifest.json"), source_record(RUN / "refpolicy/manifest.json")],
-                "selection_code": source_record(__file__), "training_sources": old["sources"],
+                "selection_code": source_record(__file__), "training_sources": actual_sources,
                 "test_game_ranks": dict(Counter(g["key"].split(":")[0] for g in fresh_rows))}
     manifest["id"] = data_id(manifest)
-    atomic_json(DEST / "data.json", manifest)
+    initial = DEST / "data.json"
+    if initial.exists() and json.loads(initial.read_text())["games"] != rows:
+        raise ValueError("reconstructed split differs from the initial frozen sample")
+    atomic_json(DATA_FILE, manifest)
     return manifest
 
 
