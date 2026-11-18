@@ -3,8 +3,9 @@
 Fixed before running: both pools, holdouts 2/3. Group by colour and by reference-set
 tertiles of the fraction of moves more than four squares from the preceding opponent
 move (Chebyshev distance, first 256 plies, omit pass pairs). Contrast the high and
-low groups with a paired owner bootstrap. Seek recurrent rivals in split 2 only and
-measure them on split 3 questions that were never used to find the pair.
+low groups with a paired owner bootstrap. Seek recurrent rivals on split 2 query
+errors, then measure them on different split 3 queries. These latter games were
+split 2 references, so this secondary diagnostic shares enrollment evidence.
 """
 from collections import Counter, defaultdict
 import json
@@ -138,7 +139,7 @@ def main():
     result = {"job": os.environ["SLURM_JOB_ID"], "reference": names[0], "alternative": names[1],
               "seeds": [2, 3], "thresholds": thresholds, "baseline_checks": baseline_checks,
               "candidate_sources_sha256": vector_ids, "sources": inputs, "groups": groups, "contrasts": contrasts,
-              "scope": "One-game candidate holdouts, not official questions. Adding four families changes ensemble composition. Descriptive groups."}
+              "scope": "One-game candidate holdouts. Adding four families changes ensemble composition. Recurrent-rival diagnostic shares enrollment games across splits."}
     atomic_json(DEST / "window_rescue_rows.json", rows)
     atomic_json(DEST / "window_rescues.json", result)
     print(json.dumps(groups["all"]), flush=True)
