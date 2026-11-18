@@ -97,18 +97,9 @@ def estimate(data, pair_ids, keep):
     return result
 
 
-def main():
-    guard()
-    parent = json.loads((ROOT / "results/final/identity_crossed_20261118.json").read_text())
-    if parent["archive"] != digest_file(CACHE / "crossed.npz"):
-        raise ValueError("independent roster changed")
-    with np.load(CACHE / "crossed.npz", allow_pickle=False) as z:
-        pairs, keys, owners = z["pairs"], z["keys"], z["owners"]
-    source = Path(read_manifest(RUN, verify=False)["source_root"])
-    phase = source / "data/pid_v2_phase_rows/stored_f2.npz"
-    obs, n, colour = source_rows(keys, phase, owners)
+def phase_comparison(obs, n, colour, pairs, calibration_owners, path):
     valid = (n == [30, 45]).all(-1)
-    whitener = whitening(obs[:, :7], valid[:, :7])
+    whitener = whitening(obs[calibration_owners, :7], valid[calibration_owners, :7])
     whitened = np.einsum("ngpd,pde->ngpe", obs, whitener, optimize=True)
     raw, details, results = [], [], []
     for u, (a, b) in enumerate(pairs):
@@ -133,13 +124,27 @@ def main():
     raw = np.asarray(raw)
     full = estimate(data, details[:, 0], np.ones(len(data), bool))
     same_colour = estimate(data, details[:, 0], details[:, 3] == 1)
-    path = CACHE / "sessions.npz"
     atomic_npz(path, raw=raw, details=details, data=data, counts=n, colour=colour, whitener=whitener)
-    atomic_json(OUT, {"plan": digest_file(PLAN), "code": digest_file(__file__), "archive": digest_file(path),
-                      "phase_source": {"path": str(phase), "sha": digest_file(phase)}, "valid_games": int(valid.sum()),
-                      "owners_with_evaluation": len(set(details[:, 2])), "all": full, "same_colour": same_colour,
+    return {"archive": digest_file(path), "valid_games": int(valid.sum()), "whitening_owners": len(calibration_owners),
+            "owners_with_evaluation": len(set(details[:, 2])), "all": full, "same_colour": same_colour}
+
+
+def main():
+    guard()
+    parent = json.loads((ROOT / "results/final/identity_crossed_20261118.json").read_text())
+    if parent["archive"] != digest_file(CACHE / "crossed.npz"):
+        raise ValueError("independent roster changed")
+    with np.load(CACHE / "crossed.npz", allow_pickle=False) as z:
+        pairs, keys, owners = z["pairs"], z["keys"], z["owners"]
+    source = Path(read_manifest(RUN, verify=False)["source_root"])
+    phase = source / "data/pid_v2_phase_rows/stored_f2.npz"
+    obs, n, colour = source_rows(keys, phase, owners)
+    primary = phase_comparison(obs, n, colour, pairs, np.unique(pairs), CACHE / "sessions.npz")
+    control = phase_comparison(obs, n, colour, pairs, np.arange(len(owners)), CACHE / "sessions_all_roster.npz")
+    atomic_json(OUT, {**primary, "plan": digest_file(PLAN), "code": digest_file(__file__),
+                      "phase_source": {"path": str(phase), "sha": digest_file(phase)}, "full_roster_whitening_sensitivity": control,
                       "early_decisions": 30, "middle_decisions": 45})
-    print("equal-budget phase comparison", full, flush=True)
+    print("equal-budget phase comparison", primary["all"], flush=True)
 
 
 if __name__ == "__main__":

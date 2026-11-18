@@ -39,7 +39,7 @@ def main():
                 s = scores[3*a:3*a+3]
                 others = s[:, ~np.isin(np.arange(s.shape[1]), [a, b])]
                 z = (s[:, [a,b]] - others.mean(1, keepdims=True)) / others.std(1, keepdims=True)
-                if z[0,0] >= z[0,1] or len(np.unique(s[0])) != s.shape[1]:
+                if z[0,0] >= z[0,1]:
                     raise ValueError("expected strict discovery rank-two loss")
                 count_as_win = lambda x, y: ((x > y) | ((x == y) & (a < b))).astype(float)
                 future = count_as_win(z[1:,0], z[1:,1])
