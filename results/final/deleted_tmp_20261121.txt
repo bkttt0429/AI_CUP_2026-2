@@ -1,0 +1,4 @@
+# deleted 2026-11-21 04:52:28: temporary, regenerable data of the last verdicts (user 2026-11-21 04:4x "好需要" to the closing list; METHOD_NOTES 2.247)
+/work/u2507115/pid_v2/vtmp8	3744 entries
+/work/u2507115/pid_v2/orig_ft	128 entries
+/work/u2507115/pid_v2/ply_origq	56 entries
