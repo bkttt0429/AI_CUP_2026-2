@@ -1,0 +1,423 @@
+{
+ "doc": "v2bgm_d2",
+ "pools": {
+  "pub2": {
+   "questions": 7200,
+   "score": 0.6085999079517965,
+   "top1": 0.5486111111111112,
+   "owner_within": {
+    "1": 0.5486111111111112,
+    "2": 0.6806944444444445,
+    "5": 0.8125,
+    "10": 0.8786111111111111,
+    "20": 0.9256944444444445,
+    "50": 0.9684722222222222,
+    "100": 0.9876388888888888
+   },
+   "loss_share_by_rank": {
+    "2-5": 0.5209505469995952,
+    "6-20": 0.2892039290335777,
+    "beyond 20": 0.18984552396682708
+   },
+   "per_candidate": {
+    "questions_each": 12.0,
+    "variance_observed": 0.08580825617283952,
+    "variance_if_equal_chances": 0.020636413323045267,
+    "ratio": 4.158099318403116,
+    "never_right": 0.028333333333333332,
+    "always_right": 0.115,
+    "at_most_a_quarter_right": 0.235,
+    "at_least_three_quarters_right": 0.345,
+    "share_of_errors_from_worst_fifth": 0.37784615384615383,
+    "distinct_games": 4579,
+    "games_per_candidate": 7.631666666666667,
+    "same_game_same_outcome_across_seeds": 0.9231273203756278,
+    "variance_between_players": 0.06431117722987992,
+    "variance_between_games_of_a_player": 0.16532735117191533,
+    "share_of_variance_that_is_the_player": 0.2800539512139512,
+    "sd_of_players_own_rates": 0.2535964850503254
+   },
+   "wrong_answers": {
+    "errors": 3250,
+    "top_5pct_hubs_share": 0.12984615384615383,
+    "max_hub": 17,
+    "hub_expected_if_uniform": 5.416666666666667,
+    "share_in_mutual_pairs": 0.24707692307692308,
+    "share_repeated_same_wrong_candidate": 0.46215384615384614,
+    "distinct_owner_thief_pairs": 2330
+   },
+   "by_game": {
+    "colour": {
+     "B": [
+      3512,
+      0.6424729794824693
+     ],
+     "W": [
+      3688,
+      0.5763433387501362
+     ]
+    },
+    "handicap": {
+     "0": [
+      5390,
+      0.6007512888922436
+     ],
+     "1": [
+      1810,
+      0.6319723149854927
+     ]
+    },
+    "plies": {
+     "100-150": [
+      889,
+      0.5219467218754442
+     ],
+     "150-200": [
+      1751,
+      0.5848693135678437
+     ],
+     "200-250": [
+      2272,
+      0.617536063684927
+     ],
+     "250-": [
+      2288,
+      0.6515562048759685
+     ]
+    }
+   },
+   "groups": {
+    "by-games": {
+     "weight": 558,
+     "score_alone": 0.5989595600421906,
+     "top1_alone": 0.5408333333333334
+    },
+    "first set": {
+     "weight": 288,
+     "score_alone": 0.5806813468062059,
+     "top1_alone": 0.5230555555555556
+    },
+    "js uniform": {
+     "weight": 216,
+     "score_alone": 0.5886273804424131,
+     "top1_alone": 0.5304166666666666
+    },
+    "plain uniform": {
+     "weight": 72,
+     "score_alone": 0.5683139780853513,
+     "top1_alone": 0.5111111111111111
+    }
+   },
+   "agreement_on_errors": {
+    "groups": 4,
+    "all_groups_pick_the_same_wrong": 0.31846153846153846,
+    "mean_groups_on_the_wrong": 2.391384615384615,
+    "some_group_picks_the_owner": 0.21046153846153845,
+    "no_group_picks_the_owner_or_the_wrong": 0.09507692307692307,
+    "oracle_any_group_right": 0.6263888888888889
+   },
+   "by_reference_games": {
+    "1": [
+     0.3484627726851765,
+     0.29583333333333334
+    ],
+    "2": [
+     0.47112725843066705,
+     0.41500000000000004
+    ],
+    "4": [
+     0.5620002919512488,
+     0.5016666666666667
+    ],
+    "7": [
+     0.6068236858566818,
+     0.5425
+    ]
+   },
+   "by_candidates": {
+    "100": [
+     0.8089789658853028,
+     0.7646527777777778
+    ],
+    "200": [
+     0.7409455947927288,
+     0.6889583333333333
+    ],
+    "300": [
+     0.6956082841054644,
+     0.6402083333333334
+    ],
+    "450": [
+     0.646191795816579,
+     0.5879861111111111
+    ],
+    "600": [
+     0.6085999079517965,
+     0.5486111111111112
+    ]
+   },
+   "owner_vs_best_other": {
+    "owner_mean": 3.6002180320839994,
+    "owner_sd": 1.22383017193906,
+    "best_other_mean": 3.3849701081797465,
+    "best_other_sd": 0.673332810938363,
+    "owner_variance_within_player": 0.7106579154933652,
+    "owner_variance_between_players": 0.787102374255024,
+    "sd_of_player_means": 0.9199586225547345
+   },
+   "multi": {
+    "2 pooled": [
+     0.79838786754223,
+     0.75125
+    ],
+    "2 summed": [
+     0.7969643903972902,
+     0.7504166666666667
+    ],
+    "3 pooled": [
+     0.8673835024648884,
+     0.8316666666666667
+    ],
+    "3 summed": [
+     0.8662915411459278,
+     0.8291666666666667
+    ]
+   },
+   "real": {
+    "1": {
+     "questions": 100,
+     "median_margin": 2.0753403065077594,
+     "pseudo_median_margin": 2.202119129690047,
+     "expected_score": 0.5944267961321019
+    },
+    "2": {
+     "questions": 100,
+     "median_margin": 3.2352100610683596,
+     "pseudo_median_margin": 3.6180518651061675,
+     "expected_score": 0.7787461939830069
+    },
+    "3": {
+     "questions": 100,
+     "median_margin": 5.613779732262746,
+     "pseudo_median_margin": 4.789513515435294,
+     "expected_score": 0.8885425990458036
+    },
+    "5": {
+     "questions": 100,
+     "median_margin": 5.943147554420182,
+     "pseudo_median_margin": 4.789513515435294,
+     "expected_score": 0.8926054022847748
+    }
+   }
+  },
+  "priv2": {
+   "questions": 7200,
+   "score": 0.6252035400812582,
+   "top1": 0.5680555555555555,
+   "owner_within": {
+    "1": 0.5680555555555555,
+    "2": 0.6945833333333333,
+    "5": 0.8222222222222222,
+    "10": 0.8931944444444444,
+    "20": 0.9376388888888889,
+    "50": 0.975,
+    "100": 0.9909722222222223
+   },
+   "loss_share_by_rank": {
+    "2-5": 0.5256684713182158,
+    "6-20": 0.3079449221363771,
+    "beyond 20": 0.16638660654540713
+   },
+   "per_candidate": {
+    "questions_each": 12.0,
+    "variance_observed": 0.08566936728395061,
+    "variance_if_equal_chances": 0.020447370113168724,
+    "ratio": 4.189749919417605,
+    "never_right": 0.03333333333333333,
+    "always_right": 0.115,
+    "at_most_a_quarter_right": 0.21666666666666667,
+    "at_least_three_quarters_right": 0.3516666666666667,
+    "share_of_errors_from_worst_fifth": 0.3964630225080386,
+    "distinct_games": 4579,
+    "games_per_candidate": 7.631666666666667,
+    "same_game_same_outcome_across_seeds": 0.9266215330858266,
+    "variance_between_players": 0.06323987872821557,
+    "variance_between_games_of_a_player": 0.16507510647278284,
+    "share_of_variance_that_is_the_player": 0.27698523017462906,
+    "sd_of_players_own_rates": 0.25147540382354605
+   },
+   "wrong_answers": {
+    "errors": 3110,
+    "top_5pct_hubs_share": 0.1495176848874598,
+    "max_hub": 24,
+    "hub_expected_if_uniform": 5.183333333333334,
+    "share_in_mutual_pairs": 0.23183279742765273,
+    "share_repeated_same_wrong_candidate": 0.477491961414791,
+    "distinct_owner_thief_pairs": 2211
+   },
+   "by_game": {
+    "colour": {
+     "B": [
+      3475,
+      0.6621122357249103
+     ],
+     "W": [
+      3725,
+      0.5907719381049656
+     ]
+    },
+    "handicap": {
+     "0": [
+      5547,
+      0.6245424682857595
+     ],
+     "1": [
+      1653,
+      0.6274219098632502
+     ]
+    },
+    "plies": {
+     "100-150": [
+      890,
+      0.5571027845929674
+     ],
+     "150-200": [
+      1615,
+      0.5957236717972937
+     ],
+     "200-250": [
+      2308,
+      0.6374705307626907
+     ],
+     "250-": [
+      2387,
+      0.6586796377647257
+     ]
+    }
+   },
+   "groups": {
+    "by-games": {
+     "weight": 558,
+     "score_alone": 0.6123893062167368,
+     "top1_alone": 0.5531944444444444
+    },
+    "first set": {
+     "weight": 288,
+     "score_alone": 0.599917433490628,
+     "top1_alone": 0.5454166666666667
+    },
+    "js uniform": {
+     "weight": 216,
+     "score_alone": 0.6079132858461567,
+     "top1_alone": 0.5525
+    },
+    "plain uniform": {
+     "weight": 72,
+     "score_alone": 0.5789599199732601,
+     "top1_alone": 0.5258333333333334
+    }
+   },
+   "agreement_on_errors": {
+    "groups": 4,
+    "all_groups_pick_the_same_wrong": 0.3295819935691318,
+    "mean_groups_on_the_wrong": 2.401929260450161,
+    "some_group_picks_the_owner": 0.20643086816720257,
+    "no_group_picks_the_owner_or_the_wrong": 0.09967845659163987,
+    "oracle_any_group_right": 0.6397222222222222
+   },
+   "by_reference_games": {
+    "1": [
+     0.366086552636227,
+     0.31416666666666665
+    ],
+    "2": [
+     0.48026425907404063,
+     0.42083333333333334
+    ],
+    "4": [
+     0.5736338294734762,
+     0.5125
+    ],
+    "7": [
+     0.6220218081895703,
+     0.5629166666666667
+    ]
+   },
+   "by_candidates": {
+    "100": [
+     0.8231299608495208,
+     0.7791319444444444
+    ],
+    "200": [
+     0.7521338984518888,
+     0.7004861111111111
+    ],
+    "300": [
+     0.7079257162439854,
+     0.6537847222222223
+    ],
+    "450": [
+     0.6593374369676881,
+     0.6028819444444444
+    ],
+    "600": [
+     0.6252035400812583,
+     0.5680555555555555
+    ]
+   },
+   "owner_vs_best_other": {
+    "owner_mean": 3.6208327486302387,
+    "owner_sd": 1.1819990909086069,
+    "best_other_mean": 3.3593941540050714,
+    "best_other_sd": 0.6443696018197915,
+    "owner_variance_within_player": 0.6209799123156131,
+    "owner_variance_between_players": 0.7761419385931599,
+    "sd_of_player_means": 0.9098847534822535
+   },
+   "multi": {
+    "2 pooled": [
+     0.8105707351380423,
+     0.7679166666666666
+    ],
+    "2 summed": [
+     0.8098130125350367,
+     0.7666666666666667
+    ],
+    "3 pooled": [
+     0.8774490962757217,
+     0.8416666666666667
+    ],
+    "3 summed": [
+     0.8776327696194359,
+     0.84375
+    ]
+   },
+   "real": {
+    "1": {
+     "questions": 100,
+     "median_margin": 2.416426460786126,
+     "pseudo_median_margin": 2.2431525343792114,
+     "expected_score": 0.6402015928745929
+    },
+    "2": {
+     "questions": 100,
+     "median_margin": 3.9363526062055048,
+     "pseudo_median_margin": 3.57558965676401,
+     "expected_score": 0.7979023728079655
+    },
+    "3": {
+     "questions": 100,
+     "median_margin": 3.885046585006828,
+     "pseudo_median_margin": 4.865070356562022,
+     "expected_score": 0.8634920792945193
+    },
+    "5": {
+     "questions": 100,
+     "median_margin": 6.571636735103127,
+     "pseudo_median_margin": 4.865070356562022,
+     "expected_score": 0.9097338712199179
+    }
+   }
+  }
+ }
+}

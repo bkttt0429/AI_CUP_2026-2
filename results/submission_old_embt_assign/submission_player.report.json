@@ -1,0 +1,210 @@
+{
+ "submission": "/work/u2507115/pid_b3/oldcheck_1110/embt/submission_player.csv",
+ "rows": 800,
+ "pools": [
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_candidates_public.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_test_public.csv",
+   "n_candidates": 400,
+   "n_candidate_games": 40000,
+   "n_candidate_games_used": 40000,
+   "candidate_game_ids_unique": true,
+   "n_questions": 400,
+   "dropped_games": [],
+   "fallback_questions": [],
+   "median_top1_margin": 9.415506643321553,
+   "assign": {
+    "mode": "auto",
+    "applied": true,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 400,
+     "distinct_top1": 399,
+     "expected_random": 253.03235509572292,
+     "by_n": {
+      "5": 100,
+      "10": 100,
+      "15": 100,
+      "20": 100
+     },
+     "one_to_one_likely": true,
+     "confident_distinct": 1.0,
+     "one_to_one_likely_v2": true
+    },
+    "n_top1_changed": 1,
+    "blocks": {
+     "orig": {
+      "applied": true,
+      "top1_collisions": {
+       "n_questions": 400,
+       "n_candidates": 400,
+       "distinct_top1": 399,
+       "expected_random": 253.03235509572292,
+       "by_n": {
+        "5": 100,
+        "10": 100,
+        "15": 100,
+        "20": 100
+       },
+       "one_to_one_likely": true,
+       "confident_distinct": 1.0,
+       "one_to_one_likely_v2": true
+      },
+      "n_top1_changed": 1
+     }
+    }
+   },
+   "b3": null,
+   "seconds": 139.41500306129456
+  },
+  {
+   "candidates": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_candidates_private.csv",
+   "questions": "/home/u2507115/BK_AICUP_2026-2/data/tests/player_identification_test_private.csv",
+   "n_candidates": 400,
+   "n_candidate_games": 40000,
+   "n_candidate_games_used": 40000,
+   "candidate_game_ids_unique": true,
+   "n_questions": 400,
+   "dropped_games": [],
+   "fallback_questions": [],
+   "median_top1_margin": 9.438837854116375,
+   "assign": {
+    "mode": "auto",
+    "applied": true,
+    "top1_collisions": {
+     "n_questions": 400,
+     "n_candidates": 400,
+     "distinct_top1": 399,
+     "expected_random": 253.03235509572292,
+     "by_n": {
+      "5": 99,
+      "10": 100,
+      "15": 100,
+      "20": 100
+     },
+     "one_to_one_likely": true,
+     "confident_distinct": 1.0,
+     "one_to_one_likely_v2": true
+    },
+    "n_top1_changed": 1,
+    "blocks": {
+     "orig": {
+      "applied": true,
+      "top1_collisions": {
+       "n_questions": 400,
+       "n_candidates": 400,
+       "distinct_top1": 399,
+       "expected_random": 253.03235509572292,
+       "by_n": {
+        "5": 99,
+        "10": 100,
+        "15": 100,
+        "20": 100
+       },
+       "one_to_one_likely": true,
+       "confident_distinct": 1.0,
+       "one_to_one_likely_v2": true
+      },
+      "n_top1_changed": 1
+     }
+    }
+   },
+   "b3": null,
+   "seconds": 141.84777164459229
+  }
+ ],
+ "fusion": {
+  "components": [
+   "opening",
+   "style",
+   "local",
+   "orient",
+   "ref",
+   "trunk",
+   "emb"
+  ],
+  "weights": [
+   2.7617524389472843,
+   0.19215938946065994,
+   0.35469342424774414,
+   0.5487202671177812,
+   0.5366011328942667,
+   1.6312136422513395,
+   2.705029700905927
+  ],
+  "cfg": {
+   "depth": 12,
+   "alpha": 2.0,
+   "beta": 5.0,
+   "shrink": 0.1,
+   "local_alpha": 2.0,
+   "local_beta": 5.0,
+   "local_start": 12,
+   "orient_alpha": 2.0,
+   "orient_beta": 5.0,
+   "orient_depth": 12,
+   "orient_raw": 1,
+   "ref_alpha": 2.0,
+   "ref_beta": 5.0,
+   "ref_min_black": 30,
+   "ref_cap": 40,
+   "ref_orient_raw": 2,
+   "ref_seed": 0,
+   "trunk_feats": "all",
+   "trunk_shrink": 0.1
+  },
+  "fitted_on_pools": [
+   [
+    1,
+    2
+   ],
+   [
+    3,
+    4
+   ]
+  ],
+  "questions": 2631,
+  "ref_folds_official": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "trunk_store_official": "data/trunk/official",
+  "emb_model_official": "results/embed/emb_final.pt",
+  "note": "emb trained on training folds 1-4 only: no official candidate or question game enters any training",
+  "git_head": "24207b2",
+  "git_dirty": true,
+  "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+  "code_files": [
+   "src/aicup/gamevec.py",
+   "src/aicup/ladder_data.py",
+   "src/aicup/aggregators.py",
+   "src/aicup/settrain.py",
+   "src/aicup/rankmodel.py",
+   "src/aicup/qfeatures.py",
+   "src/aicup/metric.py"
+  ],
+  "torch_version": "2.14.1+cu126",
+  "device_name": "cpu",
+  "pid_git_head": "a9166e5",
+  "pid_git_dirty": true
+ },
+ "problems": [],
+ "git_head": "24207b2",
+ "git_dirty": true,
+ "code_sha256": "eef9a86c1cd14f32e032dccc1e60d0cf185e1071e99fd0cdb5966aa88079d647",
+ "code_files": [
+  "src/aicup/gamevec.py",
+  "src/aicup/ladder_data.py",
+  "src/aicup/aggregators.py",
+  "src/aicup/settrain.py",
+  "src/aicup/rankmodel.py",
+  "src/aicup/qfeatures.py",
+  "src/aicup/metric.py"
+ ],
+ "torch_version": "2.14.1+cu126",
+ "device_name": "cpu",
+ "pid_git_head": "a9166e5",
+ "pid_git_dirty": true
+}

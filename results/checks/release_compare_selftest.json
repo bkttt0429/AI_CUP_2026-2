@@ -1,0 +1,228 @@
+{
+ "public": {
+  "old": {
+   "candidates": 400,
+   "candidate_games": 40000,
+   "games_per_candidate": {
+    "100": 400
+   },
+   "questions": 400,
+   "n_mix": {
+    "5": 100,
+    "10": 100,
+    "15": 100,
+    "20": 100
+   },
+   "colours_candidates": {
+    "B": 40000
+   },
+   "colours_questions": {
+    "B": 5000
+   },
+   "hd_candidates": {
+    "0": 33352,
+    "1": 6648
+   },
+   "hd_questions": {
+    "0": 4223,
+    "1": 777
+   },
+   "first_corner_candidates": {
+    "RT": 31935,
+    "RB": 4326,
+    "LB": 2739,
+    "LT": 712,
+    "CM": 206,
+    "RM": 62
+   },
+   "first_corner_questions": {
+    "RT": 4000,
+    "RB": 502,
+    "LB": 377,
+    "LT": 78,
+    "CM": 31,
+    "RM": 8
+   },
+   "first_move_modal_share_median": 0.98,
+   "first_move_modal_share_ge_0.9": 262,
+   "length_quantiles_candidates_first2000": [
+    149,
+    229,
+    289
+   ]
+  },
+  "new": {
+   "candidates": 400,
+   "candidate_games": 40000,
+   "games_per_candidate": {
+    "100": 400
+   },
+   "questions": 400,
+   "n_mix": {
+    "5": 100,
+    "10": 100,
+    "15": 100,
+    "20": 100
+   },
+   "colours_candidates": {
+    "B": 40000
+   },
+   "colours_questions": {
+    "B": 5000
+   },
+   "hd_candidates": {
+    "0": 33352,
+    "1": 6648
+   },
+   "hd_questions": {
+    "0": 4223,
+    "1": 777
+   },
+   "first_corner_candidates": {
+    "RT": 31935,
+    "RB": 4326,
+    "LB": 2739,
+    "LT": 712,
+    "CM": 206,
+    "RM": 62
+   },
+   "first_corner_questions": {
+    "RT": 4000,
+    "RB": 502,
+    "LB": 377,
+    "LT": 78,
+    "CM": 31,
+    "RM": 8
+   },
+   "first_move_modal_share_median": 0.98,
+   "first_move_modal_share_ge_0.9": 262,
+   "length_quantiles_candidates_first2000": [
+    149,
+    229,
+    289
+   ]
+  },
+  "compare": {
+   "candidate_files_identical": true,
+   "new_candidate_games_seen_in_old_candidates": 40000,
+   "new_candidate_games_seen_in_old_questions": 0,
+   "new_question_games_seen_in_old_candidates": 0,
+   "new_question_games_seen_in_old_questions": 5000,
+   "same_candidate_ids": true,
+   "same_question_ids": true
+  }
+ },
+ "private": {
+  "old": {
+   "candidates": 400,
+   "candidate_games": 40000,
+   "games_per_candidate": {
+    "100": 400
+   },
+   "questions": 400,
+   "n_mix": {
+    "5": 100,
+    "10": 100,
+    "15": 100,
+    "20": 100
+   },
+   "colours_candidates": {
+    "B": 40000
+   },
+   "colours_questions": {
+    "B": 5000
+   },
+   "hd_candidates": {
+    "0": 33194,
+    "1": 6806
+   },
+   "hd_questions": {
+    "0": 4115,
+    "1": 885
+   },
+   "first_corner_candidates": {
+    "RT": 33459,
+    "RB": 3422,
+    "LB": 2228,
+    "LT": 508,
+    "CM": 319,
+    "RM": 58
+   },
+   "first_corner_questions": {
+    "RT": 4211,
+    "RB": 408,
+    "LB": 252,
+    "LT": 71,
+    "CM": 49,
+    "RM": 8
+   },
+   "first_move_modal_share_median": 0.98,
+   "first_move_modal_share_ge_0.9": 249,
+   "length_quantiles_candidates_first2000": [
+    144,
+    223,
+    286
+   ]
+  },
+  "new": {
+   "candidates": 400,
+   "candidate_games": 40000,
+   "games_per_candidate": {
+    "100": 400
+   },
+   "questions": 400,
+   "n_mix": {
+    "5": 100,
+    "10": 100,
+    "15": 100,
+    "20": 100
+   },
+   "colours_candidates": {
+    "B": 40000
+   },
+   "colours_questions": {
+    "B": 5000
+   },
+   "hd_candidates": {
+    "0": 33194,
+    "1": 6806
+   },
+   "hd_questions": {
+    "0": 4115,
+    "1": 885
+   },
+   "first_corner_candidates": {
+    "RT": 33459,
+    "RB": 3422,
+    "LB": 2228,
+    "LT": 508,
+    "CM": 319,
+    "RM": 58
+   },
+   "first_corner_questions": {
+    "RT": 4211,
+    "RB": 408,
+    "LB": 252,
+    "LT": 71,
+    "CM": 49,
+    "RM": 8
+   },
+   "first_move_modal_share_median": 0.98,
+   "first_move_modal_share_ge_0.9": 249,
+   "length_quantiles_candidates_first2000": [
+    144,
+    223,
+    286
+   ]
+  },
+  "compare": {
+   "candidate_files_identical": true,
+   "new_candidate_games_seen_in_old_candidates": 40000,
+   "new_candidate_games_seen_in_old_questions": 0,
+   "new_question_games_seen_in_old_candidates": 0,
+   "new_question_games_seen_in_old_questions": 5000,
+   "same_candidate_ids": true,
+   "same_question_ids": true
+  }
+ }
+}

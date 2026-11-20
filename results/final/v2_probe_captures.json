@@ -1,0 +1,53 @@
+{
+ "games": 3000,
+ "plies": 667030,
+ "games_with_setup_stones": 81,
+ "games_with_a_capture": 2926,
+ "captured_stones_per_game": 13.506,
+ "by_window": {
+  "5": {
+   "plies_with_a_wrong_cell": 0.10082604980285745,
+   "wrong_cells_per_window": 0.13037644483756353,
+   "wrong_cells_given_any": 1.2930829393047254,
+   "plies_with_3_or_more": 0.005881294694391557
+  },
+  "9": {
+   "plies_with_a_wrong_cell": 0.25745618637842377,
+   "wrong_cells_per_window": 0.47807894697389924,
+   "wrong_cells_given_any": 1.8569332269654284,
+   "plies_with_3_or_more": 0.05112213843455317
+  },
+  "13": {
+   "plies_with_a_wrong_cell": 0.38974558865418346,
+   "wrong_cells_per_window": 0.9731106546931922,
+   "wrong_cells_given_any": 2.496784269075131,
+   "plies_with_3_or_more": 0.12617873259073806
+  }
+ },
+ "by_ply": {
+  "0-60": {
+   "plies": 180000,
+   "plies_with_a_wrong_cell_9": 0.06137777777777778,
+   "wrong_cells_per_window_9": 0.07601111111111111,
+   "wrong_cells_on_board": 0.3126888888888889
+  },
+  "60-120": {
+   "plies": 179006,
+   "plies_with_a_wrong_cell_9": 0.16750835167536285,
+   "wrong_cells_per_window_9": 0.2372490307587455,
+   "wrong_cells_on_board": 1.4963911824184664
+  },
+  "120-180": {
+   "plies": 159386,
+   "plies_with_a_wrong_cell_9": 0.3086406585270977,
+   "wrong_cells_per_window_9": 0.49442234575182264,
+   "wrong_cells_on_board": 3.457813107801187
+  },
+  "180-400": {
+   "plies": 148638,
+   "plies_with_a_wrong_cell_9": 0.5483456451243962,
+   "wrong_cells_per_window_9": 1.2374897401741143,
+   "wrong_cells_on_board": 8.273799432177505
+  }
+ }
+}

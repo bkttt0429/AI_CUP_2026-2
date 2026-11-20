@@ -31,7 +31,41 @@ sys.path[:0] = [str(AICUP1 / "src"), str(AICUP1 / "logs/nano4"), str(R2 / "src")
 import m88_seqid as m88  # noqa: E402
 
 
+def _exact(net, A):
+    """A for a network with the exact window (pid_winx.py, METHOD_NOTES 2.180): its colours carry the removal plies
+    (computed once per set of arrays). Any other network: A as it is."""
+    if A is None or not getattr(net, "win_exact", False):
+        return A
+    if "MOVX" not in A:
+        import pid_winx
+        A["MOVX"] = pid_winx.pack_mov(A["POS"], A["MOV"], A["LEN"])
+    return dict(A, MOV=A["MOVX"])
+
+
+DP = False  # --dp: the fine-tune's training forward is split over the visible GPUs (the loss stays on GPU 0)
+
+
+def _training_forward(net):
+    """The network itself, or with --dp and two or more visible GPUs a DataParallel copy of it for the training forward
+    (the same construction as the trainer's parallel helper: autocast is set again inside every replica thread). For the
+    512x10 networks with the second window, whose 2,048-game episode does not fit one 140 GB card (METHOD_NOTES 2.204)."""
+    if not DP or torch.cuda.device_count() < 2:
+        return net
+
+    class BF16Replica(torch.nn.Module):
+        def __init__(self, base):
+            super().__init__()
+            self.base = base
+
+        def forward(self, *args, **kwargs):
+            with torch.autocast("cuda", dtype=torch.bfloat16, enabled=torch.is_autocast_enabled("cuda")):
+                return self.base(*args, **kwargs)
+
+    return torch.nn.DataParallel(BF16Replica(net), device_ids=list(range(torch.cuda.device_count())))
+
+
 def embed(net, A, idx, batch=1024):
+    A = _exact(net, A)
     net.eval()
     out = np.zeros((len(idx), m88.D_OUT), np.float32)
     with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
@@ -52,6 +86,7 @@ def sym_table():
 
 def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=None, mix=None, warm=50, views=1, sym_aug=False):
     """A: arrays of every pool game; owner [n] candidate index or -1 (question game). Calls save(step, vectors) at steps_out."""
+    A, mix = _exact(net, A), _exact(net, mix)
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
     cand = np.flatnonzero(owner >= 0)
@@ -85,6 +120,9 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
     hz = horizon or last  # the cosine runs over `horizon` steps even when the fine-tune stops earlier (11-12: the first run's t = 100 came from a 1,000-step schedule)
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / warm) * 0.5 * (1 + math.cos(math.pi * min(s, hz) / hz)))
     net.train()
+    fwd = _training_forward(net)
+    if fwd is not net:
+        log(f"  training forward across {torch.cuda.device_count()} GPUs (--dp)")
     ar, tl, ta, t0 = np.arange(p_ep), 0.0, 0.0, time.time()
     for step in range(last):
         n_pool = p_ep if mix_by is None else p_ep // 2
@@ -97,7 +135,7 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
         if sym_aug:  # one random board symmetry per step, on the played points (as scripts/pid_seq_train.py --sym-aug)
             batch["POS"] = SYM[rng_sym.integers(8)][batch["POS"].astype(np.int64)]
         with torch.autocast("cuda", dtype=torch.bfloat16):
-            z = net(torch.as_tensor(batch["GL"]).cuda(), torch.as_tensor(batch["POS"].astype(np.int64)).cuda(), torch.as_tensor(batch["MOV"].astype(np.int64)).cuda(),
+            z = fwd(torch.as_tensor(batch["GL"]).cuda(), torch.as_tensor(batch["POS"].astype(np.int64)).cuda(), torch.as_tensor(batch["MOV"].astype(np.int64)).cuda(),
                     torch.as_tensor(batch["LEN"].astype(np.int64)).cuda(), torch.as_tensor(batch["SUBJ"].astype(np.int64)).cuda())
         z = z.float().reshape(p_ep, m_ep, m88.D_OUT)
         tot = z.sum(1)
@@ -132,16 +170,21 @@ def load_net(ckpt, state="best"):
     m88.D, m88.LAYERS, m88.HEADS, m88.FFN = st.get("arch", ARCH0)  # a network trained with pid_seq_train.py --arch is rebuilt at its own size
     net = m88.build_model()
     m88.D, m88.LAYERS, m88.HEADS, m88.FFN = ARCH0
+    if st.get("win"):  # a network with the window input (pid_seq_train_w.py --shape-win, METHOD_NOTES 2.170)
+        import pid_win
+        pid_win.wrap(net, st["win"])
     net.load_state_dict(st["best_state" if state == "best" else "net"])
     net.sup_cfg = st.get("sup")  # pid_seq_train.py --sup-dims: the input dimensions that carry the supervised features (METHOD_NOTES 2.98)
     return net.cuda()
 
 
 def main(argv=None):
+    global DP
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--mode", required=True, choices=("sim", "official", "oldsim"))
+    ap.add_argument("--mode", required=True, choices=("sim", "official", "oldsim", "orig"))
     ap.add_argument("--side", choices=("pub", "priv"), default="pub", help="oldsim: which ORIGINAL pool")
     ap.add_argument("--ply-original", default="/work/u2507115/pid_v2/ply_original")
+    ap.add_argument("--ply-origq", default="/work/u2507115/pid_v2/ply_origq", help="orig mode: per-ply parts of the ORIGINAL pools' question games (pid_v2_ply_extract.py --original-questions)")
     ap.add_argument("--fold", type=int, default=1)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--pool", choices=("pub2", "priv2"), default="pub2")
@@ -164,10 +207,12 @@ def main(argv=None):
     ap.add_argument("--views", type=int, default=1, help="1-8: also write the vectors of the whole pool under that many board symmetries (test-time views of a network "
                                                          "trained with --sym-aug; the same symmetry for every game of the pool; METHOD_NOTES 2.59)")
     ap.add_argument("--sym-aug", action="store_true", help="one random board symmetry per fine-tune step (for networks trained with --sym-aug; METHOD_NOTES 2.69)")
+    ap.add_argument("--dp", action="store_true", help="split the fine-tune's training forward over the visible GPUs (two or more); for networks whose episode does not fit one card")
     ap.add_argument("--warm", type=int, default=50, help="steps of the linear learning-rate warm-up (50: a 50-step fine-tune never leaves the warm-up; METHOD_NOTES 2.55)")
     ap.add_argument("--mix-original", default=None, help="official mode: directory of scripts/pid_v2_ply_extract.py --original; the candidates of the ORIGINAL pool of the same side "
                                                            "(pub for pub2, priv for priv2; never the other side) fill half of every episode (METHOD_NOTES 2.54)")
     a = ap.parse_args(argv)
+    DP = a.dp
     t0 = time.time()
     log = lambda s: print(f"{s} ({time.time() - t0:.0f} s)", flush=True)  # noqa: E731
     out = Path(a.out)
@@ -215,6 +260,27 @@ def main(argv=None):
         players = sorted(cands)
         own = {k: i for i, p in enumerate(players) for k, _ in cands[p]}
         tag, ckpt = f"oldsim_{a.side}_s{a.holdout_seed}_net{a.net}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.net}{a.ckpt_suffix}.pt"
+    elif a.mode == "orig":  # METHOD_NOTES 2.240: the REAL original pool of one side: fine-tuned on its candidates' stored games (ply_original), vectors of those games and of the pool's question games -> orig_<side>_net<v><tag>_t<step>.npz
+        tagname = "public" if a.side == "pub" else "private"
+        c = pd.read_csv(Path(a.tests_dir) / f"player_identification_candidates_{tagname}.csv", dtype=str, keep_default_na=False)
+        players = sorted(c.player_id.unique())
+        pidx = {p: i for i, p in enumerate(players)}
+        own_all = {f"c:{i}:{r.game_id}": pidx[r.player_id] for i, r in enumerate(c.itertuples())}
+        parts = {x: [] for x in ("key", "GL", "POS", "MOV", "LEN", "SUBJ")}
+        for f in sorted(glob.glob(f"{a.ply_original}/ply_*.npz")) + sorted(glob.glob(f"{a.ply_origq}/ply_*.npz")):
+            if f.endswith(".tmp.npz"):
+                continue
+            z = np.load(f)
+            key = z["key"].astype(str)
+            m = np.array([(k in own_all and k.split(":")[2].startswith(a.side + "_g_")) or k.startswith(f"q:{a.side}_q_") for k in key])
+            if m.any():
+                for name in parts:
+                    parts[name].append(key[m] if name == "key" else z[name][m])
+        A = {k: np.concatenate(x) for k, x in parts.items()}
+        own = {k: own_all[k] for k in A["key"].tolist() if k in own_all}
+        assert len(set(own.values())) == len(players), "a candidate of the original pool has no stored game"
+        assert int(sum(k.startswith("q:") for k in A["key"].tolist())) > 0, "no question game of the original pool: run pid_v2_ply_extract.py --original-questions"
+        tag, ckpt = f"orig_{a.side}_net{a.net}{a.tag}", Path(a.ckpt_dir) / f"ckpt_{a.net}{a.ckpt_suffix}.pt"
     else:
         tagname = "public" if a.pool == "pub2" else "private"
         c = pd.read_csv(Path(a.tests_dir) / f"player_identification_candidates2_{tagname}.csv", dtype=str, keep_default_na=False)

@@ -1,0 +1,153 @@
+{
+ "side": "priv",
+ "candidates": [
+  "priv_p_0017",
+  "priv_p_0368"
+ ],
+ "questions": [
+  "priv_q_0115",
+  "priv_q_0255"
+ ],
+ "steps": {
+  "0": {
+   "networks": 32,
+   "prototype_cosine": 0.9602785152382824,
+   "prototype_cosine_z_among_all_pairs": 3.7872561655240795,
+   "share_of_all_pairs_less_alike": 0.9999874686716792,
+   "rank_of_each_other_among_neighbours_median": [
+    1.0,
+    1.0
+   ],
+   "own_games": {
+    "priv_p_0017": {
+     "games": 30,
+     "closer_to_own": 15,
+     "mean": -0.0008376818701412475,
+     "se": 0.005572166421004722
+    },
+    "priv_p_0368": {
+     "games": 30,
+     "closer_to_own": 13,
+     "mean": -0.0006393076469605851,
+     "se": 0.0056332562172307305
+    }
+   },
+   "question_games": {
+    "priv_q_0115": {
+     "games": 5,
+     "closer_to_first": 4,
+     "mean": 0.0169646317615382,
+     "se": 0.01288774070596829,
+     "per_game": [
+      0.0114,
+      0.0346,
+      -0.0243,
+      0.011,
+      0.0522
+     ]
+    },
+    "priv_q_0255": {
+     "games": 20,
+     "closer_to_first": 13,
+     "mean": 0.0013006752065075865,
+     "se": 0.007717990896787535,
+     "per_game": [
+      -0.0226,
+      -0.0647,
+      0.0239,
+      0.0079,
+      0.0688,
+      0.0155,
+      -0.0186,
+      -0.009,
+      0.0079,
+      0.0092,
+      0.0531,
+      0.0364,
+      -0.026,
+      0.0043,
+      0.0046,
+      0.0243,
+      0.0084,
+      0.0117,
+      -0.0445,
+      -0.0644
+     ]
+    }
+   },
+   "per_game_mean_gap": {
+    "priv_q_0115->priv_p_0017 and priv_q_0255->priv_p_0368 minus the opposite": 0.015663956555030615
+   }
+  },
+  "50": {
+   "networks": 32,
+   "prototype_cosine": 0.9512038509564232,
+   "prototype_cosine_z_among_all_pairs": 4.1323511571158775,
+   "share_of_all_pairs_less_alike": 0.9999874686716792,
+   "rank_of_each_other_among_neighbours_median": [
+    1.0,
+    1.0
+   ],
+   "own_games": {
+    "priv_p_0017": {
+     "games": 30,
+     "closer_to_own": 15,
+     "mean": 0.006071750674799748,
+     "se": 0.006846600189985671
+    },
+    "priv_p_0368": {
+     "games": 30,
+     "closer_to_own": 14,
+     "mean": 0.007715206476177281,
+     "se": 0.006666821909085261
+    }
+   },
+   "question_games": {
+    "priv_q_0115": {
+     "games": 5,
+     "closer_to_first": 4,
+     "mean": 0.01441542197582299,
+     "se": 0.020293858222116944,
+     "per_game": [
+      0.005,
+      0.0466,
+      -0.0541,
+      0.0112,
+      0.0635
+     ]
+    },
+    "priv_q_0255": {
+     "games": 20,
+     "closer_to_first": 11,
+     "mean": 0.0004933401373100943,
+     "se": 0.008295943076796583,
+     "per_game": [
+      -0.0266,
+      -0.0815,
+      0.032,
+      0.0214,
+      0.0746,
+      0.0097,
+      -0.0269,
+      -0.0064,
+      -0.004,
+      0.0171,
+      0.049,
+      0.0379,
+      -0.028,
+      0.0034,
+      0.0097,
+      0.018,
+      0.0092,
+      -0.0005,
+      -0.0307,
+      -0.0673
+     ]
+    }
+   },
+   "per_game_mean_gap": {
+    "priv_q_0115->priv_p_0017 and priv_q_0255->priv_p_0368 minus the opposite": 0.013922081838512896
+   }
+  }
+ }
+}

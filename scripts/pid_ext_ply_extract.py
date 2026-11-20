@@ -47,6 +47,7 @@ def main():
     ap.add_argument("--start", type=int, default=0, help="rows [start, stop) of the selection (applied before the shards), for a selection extracted in stages")
     ap.add_argument("--stop", type=int, default=0)
     ap.add_argument("--max-plies", type=int, default=T_MAX, help="store (and run the trunk on) only the first this many plies of a game (METHOD_NOTES 2.70; default 256)")
+    ap.add_argument("--compress", action="store_true", help="write the parts deflate-compressed (np.load reads them the same; METHOD_NOTES 2.164)")
     ap.add_argument("--light", action="store_true", help="no trunk: the parts hold the plies' points and movers only, GLQ is zero (the mean after de-quantisation). For games that only "
                                                          "networks reading the supervised features alone (--sup-only) will train on (METHOD_NOTES 2.126); no GPU is used")
     ap.add_argument("--account-games", type=int, nargs=2, default=None, metavar=("FROM", "TO"),
@@ -107,7 +108,7 @@ def main():
                 q = np.clip(np.rint((np.hstack([g, l])[keep].astype(np.float32) - mu) / sd * Q), -127, 127).astype(np.int8)
             subj = np.array([int(d[4][d[5]][0]) if d[5].any() else 0 for d in done], np.int8)
             tmp = path.with_name(path.name + ".tmp.npz")
-            (np.savez_compressed if a.light else np.savez)(tmp, key=np.array([d[0] for d in done]), LEN=np.minimum(lens, a.max_plies).astype(np.int16), SUBJ=subj, POS=pos[keep].astype(np.int16),
+            (np.savez_compressed if (a.light or a.compress) else np.savez)(tmp, key=np.array([d[0] for d in done]), LEN=np.minimum(lens, a.max_plies).astype(np.int16), SUBJ=subj, POS=pos[keep].astype(np.int16),
                                                            MOV=mover[keep].astype(np.int8), GLQ=q)
             os.replace(tmp, path)
             plies += int(lens.sum())

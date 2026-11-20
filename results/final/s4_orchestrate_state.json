@@ -1,0 +1,154 @@
+{
+ "exclude": [
+  1,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  39,
+  62,
+  69,
+  82,
+  83,
+  145,
+  146,
+  147,
+  155,
+  159,
+  161,
+  166,
+  167,
+  177
+ ],
+ "task": {
+  "ply0": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "ply8": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "ply16": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "ply24": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "ply32": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "ply40": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "sup0": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "sup8": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "sup16": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "sup24": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "check": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o36_g0": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o36_g1": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "vec_o36": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o37_g0": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o37_g1": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "vec_o37": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o38_g0": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o38_g1": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "vec_o38": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o39_g0": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "o39_g1": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "vec_o39": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "chain_v2fin2": {
+   "status": "waiting",
+   "job": null,
+   "tries": 0
+  },
+  "select": {
+   "status": "submitted",
+   "job": "791044",
+   "tries": 1
+  }
+ }
+}

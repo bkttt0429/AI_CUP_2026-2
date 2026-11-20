@@ -1,0 +1,448 @@
+{
+ "nets": [
+  "o22Ss0",
+  "o22Ss1",
+  "o22Ss2",
+  "o22Ss3",
+  "o22SMs0",
+  "o22SMs1",
+  "o22SMs2",
+  "o22SMs3",
+  "o7Ss0",
+  "o7Ss1k30",
+  "o7Ss2",
+  "o7Ss3",
+  "o7SMs0k30",
+  "o7SMs1",
+  "o7SMs2",
+  "o7SMs3k30"
+ ],
+ "groups": {
+  "control: held-out games of known training players": {
+   "n": 1285,
+   "own_rank_0": 0.7844357976653696,
+   "own_cos": [
+    0.584,
+    0.672,
+    0.728,
+    0.774,
+    0.845,
+    0.876
+   ],
+   "own_z": [
+    2.687,
+    3.408,
+    3.952,
+    4.669,
+    5.753,
+    6.615
+   ]
+  },
+  "pub2 vs training": {
+   "n": 600,
+   "cos": [
+    0.634,
+    0.686,
+    0.732,
+    0.786,
+    0.893,
+    0.938
+   ],
+   "z": [
+    2.653,
+    2.972,
+    3.293,
+    3.759,
+    4.968,
+    5.724
+   ],
+   "above_control_cos5": 595,
+   "above_control_cos25": 497,
+   "above_control_z5": 555,
+   "above_control_z25": 254,
+   "top": [
+    [
+     "pub2_p_0400",
+     "d64586c4",
+     0.899,
+     6.75
+    ],
+    [
+     "pub2_p_0162",
+     "4cdae8a2",
+     0.938,
+     6.3
+    ],
+    [
+     "pub2_p_0140",
+     "2f20a069",
+     0.923,
+     6.19
+    ],
+    [
+     "pub2_p_0353",
+     "41676d00",
+     0.922,
+     5.96
+    ],
+    [
+     "pub2_p_0510",
+     "adcb6c69",
+     0.941,
+     5.84
+    ]
+   ]
+  },
+  "priv2 vs training": {
+   "n": 600,
+   "cos": [
+    0.625,
+    0.682,
+    0.725,
+    0.771,
+    0.896,
+    0.941
+   ],
+   "z": [
+    2.622,
+    2.974,
+    3.296,
+    3.651,
+    5.077,
+    5.927
+   ],
+   "above_control_cos5": 598,
+   "above_control_cos25": 479,
+   "above_control_z5": 557,
+   "above_control_z25": 248,
+   "top": [
+    [
+     "priv2_p_0002",
+     "4cdae8a2",
+     0.947,
+     6.89
+    ],
+    [
+     "priv2_p_0250",
+     "4cdae8a2",
+     0.941,
+     6.18
+    ],
+    [
+     "priv2_p_0261",
+     "c2679c29",
+     0.942,
+     6.1
+    ],
+    [
+     "priv2_p_0462",
+     "4354f43e",
+     0.936,
+     6.1
+    ],
+    [
+     "priv2_p_0172",
+     "adcb6c69",
+     0.951,
+     6.06
+    ]
+   ]
+  },
+  "pub vs training": {
+   "n": 400,
+   "cos": [
+    0.645,
+    0.683,
+    0.72,
+    0.761,
+    0.824,
+    0.893
+   ],
+   "z": [
+    2.634,
+    3.008,
+    3.301,
+    3.728,
+    4.535,
+    5.372
+   ],
+   "above_control_cos5": 397,
+   "above_control_cos25": 328,
+   "above_control_z5": 373,
+   "above_control_z25": 176,
+   "top": [
+    [
+     "pub_p_0051",
+     "5b04935d",
+     0.9,
+     7.3
+    ],
+    [
+     "pub_p_0194",
+     "971ff144",
+     0.871,
+     6.67
+    ],
+    [
+     "pub_p_0354",
+     "84639a9d",
+     0.814,
+     6.06
+    ],
+    [
+     "pub_p_0107",
+     "b6c07ad0",
+     0.858,
+     5.78
+    ],
+    [
+     "pub_p_0343",
+     "d5b984b2",
+     0.71,
+     5.37
+    ]
+   ]
+  },
+  "priv vs training": {
+   "n": 400,
+   "cos": [
+    0.621,
+    0.684,
+    0.721,
+    0.759,
+    0.825,
+    0.902
+   ],
+   "z": [
+    2.692,
+    2.985,
+    3.325,
+    3.645,
+    4.513,
+    5.701
+   ],
+   "above_control_cos5": 395,
+   "above_control_cos25": 331,
+   "above_control_z5": 383,
+   "above_control_z25": 170,
+   "top": [
+    [
+     "priv_p_0274",
+     "f1bde187",
+     0.936,
+     6.67
+    ],
+    [
+     "priv_p_0136",
+     "ef79bdb7",
+     0.944,
+     6.13
+    ],
+    [
+     "priv_p_0368",
+     "c63d35f6",
+     0.911,
+     6.03
+    ],
+    [
+     "priv_p_0017",
+     "c63d35f6",
+     0.902,
+     5.88
+    ],
+    [
+     "priv_p_0357",
+     "36631c2d",
+     0.934,
+     5.7
+    ]
+   ]
+  },
+  "pub2 vs original pub (same side)": {
+   "n": 600,
+   "cos": [
+    0.516,
+    0.596,
+    0.652,
+    0.706,
+    0.768,
+    0.802
+   ],
+   "z": [
+    2.024,
+    2.275,
+    2.62,
+    3.006,
+    3.639,
+    3.935
+   ],
+   "above_control_cos5": 476,
+   "above_control_cos25": 246,
+   "above_control_z5": 269,
+   "above_control_z25": 60
+  },
+  "pub2 vs original priv (other side, null)": {
+   "n": 600,
+   "cos": [
+    0.524,
+    0.598,
+    0.651,
+    0.703,
+    0.762,
+    0.788
+   ],
+   "z": [
+    2.006,
+    2.288,
+    2.606,
+    2.955,
+    3.664,
+    4.378
+   ],
+   "above_control_cos5": 475,
+   "above_control_cos25": 236,
+   "above_control_z5": 251,
+   "above_control_z25": 58
+  },
+  "pub2 vs pub2 (other candidates, null)": {
+   "n": 600,
+   "cos": [
+    0.543,
+    0.636,
+    0.696,
+    0.757,
+    0.897,
+    0.923
+   ],
+   "z": [
+    1.977,
+    2.244,
+    2.611,
+    3.056,
+    4.475,
+    5.361
+   ],
+   "above_control_cos5": 536,
+   "above_control_cos25": 364,
+   "above_control_z5": 277,
+   "above_control_z25": 90
+  },
+  "priv2 vs original priv (same side)": {
+   "n": 600,
+   "cos": [
+    0.524,
+    0.594,
+    0.651,
+    0.701,
+    0.76,
+    0.812
+   ],
+   "z": [
+    2.027,
+    2.287,
+    2.596,
+    2.98,
+    3.739,
+    4.637
+   ],
+   "above_control_cos5": 467,
+   "above_control_cos25": 240,
+   "above_control_z5": 249,
+   "above_control_z25": 62
+  },
+  "priv2 vs original pub (other side, null)": {
+   "n": 600,
+   "cos": [
+    0.515,
+    0.591,
+    0.653,
+    0.699,
+    0.758,
+    0.806
+   ],
+   "z": [
+    1.99,
+    2.292,
+    2.596,
+    2.993,
+    3.581,
+    4.509
+   ],
+   "above_control_cos5": 460,
+   "above_control_cos25": 231,
+   "above_control_z5": 266,
+   "above_control_z25": 62
+  },
+  "priv2 vs priv2 (other candidates, null)": {
+   "n": 600,
+   "cos": [
+    0.559,
+    0.638,
+    0.685,
+    0.743,
+    0.902,
+    0.92
+   ],
+   "z": [
+    1.985,
+    2.318,
+    2.648,
+    3.117,
+    4.499,
+    5.203
+   ],
+   "above_control_cos5": 537,
+   "above_control_cos25": 348,
+   "above_control_z5": 286,
+   "above_control_z25": 103
+  },
+  "original pub: own question games vs own 10-game set (same person, unseen by the network)": {
+   "n": 400,
+   "cos": [
+    0.832,
+    0.873,
+    0.899,
+    0.919,
+    0.947,
+    0.962
+   ],
+   "z": [
+    2.631,
+    3.26,
+    3.996,
+    4.766,
+    5.817,
+    6.434
+   ],
+   "above_control_cos5": 400,
+   "above_control_cos25": 400,
+   "above_control_z5": 374,
+   "above_control_z25": 275,
+   "own_rank_0": 0.9975
+  },
+  "original priv: own question games vs own 10-game set (same person, unseen by the network)": {
+   "n": 400,
+   "cos": [
+    0.83,
+    0.869,
+    0.894,
+    0.918,
+    0.945,
+    0.959
+   ],
+   "z": [
+    2.642,
+    3.214,
+    3.931,
+    4.769,
+    5.754,
+    6.328
+   ],
+   "above_control_cos5": 400,
+   "above_control_cos25": 400,
+   "above_control_z5": 377,
+   "above_control_z25": 273,
+   "own_rank_0": 0.995
+  }
+ }
+}

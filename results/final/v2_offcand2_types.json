@@ -1,0 +1,219 @@
+{
+ "groups": {
+  "o19Alin": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs0e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs1e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs2e_t0.npz"
+  ],
+  "o19Asq": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs3e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs4e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs5e_t0.npz"
+  ],
+  "o19C": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs6e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o19Fs7e_t0.npz"
+  ],
+  "o21A": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o21Fs0e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o21Fs2e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o21Fs3e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o21Fs4e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o21Fs5e_t0.npz"
+  ],
+  "o21C": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o21Fs6e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o21Fs7e_t0.npz"
+  ],
+  "o29Alin": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o29Fs0e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o29Fs1e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o29Fs2e_t0.npz"
+  ],
+  "o30A": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs0e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs1e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs2e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs3e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs4e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs5e_t0.npz"
+  ],
+  "o30C": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs6e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o30Fs7e_t0.npz"
+  ],
+  "o23A": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs0e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs1e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs2e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs3e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs4e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs5e_t0.npz"
+  ],
+  "o23C": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs6e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o23Fs7e_t0.npz"
+  ],
+  "o22S": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs0e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs1e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs2e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs3e_t0.npz"
+  ],
+  "o22SM": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs4e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs5e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs6e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o22Fs7e_t0.npz"
+  ],
+  "o24S": [
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o24Fs0e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o24Fs1e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o24Fs2e_t0.npz",
+   "/home/u2507115/BK_AICUP_2026-2/data/seq_ft/official_{pool}_net-1_o24Fs3e_t0.npz"
+  ]
+ },
+ "comps": {
+  "o19Alin": [
+   [
+    "o19Alin",
+    1.0
+   ]
+  ],
+  "o21A": [
+   [
+    "o21A",
+    1.0
+   ]
+  ]
+ },
+ "ref": "o19Alin",
+ "pools": {
+  "pub2": {
+   "1": {
+    "single_by_group": {
+     "o19Alin": 0.5657993945545544,
+     "o19Asq": 0.5610550615441152,
+     "o19C": 0.5485398663587912,
+     "o21A": 0.5450493317273348,
+     "o21C": 0.5320608456519738,
+     "o29Alin": 0.569681162074089,
+     "o30A": 0.5570312300323919,
+     "o30C": 0.5394265966614931,
+     "o23A": 0.5558075857045196,
+     "o23C": 0.5343982842430497,
+     "o22S": 0.5520289934002819,
+     "o22SM": 0.5574434715643487,
+     "o24S": 0.5428655811926634
+    },
+    "score": {
+     "o19Alin": 0.5923848711290816,
+     "o21A": 0.5908777114158317
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o19Alin": 0.7840414189917472,
+     "o19Asq": 0.7898843935762576,
+     "o19C": 0.7738315924153141,
+     "o21A": 0.7784995663881112,
+     "o21C": 0.7588440489272387,
+     "o29Alin": 0.7889794981106987,
+     "o30A": 0.7798764766240677,
+     "o30C": 0.7754075181352501,
+     "o23A": 0.7757823282953913,
+     "o23C": 0.7659130161874976,
+     "o22S": 0.7750515963109796,
+     "o22SM": 0.78261859083489,
+     "o24S": 0.7648152076042125
+    },
+    "score": {
+     "o19Alin": 0.8039224541864889,
+     "o21A": 0.8173806748555587
+    }
+   }
+  },
+  "priv2": {
+   "1": {
+    "single_by_group": {
+     "o19Alin": 0.5789455585736951,
+     "o19Asq": 0.5771797940843534,
+     "o19C": 0.5664229017533322,
+     "o21A": 0.5673518726570999,
+     "o21C": 0.5462596643801878,
+     "o29Alin": 0.5860471139711891,
+     "o30A": 0.5751137370410807,
+     "o30C": 0.5608833595384017,
+     "o23A": 0.5726625201267669,
+     "o23C": 0.5538917681159403,
+     "o22S": 0.5671077096287007,
+     "o22SM": 0.573679471455002,
+     "o24S": 0.5582418590112976
+    },
+    "score": {
+     "o19Alin": 0.6059502237535763,
+     "o21A": 0.6107632324872724
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o19Alin": 0.8012117456759071,
+     "o19Asq": 0.8095199687350213,
+     "o19C": 0.8093787491757376,
+     "o21A": 0.7930409546864019,
+     "o21C": 0.7912358056025695,
+     "o29Alin": 0.8171749248442182,
+     "o30A": 0.80149682617707,
+     "o30C": 0.793030532817893,
+     "o23A": 0.7957412224084659,
+     "o23C": 0.7965684955331447,
+     "o22S": 0.8056687550463473,
+     "o22SM": 0.8058496965141101,
+     "o24S": 0.8000235817301289
+    },
+    "score": {
+     "o19Alin": 0.8140902872250861,
+     "o21A": 0.8135759843947503
+    }
+   }
+  }
+ },
+ "both": {
+  "1": {
+   "o19Alin": {
+    "score": 0.5991675474413289,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o21A": {
+    "score": 0.600820471951552,
+    "diff": 0.0016529245102230097,
+    "ci95": [
+     -0.0028009172000603376,
+     0.005973628711480192
+    ]
+   }
+  },
+  "3": {
+   "o19Alin": {
+    "score": 0.8090063707057875,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o21A": {
+    "score": 0.8154783296251544,
+    "diff": 0.006471958919367028,
+    "ci95": [
+     -0.002625114900694288,
+     0.016306619852703597
+    ]
+   }
+  }
+ }
+}

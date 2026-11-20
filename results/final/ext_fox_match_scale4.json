@@ -1,0 +1,17 @@
+[
+ {
+  "competition_file": "train_5D.csv",
+  "competition_moves": 123,
+  "external_folder": "7d",
+  "external_moves": 107,
+  "moves_equal_from_start": 67,
+  "whole_record_equal": false,
+  "external_year": 2017,
+  "external_ranks_black_white": [
+   7,
+   7
+  ],
+  "external_handicap": 0,
+  "external_records_with_this_prefix": 1
+ }
+]

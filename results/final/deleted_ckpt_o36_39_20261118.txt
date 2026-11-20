@@ -1,0 +1,63 @@
+# deleted 2026-11-18 17:55:25 on the user's word of 2026-11-18 ("同意刪 o36–o39、早期官方網路、pid_b3"): checkpoints of the closed scale4 round and their family links in /work/u2507115/pid_v2/seqnet; the train_-1_o3[6-9]*.json logs are kept
+link ckpt_-1_o36Fs0e.pt -> ckpt_-1_o36Ss0e.pt
+link ckpt_-1_o36Fs1e.pt -> ckpt_-1_o36Ss1e.pt
+link ckpt_-1_o36Fs2e.pt -> ckpt_-1_o36Ss2e.pt
+link ckpt_-1_o36Fs3e.pt -> ckpt_-1_o36Ss3e.pt
+link ckpt_-1_o36Fs4e.pt -> ckpt_-1_o36SMs0e.pt
+link ckpt_-1_o36Fs5e.pt -> ckpt_-1_o36SMs1e.pt
+link ckpt_-1_o36Fs6e.pt -> ckpt_-1_o36SMs2e.pt
+file ckpt_-1_o36SMs0e.pt 62876946
+file ckpt_-1_o36SMs1e.pt 62876946
+file ckpt_-1_o36SMs2e.pt 62876946
+file ckpt_-1_o36Ss0e.pt 62876817
+file ckpt_-1_o36Ss1e.pt 62876817
+file ckpt_-1_o36Ss2e.pt 62876817
+file ckpt_-1_o36Ss3e.pt 62876817
+file ckpt_-1_o37As0e.pt 62876881
+file ckpt_-1_o37As1e.pt 62876881
+file ckpt_-1_o37As2e.pt 62876881
+file ckpt_-1_o37As3e.pt 62876881
+file ckpt_-1_o37As4e.pt 62876881
+file ckpt_-1_o37As5e.pt 62876881
+file ckpt_-1_o37Cs0e.pt 62876881
+file ckpt_-1_o37Cs1e.pt 62876881
+link ckpt_-1_o37Fs0e.pt -> ckpt_-1_o37As0e.pt
+link ckpt_-1_o37Fs1e.pt -> ckpt_-1_o37As1e.pt
+link ckpt_-1_o37Fs2e.pt -> ckpt_-1_o37As2e.pt
+link ckpt_-1_o37Fs3e.pt -> ckpt_-1_o37As3e.pt
+link ckpt_-1_o37Fs4e.pt -> ckpt_-1_o37As4e.pt
+link ckpt_-1_o37Fs5e.pt -> ckpt_-1_o37As5e.pt
+link ckpt_-1_o37Fs6e.pt -> ckpt_-1_o37Cs0e.pt
+link ckpt_-1_o37Fs7e.pt -> ckpt_-1_o37Cs1e.pt
+file ckpt_-1_o38As0e.pt 62876881
+file ckpt_-1_o38As1e.pt 62876881
+file ckpt_-1_o38As2e.pt 62876881
+file ckpt_-1_o38As3e.pt 62876881
+file ckpt_-1_o38As4e.pt 62876881
+file ckpt_-1_o38As5e.pt 62876881
+file ckpt_-1_o38Cs0e.pt 62876881
+file ckpt_-1_o38Cs1e.pt 62876881
+link ckpt_-1_o38Fs0e.pt -> ckpt_-1_o38As0e.pt
+link ckpt_-1_o38Fs1e.pt -> ckpt_-1_o38As1e.pt
+link ckpt_-1_o38Fs2e.pt -> ckpt_-1_o38As2e.pt
+link ckpt_-1_o38Fs3e.pt -> ckpt_-1_o38As3e.pt
+link ckpt_-1_o38Fs4e.pt -> ckpt_-1_o38As4e.pt
+link ckpt_-1_o38Fs5e.pt -> ckpt_-1_o38As5e.pt
+link ckpt_-1_o38Fs6e.pt -> ckpt_-1_o38Cs0e.pt
+link ckpt_-1_o38Fs7e.pt -> ckpt_-1_o38Cs1e.pt
+file ckpt_-1_o39As0e.pt 134118945
+file ckpt_-1_o39As1e.pt 134118945
+file ckpt_-1_o39As2e.pt 134118945
+file ckpt_-1_o39As3e.pt 134118945
+file ckpt_-1_o39As4e.pt 134118945
+file ckpt_-1_o39As5e.pt 134118945
+file ckpt_-1_o39Cs0e.pt 134118945
+file ckpt_-1_o39Cs1e.pt 134118945
+link ckpt_-1_o39Fs0e.pt -> ckpt_-1_o39As0e.pt
+link ckpt_-1_o39Fs1e.pt -> ckpt_-1_o39As1e.pt
+link ckpt_-1_o39Fs2e.pt -> ckpt_-1_o39As2e.pt
+link ckpt_-1_o39Fs3e.pt -> ckpt_-1_o39As3e.pt
+link ckpt_-1_o39Fs4e.pt -> ckpt_-1_o39As4e.pt
+link ckpt_-1_o39Fs5e.pt -> ckpt_-1_o39As5e.pt
+link ckpt_-1_o39Fs6e.pt -> ckpt_-1_o39Cs0e.pt
+link ckpt_-1_o39Fs7e.pt -> ckpt_-1_o39Cs1e.pt

@@ -1,0 +1,145 @@
+{
+ "side": "priv",
+ "questions": 400,
+ "candidates": 400,
+ "old_rows_distinct_top1": 400,
+ "steps": {
+  "0": {
+   "networks": 32,
+   "families": {
+    "o32F": 8,
+    "o44F": 8,
+    "o58F": 8,
+    "o62F": 8
+   },
+   "candidate_games_used": [
+    30,
+    30
+   ],
+   "question_games_used_vs_given": [
+    5000,
+    5000
+   ],
+   "top1_same_as_old_unassigned": 399,
+   "top1_same_as_old_assigned": 398,
+   "assignment_changes_top1": 1,
+   "margin_assigned_minus_best_other_percentiles": {
+    "0": -0.015805570244955547,
+    "1": 0.274146865794073,
+    "5": 0.46457850536993933,
+    "10": 0.6287844056367189,
+    "25": 0.8678627946788924,
+    "50": 1.4216574783689375
+   },
+   "families_same_as_old": {
+    "o32F": 398,
+    "o44F": 398,
+    "o58F": 398,
+    "o62F": 398
+   },
+   "disagreements": [
+    {
+     "question": "priv_q_0115",
+     "games": 5,
+     "new": "priv_p_0017",
+     "old": "priv_p_0368",
+     "margin_new_minus_old": 0.20430202768703776,
+     "rank_of_old_under_new": 2,
+     "rank_of_new_in_old_row": 2,
+     "unassigned_top1": "priv_p_0017",
+     "families": {
+      "o32F": "priv_p_0017",
+      "o44F": "priv_p_0017",
+      "o58F": "priv_p_0017",
+      "o62F": "priv_p_0017"
+     }
+    },
+    {
+     "question": "priv_q_0255",
+     "games": 20,
+     "new": "priv_p_0368",
+     "old": "priv_p_0017",
+     "margin_new_minus_old": -0.015805570244955547,
+     "rank_of_old_under_new": 1,
+     "rank_of_new_in_old_row": 2,
+     "unassigned_top1": "priv_p_0017",
+     "families": {
+      "o32F": "priv_p_0368",
+      "o44F": "priv_p_0368",
+      "o58F": "priv_p_0368",
+      "o62F": "priv_p_0368"
+     }
+    }
+   ]
+  },
+  "50": {
+   "networks": 32,
+   "families": {
+    "o32F": 8,
+    "o44F": 8,
+    "o58F": 8,
+    "o62F": 8
+   },
+   "candidate_games_used": [
+    30,
+    30
+   ],
+   "question_games_used_vs_given": [
+    5000,
+    5000
+   ],
+   "top1_same_as_old_unassigned": 399,
+   "top1_same_as_old_assigned": 398,
+   "assignment_changes_top1": 1,
+   "margin_assigned_minus_best_other_percentiles": {
+    "0": -0.004576621053975494,
+    "1": 0.3655964824161826,
+    "5": 0.5783415312832408,
+    "10": 0.7301842958045413,
+    "25": 1.0149013652950045,
+    "50": 1.570415184067928
+   },
+   "families_same_as_old": {
+    "o32F": 398,
+    "o44F": 398,
+    "o58F": 398,
+    "o62F": 398
+   },
+   "disagreements": [
+    {
+     "question": "priv_q_0115",
+     "games": 5,
+     "new": "priv_p_0017",
+     "old": "priv_p_0368",
+     "margin_new_minus_old": 0.15212568941968474,
+     "rank_of_old_under_new": 2,
+     "rank_of_new_in_old_row": 2,
+     "unassigned_top1": "priv_p_0017",
+     "families": {
+      "o32F": "priv_p_0017",
+      "o44F": "priv_p_0017",
+      "o58F": "priv_p_0017",
+      "o62F": "priv_p_0017"
+     }
+    },
+    {
+     "question": "priv_q_0255",
+     "games": 20,
+     "new": "priv_p_0368",
+     "old": "priv_p_0017",
+     "margin_new_minus_old": -0.004576621053975494,
+     "rank_of_old_under_new": 1,
+     "rank_of_new_in_old_row": 2,
+     "unassigned_top1": "priv_p_0017",
+     "families": {
+      "o32F": "priv_p_0368",
+      "o44F": "priv_p_0368",
+      "o58F": "priv_p_0368",
+      "o62F": "priv_p_0368"
+     }
+    }
+   ]
+  }
+ },
+ "answers_equal_between_steps": 400
+}

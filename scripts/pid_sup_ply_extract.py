@@ -67,6 +67,7 @@ def main(argv=None):
     ap.add_argument("--max-plies", type=int, default=0, help="with --select: keep only the subject's plies whose ply number is below this (0: all)")
     ap.add_argument("--scalars", action="store_true", help="append four policy scalars to every ply's features: surprisal, log(1 + rank), entropy, distance to the policy's top point (METHOD_NOTES 2.102)")
     ap.add_argument("--ckpt", default=None, help="another KataGo checkpoint than humanv0 (probe K, METHOD_NOTES 2.119)")
+    ap.add_argument("--compress", action="store_true", help="write the parts deflate-compressed (np.load reads them the same; METHOD_NOTES 2.164)")
     ap.add_argument("--out2", default=None, help="with --scalars and float parts: also write the same parts WITHOUT the scalars here (two stores from one pass)")
     a = ap.parse_args(argv)
     global MAX_T
@@ -149,7 +150,7 @@ def main(argv=None):
                 t2 = p2.with_name(p2.name + ".tmp.npz")
                 np.savez(t2, z=z[:, :W.shape[1]].astype(np.float16), **head)
                 os.replace(t2, p2)
-            np.savez(tmp, **head, **feat)
+            (np.savez_compressed if a.compress else np.savez)(tmp, **head, **feat)
             os.replace(tmp, path)
             done_games += len(part)
             if (k % 10) == 0:

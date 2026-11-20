@@ -126,6 +126,9 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
     files2 = files2[:20] if smoke else files2
     ext_own = {}
     if ext_ply:  # the same part layout as M90's (key, LEN, SUBJ, POS, MOV, GLQ; the same quantisation statistics)
+        empty = [str(d) for d in ext_ply if not any(Path(d).glob("ply_x_*.npz"))]
+        if empty:  # a missing folder used to load silently less data (METHOD_NOTES 2.148)
+            raise FileNotFoundError(f"external ply folders without parts: {empty}")
         fx = sorted(f for d in ext_ply for f in Path(d).glob("ply_x_*.npz") if not f.name.endswith(".tmp.npz"))
         files2 += fx[:5] if smoke else fx
         import csv

@@ -32,11 +32,18 @@ def load_net(ckpt):
     m88.D, m88.LAYERS, m88.HEADS, m88.FFN = st.get("arch", ARCH0)  # a network trained with pid_seq_train.py --arch is rebuilt at its own size
     net = m88.build_model()
     m88.D, m88.LAYERS, m88.HEADS, m88.FFN = ARCH0
+    if st.get("win"):  # a network with the window input (pid_seq_train_w.py --shape-win, METHOD_NOTES 2.170)
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import pid_win
+        pid_win.wrap(net, st["win"])
     net.load_state_dict(st["best_state"] if STATE == "best" else st["net"])
     return net.cuda().eval(), (st["best"] if STATE == "best" else {"step": st["step"], "state": "last"})
 
 
 def embed(net, GL, POS, MOV, LEN, SUBJ, batch=1024):
+    if getattr(net, "win_exact", False):  # METHOD_NOTES 2.180: the exact window wants the removal plies packed into the colours
+        import pid_winx
+        MOV = pid_winx.pack_mov(POS, MOV, LEN)
     out = np.zeros((len(LEN), m88.D_OUT), np.float32)
     with torch.no_grad(), torch.autocast("cuda", dtype=torch.bfloat16):
         for i in range(0, len(LEN), batch):

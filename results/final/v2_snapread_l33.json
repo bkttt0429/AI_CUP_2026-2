@@ -1,0 +1,123 @@
+{
+ "groups": {
+  "o23F": [
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs1e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o23Fs7e_t0.npz"
+  ],
+  "o33F": [
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs1e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122592/official_{pool}_net-1_o33Fs7e_t0.npz"
+  ]
+ },
+ "comps": {
+  "o23F": [
+   [
+    "o23F",
+    1.0
+   ]
+  ],
+  "o33F": [
+   [
+    "o33F",
+    1.0
+   ]
+  ]
+ },
+ "ref": "o23F",
+ "pools": {
+  "pub2": {
+   "1": {
+    "single_by_group": {
+     "o23F": 0.5504552603391522,
+     "o33F": 0.5664685413287497
+    },
+    "score": {
+     "o23F": 0.6004034461129907,
+     "o33F": 0.6140674012382092
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o23F": 0.7733150002684179,
+     "o33F": 0.7886468943283328
+    },
+    "score": {
+     "o23F": 0.8058060799113859,
+     "o33F": 0.8217412810597661
+    }
+   }
+  },
+  "priv2": {
+   "1": {
+    "single_by_group": {
+     "o23F": 0.5679698321240603,
+     "o33F": 0.5860073968229969
+    },
+    "score": {
+     "o23F": 0.6170461276362592,
+     "o33F": 0.6315847123441111
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o23F": 0.7959480406896355,
+     "o33F": 0.8098939456652574
+    },
+    "score": {
+     "o23F": 0.8260170998032159,
+     "o33F": 0.8369733736529664
+    }
+   }
+  }
+ },
+ "both": {
+  "1": {
+   "o23F": {
+    "score": 0.608724786874625,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o33F": {
+    "score": 0.6228260567911601,
+    "diff": 0.014101269916535219,
+    "ci95": [
+     0.010242374625964685,
+     0.01782040583647211
+    ]
+   }
+  },
+  "3": {
+   "o23F": {
+    "score": 0.815911589857301,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o33F": {
+    "score": 0.8293573273563662,
+    "diff": 0.01344573749906529,
+    "ci95": [
+     0.004578620919270968,
+     0.022735166565989638
+    ]
+   }
+  }
+ }
+}

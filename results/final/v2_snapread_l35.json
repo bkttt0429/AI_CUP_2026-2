@@ -1,0 +1,122 @@
+{
+ "groups": {
+  "o21F": [
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o21Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o21Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o21Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o21Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o21Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o21Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o21Fs7e_t0.npz"
+  ],
+  "o35F": [
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs1e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122594/official_{pool}_net-1_o35Fs7e_t0.npz"
+  ]
+ },
+ "comps": {
+  "o21F": [
+   [
+    "o21F",
+    1.0
+   ]
+  ],
+  "o35F": [
+   [
+    "o35F",
+    1.0
+   ]
+  ]
+ },
+ "ref": "o21F",
+ "pools": {
+  "pub2": {
+   "1": {
+    "single_by_group": {
+     "o21F": 0.5413383357058031,
+     "o35F": 0.5561802086239584
+    },
+    "score": {
+     "o21F": 0.5973787679592784,
+     "o35F": 0.6097224833975969
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o21F": 0.7728837042564335,
+     "o35F": 0.7815232666360512
+    },
+    "score": {
+     "o21F": 0.8089097776025623,
+     "o35F": 0.8146620951034438
+    }
+   }
+  },
+  "priv2": {
+   "1": {
+    "single_by_group": {
+     "o21F": 0.561325527435125,
+     "o35F": 0.5786466355723754
+    },
+    "score": {
+     "o21F": 0.6128464067849224,
+     "o35F": 0.6296426311823156
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o21F": 0.792525197805307,
+     "o35F": 0.8072265041998219
+    },
+    "score": {
+     "o21F": 0.8164645978781874,
+     "o35F": 0.8349881524369158
+    }
+   }
+  }
+ },
+ "both": {
+  "1": {
+   "o21F": {
+    "score": 0.6051125873721004,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o35F": {
+    "score": 0.6196825572899562,
+    "diff": 0.014569969917855871,
+    "ci95": [
+     0.010536987653533402,
+     0.01864178037055905
+    ]
+   }
+  },
+  "3": {
+   "o21F": {
+    "score": 0.8126871877403749,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o35F": {
+    "score": 0.8248251237701798,
+    "diff": 0.012137936029804943,
+    "ci95": [
+     0.0023504230151063224,
+     0.02189492214288845
+    ]
+   }
+  }
+ }
+}

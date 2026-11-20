@@ -44,6 +44,19 @@ def original_tasks(tests_dir, per_candidate):
     return out
 
 
+def original_question_tasks(tests_dir):
+    """{key: (sgf, colour)} of the ORIGINAL pools' QUESTION games (pub_q_ / priv_q_; METHOD_NOTES 2.240): keys q:<question_id>:<i>
+    as the added pools' question games (pid_trunk_extract.official2_tasks)."""
+    import pid_trunk_extract as pte
+    out = {}
+    for tag in ("public", "private"):
+        for q in pte.pools.read_questions(Path(tests_dir) / f"player_identification_test_{tag}.csv"):
+            for i, (sgf, colour) in enumerate(q["games"]):
+                if check_game(sgf, colour or "B")[0]:
+                    out[f"q:{q['question_id']}:{i}"] = (sgf, colour or "B")
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--tests-dir", required=True)
@@ -54,11 +67,13 @@ def main(argv=None):
     ap.add_argument("--part-size", type=int, default=200)
     ap.add_argument("--batch", type=int, default=512)
     ap.add_argument("--original", type=int, default=0, help="instead of the added pools: this many candidate games per candidate of the ORIGINAL pools (METHOD_NOTES 2.54)")
+    ap.add_argument("--original-questions", action="store_true", help="instead of the added pools: the QUESTION games of the ORIGINAL pools (METHOD_NOTES 2.240)")
     a = ap.parse_args(argv)
     t0 = time.time()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    tasks = original_tasks(a.tests_dir, a.original) if a.original else official2_tasks(a.tests_dir)
+    assert not (a.original and a.original_questions)
+    tasks = original_question_tasks(a.tests_dir) if a.original_questions else original_tasks(a.tests_dir, a.original) if a.original else official2_tasks(a.tests_dir)
     mine = sorted(tasks)[a.shard::a.nshards]
     parts = [mine[i:i + a.part_size] for i in range(0, len(mine), a.part_size)]
     todo = [(k, p) for k, p in enumerate(parts) if not (out / f"ply_s{a.shard:03d}_p{k:04d}.npz").exists()]

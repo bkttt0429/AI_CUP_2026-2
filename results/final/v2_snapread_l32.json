@@ -1,0 +1,123 @@
+{
+ "groups": {
+  "o22F": [
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs1e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o22Fs7e_t0.npz"
+  ],
+  "o32F": [
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs1e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122591/official_{pool}_net-1_o32Fs7e_t0.npz"
+  ]
+ },
+ "comps": {
+  "o22F": [
+   [
+    "o22F",
+    1.0
+   ]
+  ],
+  "o32F": [
+   [
+    "o32F",
+    1.0
+   ]
+  ]
+ },
+ "ref": "o22F",
+ "pools": {
+  "pub2": {
+   "1": {
+    "single_by_group": {
+     "o22F": 0.5547362324823153,
+     "o32F": 0.5744977494038173
+    },
+    "score": {
+     "o22F": 0.5987547338715224,
+     "o32F": 0.6180525455121612
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o22F": 0.7788350935729349,
+     "o32F": 0.7988899361262208
+    },
+    "score": {
+     "o22F": 0.8025655542725153,
+     "o32F": 0.8192448128312466
+    }
+   }
+  },
+  "priv2": {
+   "1": {
+    "single_by_group": {
+     "o22F": 0.5703935905418513,
+     "o32F": 0.5920733809180574
+    },
+    "score": {
+     "o22F": 0.6142269470037651,
+     "o32F": 0.6333819331044505
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o22F": 0.8057592257802286,
+     "o32F": 0.8192478905567052
+    },
+    "score": {
+     "o22F": 0.8282468036406047,
+     "o32F": 0.8388634660351094
+    }
+   }
+  }
+ },
+ "both": {
+  "1": {
+   "o22F": {
+    "score": 0.6064908404376438,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o32F": {
+    "score": 0.6257172393083058,
+    "diff": 0.019226398870662,
+    "ci95": [
+     0.015225751621206193,
+     0.023063523908500524
+    ]
+   }
+  },
+  "3": {
+   "o22F": {
+    "score": 0.81540617895656,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o32F": {
+    "score": 0.829054139433178,
+    "diff": 0.013647960476617994,
+    "ci95": [
+     0.0037091777667424826,
+     0.02330937283993487
+    ]
+   }
+  }
+ }
+}

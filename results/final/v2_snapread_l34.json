@@ -1,0 +1,123 @@
+{
+ "groups": {
+  "o19F": [
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs1e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o19Fs7e_t0.npz"
+  ],
+  "o34F": [
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs0e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs1e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs2e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs3e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs4e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs5e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs6e_t0.npz",
+   "/dev/shm/pid_snap_79122593/official_{pool}_net-1_o34Fs7e_t0.npz"
+  ]
+ },
+ "comps": {
+  "o19F": [
+   [
+    "o19F",
+    1.0
+   ]
+  ],
+  "o34F": [
+   [
+    "o34F",
+    1.0
+   ]
+  ]
+ },
+ "ref": "o19F",
+ "pools": {
+  "pub2": {
+   "1": {
+    "single_by_group": {
+     "o19F": 0.5597053876266989,
+     "o34F": 0.5702353021719302
+    },
+    "score": {
+     "o19F": 0.6030253659614713,
+     "o34F": 0.6126800180310509
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o19F": 0.7836800778168302,
+     "o34F": 0.7987281620728498
+    },
+    "score": {
+     "o19F": 0.8097584327904588,
+     "o34F": 0.8246971770311095
+    }
+   }
+  },
+  "priv2": {
+   "1": {
+    "single_by_group": {
+     "o19F": 0.5751527326851013,
+     "o34F": 0.5898054945123055
+    },
+    "score": {
+     "o19F": 0.6165494168541638,
+     "o34F": 0.6322024281578746
+    }
+   },
+   "3": {
+    "single_by_group": {
+     "o19F": 0.8063690801980326,
+     "o34F": 0.813373169184536
+    },
+    "score": {
+     "o19F": 0.8352363893274379,
+     "o34F": 0.8343027573357105
+    }
+   }
+  }
+ },
+ "both": {
+  "1": {
+   "o19F": {
+    "score": 0.6097873914078175,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o34F": {
+    "score": 0.6224412230944628,
+    "diff": 0.012653831686645304,
+    "ci95": [
+     0.008481325785830395,
+     0.0163529521506161
+    ]
+   }
+  },
+  "3": {
+   "o19F": {
+    "score": 0.8224974110589484,
+    "diff": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "o34F": {
+    "score": 0.82949996718341,
+    "diff": 0.007002556124461598,
+    "ci95": [
+     -0.0008843304330903138,
+     0.014713481936166754
+    ]
+   }
+  }
+ }
+}
