@@ -1,0 +1,4 @@
+# 2026-11-21 06:12:26: the /home COPIES of the /work staging, deleted after the user reported all three parts downloaded ("這都下載好了"); the /work staging and the originals are untouched
+/home/u2507115/AICUP2_MOVE_20261121_work_part1	530 files
+/home/u2507115/AICUP2_MOVE_20261121_work_part2	69 files
+/home/u2507115/AICUP2_MOVE_20261121_work_part3	65 files
