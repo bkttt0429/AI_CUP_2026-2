@@ -1,0 +1,13 @@
+Left on nano4, NOT staged (MB) - all of it can be made again from the code on GitHub, the competition files and the open
+external data; none of it is needed to rebuild the final file from the staged checkpoints and vectors:
+   31350  /work/u2507115/ext_fox                 external open games (Fox Go dataset) and their per-ply features (training input)
+   12258  /work/u2507115/pid_v2/supj             supervised per-ply features of the TRAINING games (pools/ IS staged)
+    1541  /work/u2507115/pid_v2/probep           projection, statistics and features of the supervised feature set
+    3512  BK_AICUP_2026-2/data/pid_v2_f0tmp      pseudo-pool vectors of the verdicts (hold-out seeds 4-7)
+    2448  BK_AICUP_2026-2/data/pid_v2_seq_ft_offsim   pseudo-pool vectors (hold-out seeds 0-3)
+    1213  BK_AICUP_2026-2/data/pid_v2_seq_ft_oldsim   old-pool simulation vectors
+     137  BK_AICUP_2026-2/data/tests_1111        the organisers' test files (the user has the originals)
+          BK_AICUP_2026-2/.venv, data/ext_ply*, data/supj_ext, the rank project's trunk network and per-ply stores
+          (results/trunk_vec* of BK_AICUP_2026-1: the rank project's own staging)
+
+Deleted on 2026-11-21 (temporary, regenerable; METHOD_NOTES 2.247): /work/u2507115/pid_v2/vtmp8, orig_ft, ply_origq.
