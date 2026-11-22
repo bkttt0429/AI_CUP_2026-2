@@ -4087,6 +4087,14 @@
 - 刪掉的：`/work/u2507115/AICUP2_MOVE_20261121`（661 個檔）與 `/home/u2507115/AICUP2_MOVE_20261121`（7,173 個檔）。裡面除了 8 個整理用的小檔，都是指到原檔的硬連結，所以原檔不受影響、也不會多出空間；刪後定案檔 md5 仍是 c7397211f0ca0af7225ad1d04566f969。
 - 只存在整理資料夾裡的 8 個小檔：兩份 sha256 清單、兩份 README、`LEFT_OUT.txt`、`SEQNET_LINKS.txt` 已先複製到 `results/final/move_20261121/`；空檔 `SYMLINKS_IN_STAGING.txt` 與一份 11-21 的舊版筆記（倉庫裡有最新版）直接刪掉。
 
+### 2.255 nano4 上的玩家辨識全部刪除（2026-11-22 16:3x）
+
+- **使用者 11-22**：「可以都清掉快取也是」；接著在問題對話框裡選了：沒下載的約 55 GB 也「一起刪」、沒推的程式「推上 GitHub＋打包下載」、別人的目錄（Codex 11-16 的研究、棋力留下的兩個小目錄）也「一起刪」。
+- **刪之前**：三個沒推的分支推上 GitHub（`nano4/pid-report` edf1dfe、`research/conditional-behavior-20261116` a8faa96、`research/pid-choice-signal-20261116` 63bcf2a），之後本機每個分支都和 GitHub 一致、沒有 stash、沒有 tag。沒進版控的 179 個檔（`reports/pid_deck` 結案簡報原始檔、`logs/`、`docs/superpowers` 四份設計文件、幾個結果檔）、兩個工作目錄裡沒提交的兩個小檔、以及刪除檔案清單，打包成 `/home/u2507115/AICUP2_EXTRA_20261122.tar.gz`（30 MB，sha256 8591b5f69cb79a4b66a127299ed5a24b9b7e0066655799dc3abce169addb297f），等使用者下載。沒有工作在跑、沒有 Codex 程序、範圍外沒有符號連結指進來。
+- **刪除範圍**（55,904 個檔、92.3 GB）：`~/BK_AICUP_2026-2`（整個倉庫，含 data、upload、results、.git）、`/work/u2507115/pid_v2`、`/work/u2507115/ext_fox`、`/work/u2507115/behavior_probe_20261116`、`/work/u2507115/m161_ckpt`、`/work/u2507115/m197_choice64`、`~/.cache` 裡的工作目錄（pidrpt_wt、pidbehavior_wt、pidchoice_wt、pr4wt）、簡報工具與工作（pid_deck_bak、pid_deck_jobs、report_audit、go_deck_w3、go_deck_jobs、go_deck_tools）、一般快取（pip、torch、matplotlib、fontconfig、typescript、nvidia），以及 `~/.triton`、`~/.nv`、`~/.npm`。
+- **沒有下載、刪了就沒有的**：外部 Fox 棋譜與逐手特徵（ext_fox 31 GB）、訓練棋局的有監督特徵（supj 12 GB）、data/ext_ply2、supj_ext、判定用的擬題向量、probep、沒進定案的網路檢查點。都可用本分支的程式重做，但特徵抽取需要數天 GPU。
+- **之後還在的**：程式與筆記在 GitHub；定案檔、定案與備案的 200 個網路檢查點、題庫向量、結果在使用者電腦（11-21 的兩批下載）。沒動：`~/.claude`（記憶與對話紀錄）、`~/.vscode-server`、`~/.codex`、`~/.ssh`、`~/.config`、VS Code 擴充套件與 Claude CLI 自己的快取。
+
 ## 3. 參考：2023 AI CUP 秋季賽「圍棋棋力模仿與棋風辨識」（2026-10-29 查）
 - 題目與 2026 不同：(a) Dan／Kyu 兩組「下一手預測」（361 類 softmax）；(b) PlayStyle 三類棋風分類，每局一個標籤。第 6 名隊伍（GitHub `yiyunrin/AI-CUP-Team_3839`，TensorFlow）：棋風模型只用**每局最後一個局面**，28 層平面（雙方棋子、雙方氣數 1／2／3／≥4、空點、最近 8 手、最後一手周圍 7×7／5×5／3×3 的三態窗），8 重對稱增強，約 33 個 bottleneck 殘差塊（1024 通道、3,660 萬參數）→ 全局平均池化 → 3 類，Nadam 1e-4；下一手模型 19 層平面、29 個殘差塊、361 類。沒有多局聚合，也沒有預訓練權重。第 1 名 GoDeep（成大）的報告在 aicup.tw 教材頁，雲端網路白名單擋住，未讀。
 - 對我們的意義：2023 的「棋風」是主辦方定的三個粗類，整局一張圖就能分；2026 的「辨識」是 400 個個體、5–20 局的檢索，單局面 CNN 分類的做法不會直接轉移。可以借的是對稱正規化／增強、落子周圍局部窗的特徵（風格藏在局部形狀的選擇裡）、以及「要用整局、跨局聚合」這個教訓。我們的路線（預訓練強 policy 當特徵抽取器 + 每手條件似然 + 明確的跨局聚合與驗證協議）和 2023 從零訓 CNN 的做法在起點上就不同。
