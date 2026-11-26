@@ -4,7 +4,7 @@ AI CUP 2026 秋季賽「圍棋棋力與風格預測競賽—競賽一：從圍�
 
 - 任務：每題給同一位未知玩家的數局棋譜，自對應候選庫中辨識該玩家，輸出信心最高的前 5 名。
 - 成績：Public 0.9313515、Private 0.9341401（最終提交檔 `pid_v2fin11_c_a2k_p3.csv`，md5 `c7397211f0ca0af7225ad1d04566f969`）。
-- 本分支（`nano4/pid-b3-assign`）為最終提交所用的程式；`main` 只有開案時的第一版。
+- `main` 即最終提交所用的程式（原分支 `nano4/pid-b3-assign`；2026-11-27 起倉庫整併為單一分支，紀錄見 [docs/BRANCHES.md](docs/BRANCHES.md)）。
 
 ## 1. 文件
 
@@ -22,7 +22,7 @@ AI CUP 2026 秋季賽「圍棋棋力與風格預測競賽—競賽一：從圍�
 
 ```bash
 git clone https://github.com/bkttt0429/AI_CUP_2026-1
-git clone -b nano4/pid-b3-assign https://github.com/bkttt0429/AI_CUP_2026-2
+git clone https://github.com/bkttt0429/AI_CUP_2026-2
 cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.12、PyTorch 2.14.1（CUDA 12.6）與 requirements.txt
 ```
 

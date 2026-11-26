@@ -128,7 +128,7 @@ Private 總分 =（原題池 400 題 + 新增池 400 題）÷ 2。
 
 ## 10. 重現與資料位置
 
-- 程式與筆記：GitHub `bkttt0429/AI_CUP_2026-2`，分支 `nano4/pid-b3-assign`。
+- 程式與筆記：GitHub `bkttt0429/AI_CUP_2026-2` 的 `main`（原分支 `nano4/pid-b3-assign`，2026-11-27 整併）。
 - 由已有的向量重建定案檔（需要 `data/seq_ft`、`results/pid_fusion_w11c.json`、`results/submission_old_embt_assign/`）：
 
   ```
