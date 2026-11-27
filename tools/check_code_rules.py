@@ -267,7 +267,7 @@ def check_push(before, after):  # 檢查一次 push 到 main 的內容（AGENTS.
     subject = git_out("log", "-1", "--format=%s", after)  # 最新 commit 的標題
     if len(parents) > 2 and subject.startswith("Merge pull request"):  # PR 的一般合併
         return []  # 走 PR 的變更不受限
-    changed = [p for p in git_out("diff", "--name-only", before, after).splitlines() if p]  # 這次 push 改到的檔案
+    changed = [p for p in git_out("diff", "-z", "--name-only", before, after).split("\0") if p]  # 這次 push 改到的檔案（-z：中文檔名照原樣輸出，不加引號跳脫）
     return [f"{p}: 直接 push 到 main 只能修改 docs/work/ 的工作檔，其他變更請走 pull request" for p in changed if not p.startswith("docs/work/")]  # 回報工作檔以外的變更
 
 
