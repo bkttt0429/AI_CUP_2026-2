@@ -1,7 +1,7 @@
 """Candidate pools, questions, the official score and the submission file (player identification).
 
 A pool is 400 candidate players with 100 Black games each; a question is 5 / 10 / 15 / 20 Black games of one of them
-(docs/TASK.md). make_pool simulates pools from the training set (docs/ARCHITECTURE.md section 3): players of the given
+(docs/TASK.md). make_pool simulates pools from the training set (docs/records/ARCHITECTURE.md section 3): players of the given
 folds with at least 100 + 5 Black games, each one's Black games shuffled with a seed derived from the player id, the
 first 100 as the candidate's games and the rest cut into one question per size in ascending order. read_candidates /
 read_questions read the official files; question_score is e^-(r-1) for the true player at Top-5 rank r (0 otherwise);

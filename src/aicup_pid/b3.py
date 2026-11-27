@@ -2,8 +2,8 @@
 
 Every candidate's games are cut into chunks of at most 20 (the rank model's question size). Each chunk and each question
 goes through the rank session's test-side path (AI_CUP_2026-1 predict_submission.py -> trunk_predict.py extract /
-predict, read-only) with a hook that keeps zq for every pass (checkpoint x L1b head); see scripts/pid_b3_pools.py
-(leak-free simulated pools) and scripts/pid_b3_official.py (official files).
+predict, read-only) with a hook that keeps zq for every pass (checkpoint x L1b head); see experiments/pid_b3_pools.py
+(leak-free simulated pools) and experiments/pid_b3_official.py (official files).
 score_b3: candidate vector = mean of its chunks' zq; every dimension z-scored with the candidates' mean / sd; cosine with
 the question's zq; the passes' [Q, C] matrices averaged. This is the component the 11-09 pool test passed with.
 """

@@ -9,7 +9,7 @@ games are as unseen as official question games. Everything else is the official 
 the fusion document's components, embedding model and weights). Pools are never mixed: weights are fitted and scored inside
 one pool. Differences from the real pools: 7 reference games instead of 10, no 5-game questions.
 
-This file is scripts/pid_v2_offsim.py with the splits (pool x seed) as separate processes (METHOD_NOTES 2.190): the original
+This file is experiments/pid_v2_offsim.py with the splits (pool x seed) as separate processes (METHOD_NOTES 2.190): the original
 computes its eight splits one after the other in one process (about 75 minutes for four seeds), which is too slow for the
 evening's verdict.  --only POOL:SEED --dump DIR  computes one split and writes it to DIR (no statistics);
 --from-dumps --dump DIR  reads the splits of --seeds from DIR and prints / writes exactly what the original does (the random

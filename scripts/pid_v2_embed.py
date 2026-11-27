@@ -27,7 +27,7 @@ def main(argv=None):
     ap.add_argument("--steps", type=int, default=3000)
     ap.add_argument("--support", type=int, default=10)
     ap.add_argument("--tag", default="emb2")
-    ap.add_argument("--phase-dir", default=None, help="scripts/pid_v2_phase_rows.py output: train on the 640-dim rows with phase means (use --tag emb3)")
+    ap.add_argument("--phase-dir", default=None, help="experiments/pid_v2_phase_rows.py output: train on the 640-dim rows with phase means (use --tag emb3)")
     ap.add_argument("--seeds", nargs="+", type=int, default=[0], help="seed 0 keeps the plain file names; seed k > 0 writes <tag>_<name>_s<k>.pt")
     a = ap.parse_args(argv)
     t0 = time.time()

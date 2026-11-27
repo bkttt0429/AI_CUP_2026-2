@@ -14,7 +14,7 @@ cfg: {"size": odd, "ch": channels, "prev": 0|1, "own2": 0|1, "depth": n}. The st
 (closed, notes 2.193). The encoders' outputs start at zero, so a wrapped network equals the plain one at the start.
 
 The shared modules are NOT changed for the short runs: the trainer scripts/pid_seq_train_w3.py calls wrap() here, and
-the loaders are started through scripts/pid_w3_run.py, which makes pid_win.wrap() send a cfg with "own2" or "depth"
+the loaders are started through experiments/pid_w3_run.py, which makes pid_win.wrap() send a cfg with "own2" or "depth"
 here (install()). A family that is expanded later gets the permanent dispatch in pid_win.py after a regression check.
 """
 

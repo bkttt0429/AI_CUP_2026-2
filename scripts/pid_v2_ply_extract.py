@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Per-ply trunk vectors of the v2 release's added pools, in the layout of the rank session's sequence identity model
-(AI_CUP_2026-1 logs/nano4/m88_seqid.py read_part): per game the first 256 plies of BOTH players, GL [256, 128] fp16 (board-pooled
+(AI_CUP_2026-1 scripts/m_series/m88_seqid.py read_part): per game the first 256 plies of BOTH players, GL [256, 128] fp16 (board-pooled
 64 + played-point 64), POS (tensor position, 361 pass, 362 padding), MOV (0 Black / 1 White), LEN, SUBJ (the player's colour).
 Same replay, network and projections as scripts/pid_trunk_extract.py / AI_CUP_2026-1 scripts/trunk_extract.py. Sharded by
 shards.sh (--shard i --nshards N); one .npz per part, resumable. Keys as pid_trunk_extract.py --official2."""

@@ -46,7 +46,7 @@ def _split(make, cand_items, q_items, players):
 def components(cands, questions, moves, sgfs, cfg, rows=None, emb=None, which=None, seq=None, rows_full=None, emb_full=None):
     """{name: [Q, C]}. cands {player: [(key, colour)]}, questions [[(key, colour)]], moves {key: parsed moves as recorded},
     sgfs {key: record}, rows {key: [256] trunk row of the player's side}, emb a fitted aicup_pid.embed.PlayerEmbedding,
-    seq {key: [128] unit vector of the player's side from the sequence identity model (scripts/pid_v2_seq_embed.py)};
+    seq {key: [128] unit vector of the player's side from the sequence identity model (experiments/pid_v2_seq_embed.py)};
     rows_full {key: row of the UNPROJECTED trunk statistics (scripts/pid_trunk_extract.py --full)} and emb_full, one or several
     PlayerEmbedding fitted on such rows: the component 'embfull' (METHOD_NOTES 2.75)."""
     which = set(which or (*SPLIT, *MERGED))
@@ -169,7 +169,7 @@ def official_pool(cand_path, q_path):
 def candidate_holdout(cands, h, seed):
     """{player: [h held-out (key, colour)]}: the labelled pseudo-pool cut from an official pool's own candidates (METHOD_NOTES
     2.41). Per candidate (sorted ids, games in file order) h games drawn without replacement, in the drawn order; the same
-    draw in scripts/pid_v2_seq_finetune.py --holdout (those games stay out of the fine-tune) and scripts/pid_v2_offsim.py."""
+    draw in scripts/pid_v2_seq_finetune.py --holdout (those games stay out of the fine-tune) and experiments/pid_v2_offsim.py."""
     rng = np.random.default_rng(4100 + seed)
     return {p: [cands[p][i] for i in rng.permutation(len(cands[p]))[:h]] for p in sorted(cands)}
 
@@ -260,7 +260,7 @@ def pool_normalised(vecs, cands, questions, shrink=0.3):
 def load_phase_rows(aicup1_root, stored_dir, keep=None):
     """{training game key: [640]} = the 256-dim row of the owner's side (competition 1's block order) + the three phase means
     (plies t < 60, 60-150, >= 150; 128 dims each). Sources: the rank session's results/m84_rowsp (games without stored per-ply
-    vectors) and scripts/pid_v2_phase_rows.py's stored_f<fold>.npz (the others); the same function computed both."""
+    vectors) and experiments/pid_v2_phase_rows.py's stored_f<fold>.npz (the others); the same function computed both."""
     import glob
     from pathlib import Path
     out = {}

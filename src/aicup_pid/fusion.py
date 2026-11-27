@@ -1,4 +1,4 @@
-"""Fuse per-candidate log scores of several components into Top-5 lists (docs/ARCHITECTURE.md ladder (5)).
+"""Fuse per-candidate log scores of several components into Top-5 lists (docs/records/ARCHITECTURE.md ladder (5)).
 
 Each component gives a [Q, C] matrix of scores (questions x candidates). standardise centres and scales every row, so
 components live on one scale; Fusion learns one weight per component by maximising the multinomial log-likelihood of

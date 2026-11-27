@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Simulated-pool CV of the player-identification ladder's CPU components (docs/ARCHITECTURE.md sections 2-3).
+"""Simulated-pool CV of the player-identification ladder's CPU components (docs/records/ARCHITECTURE.md sections 2-3).
 
 Each --pools entry names the folds of one simulated pool (aicup_pid.pools.make_pool: up to 400 players with >= 105 Black
 games, 100 candidate games each, the rest cut into 5/10/15/20-game questions). Per pool the opening model and the style

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Per-ply trunk vectors of the external games chosen by scripts/ext_fox_select.py (METHOD_NOTES 2.46), in exactly the form
-of the rank session's M90 parts (AI_CUP_2026-1 logs/nano4/m90_ply_extract.py: same network, replay, projection, the same
+of the rank session's M90 parts (AI_CUP_2026-1 scripts/m_series/m90_ply_extract.py: same network, replay, projection, the same
 quantisation statistics results/m90/glstats.npz), so that the sequence identity networks train on them next to the
 competition's games. That session's modules are imported read-only; nothing of theirs is written.
 Parts <out>/ply_x_s<shard>of<n>_p<k>.npz: key, LEN, SUBJ, POS, MOV, GLQ (the first 256 plies). Resumable per part.
@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 ROOT = Path.cwd()
-sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts"), str(ROOT / "logs/nano4")]
+sys.path[:0] = [str(ROOT / "src"), str(ROOT / "scripts"), str(ROOT / "scripts/m_series")]
 import trunk_extract as te  # noqa: E402
 from aicup.humansl import load_humansl  # noqa: E402
 from aicup.l1b import neutral_rows, trunk_features  # noqa: E402

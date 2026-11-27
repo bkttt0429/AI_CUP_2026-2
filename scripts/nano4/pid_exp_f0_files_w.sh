@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # METHOD_NOTES 2.233: the submission file of a composition whose FUSION WEIGHTS come from another document (weights re-fitted
-# on the pools' own candidates) instead of v2ge's. = scripts/nano4/pid_exp_f0_files.sh with one step in between:
+# on the pools' own candidates) instead of v2ge's. = experiments/nano4/pid_exp_f0_files.sh with one step in between:
 #   1. data/day_scripts/build_v2h.py <name> <composition>      (real-pool document, weights of v2ge)
 #   2. the 9 weights are replaced by those of results/pid_fusion_<weights document>.json (same components, checked)
 #   3. scripts/nano4/pid_exp_compfile.sh <name> <file to compare with>   -> results/final/not_for_upload/pid_<name>_a2k_p3.csv

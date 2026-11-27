@@ -3,7 +3,7 @@
 
 The original pools (pub_ / priv_, byte-identical to the 10-30 files) keep the rows of an existing submission (--old-submission:
 predict_pid.py's output on those files). The added pools (pub2_ / priv2_: 600 candidates x 10 games, questions of 1-5 games,
-either colour) are scored here with aicup_pid.v2.components and the fusion document of scripts/pid_v2_sim.py; --assign auto
+either colour) are scored here with aicup_pid.v2.components and the fusion document of experiments/pid_v2_sim.py; --assign auto
 applies the one-to-one assignment only when aicup_pid.checks' rule v2 says the pool looks one-to-one. Games that do not replay
 (aicup.submission.check_game) or have no trunk row are left out; a question without a usable game takes the first five
 candidates and is listed. The result is checked against the sample submission before it is written.
@@ -121,7 +121,7 @@ def predict_pool(cand_path, q_path, doc, emb, store, assign, workers, log=print,
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--tests-dir", required=True)
-    ap.add_argument("--fusion", required=True, help="scripts/pid_v2_sim.py --fusion-out")
+    ap.add_argument("--fusion", required=True, help="experiments/pid_v2_sim.py --fusion-out")
     ap.add_argument("--trunk-store", nargs="*", default=[], help="pid_trunk_extract.py --official2 output (needed when the fusion names emb)")
     ap.add_argument("--old-submission", required=True, help="800 rows for the original pools (predict_pid.py on the 10-30 files)")
     ap.add_argument("--assign", choices=["off", "auto", "on", "soft", "big"], default="off",

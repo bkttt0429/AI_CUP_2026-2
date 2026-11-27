@@ -100,7 +100,7 @@ def main(argv=None):
     print(f"shard {a.shard}/{a.nshards}: {len(mine)} of {len(keys)} games, {len(parts)} parts, {len(todo)} to do", flush=True)
     if not todo:
         return 0
-    config = torch.load(str(ckpt), map_location="cpu", weights_only=a.ckpt is None)["config"]  # a foreign checkpoint holds more than tensors (as the rank session's scripts/ai_state_extract.py loads it)
+    config = torch.load(str(ckpt), map_location="cpu", weights_only=a.ckpt is None)["config"]  # a foreign checkpoint holds more than tensors (as the rank session's experiments/ai_state_extract.py loads it)
     pool = mp.get_context("fork").Pool(a.workers, initializer=te.init_worker, initargs=(config,))
 
     def save(path, **arrays):

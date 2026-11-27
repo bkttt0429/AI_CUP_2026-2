@@ -1,4 +1,4 @@
-"""Opening language model: a candidate's Black-move habits in the first moves (docs/ARCHITECTURE.md ladder (1)).
+"""Opening language model: a candidate's Black-move habits in the first moves (docs/records/ARCHITECTURE.md ladder (1)).
 
 Every game is put into a canonical orientation: of the 8 board symmetries the one whose transformed Black coordinates
 among the first `depth` moves are lexicographically smallest (ties broken by all the moves), so a game and its mirror

@@ -1,4 +1,4 @@
-"""scripts/pid_audit.py: the report-only leak audit of the simulated pools (planted duplicates are found, symmetric copies included)."""
+"""experiments/pid_audit.py: the report-only leak audit of the simulated pools (planted duplicates are found, symmetric copies included)."""
 import json
 import re
 

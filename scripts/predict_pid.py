@@ -99,7 +99,7 @@ def predict_pool(cand_path, q_path, fus, cfg, workers, comps=COMPONENTS, assign=
         log(f"embedding component ({emb_path}, {emb_model.players_trained} training players) in {time.time() - t1:.0f} s", flush=True)
     S = score_components([c for c in comps if c != "b3"], opening, style, usable, moves, feats, local, hd, sgfs, orient, opening_raw, S_ref, S_trunk, S_emb)
     b3_info = None
-    if "b3" in comps:  # line B3 (METHOD_NOTES 2.26): ct9's zq captured by scripts/pid_b3_official.py; only for the no-assignment fallback
+    if "b3" in comps:  # line B3 (METHOD_NOTES 2.26): ct9's zq captured by experiments/pid_b3_official.py; only for the no-assignment fallback
         from aicup_pid.b3 import score_b3
         if not b3_dir:
             raise ValueError("the fusion names 'b3' but no --b3-dir was given")
@@ -163,7 +163,7 @@ def main(argv=None):
     ap.add_argument("--trunk-store", nargs="*", default=None, help="trunk rows of these official files (default: the fusion document's trunk_store_official); a re-released set has its own store")
     ap.add_argument("--assign-blocks", nargs="*", default=None, help="test CSVs of an earlier release: the questions found there (same games) form block 'orig', the rest 'added'; "
                     "the assignment rule and the assignment then run block by block")
-    ap.add_argument("--b3-dir", default=None, help="scripts/pid_b3_official.py work folder (<dir>/pub, <dir>/priv) for a fusion that names 'b3'")
+    ap.add_argument("--b3-dir", default=None, help="experiments/pid_b3_official.py work folder (<dir>/pub, <dir>/priv) for a fusion that names 'b3'")
     ap.add_argument("--assign", choices=["off", "auto", "on"], default="off",
                     help="line B3: one-to-one assignment of the Top-1 (auto = only when the Top-1 picks name >= 87.5%% distinct candidates, or >= 95%% "
                          "distinct among the more confident half with no more questions than candidates: aicup_pid.checks.top1_collisions)")

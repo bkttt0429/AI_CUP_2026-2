@@ -98,7 +98,7 @@ def aggregate(g, l, pos, lens):
 def replay_target(task):
     """trunk_extract.replay for the TARGET side's plies only: the game is played through as there, but the input features of the
     other side's positions are never computed (they are most of the replay's cost; the rank session's replay_side, AI_CUP_2026-1
-    logs/nano4/m118_fullrows_extract.py, checked against the full replay). Returns (key, bins, globs, pos, mover, t) for the
+    experiments/nano4/m118_fullrows_extract.py, checked against the full replay). Returns (key, bins, globs, pos, mover, t) for the
     target's plies, t their ply numbers; bins and globs are None when the target has no ply."""
     idx, sgf, color = task
     stones, moves = te.setup_and_moves(sgf)
@@ -299,7 +299,7 @@ def main(argv=None):
             if not np.isfinite(feats).all():
                 raise ValueError(f"part {k}: non-finite features")
             # phase means of the target's plies (t < 60, 60 <= t < 150, t >= 150; 128 dims each, zeros when a phase is empty): the same
-            # definition as AI_CUP_2026-1 logs/nano4/m84_rows_extract.py side_rows (a pass keeps a zero played-point vector)
+            # definition as AI_CUP_2026-1 scripts/m_series/m84_rows_extract.py side_rows (a pass keeps a zero played-point vector)
             phase = np.zeros((len(lens), 384), np.float16)
             X = np.hstack([g.astype(np.float32), l.astype(np.float32)])
             start = 0

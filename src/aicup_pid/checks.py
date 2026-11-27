@@ -1,4 +1,4 @@
-"""The 11/04 official-file checks as pure functions (docs/superpowers/specs/2026-11-03-pid-fork-plan-design.md section 3).
+"""The 11/04 official-file checks as pure functions (docs/records/specs/2026-11-03-pid-fork-plan-design.md section 3).
 
 Every function takes in-memory inputs (hashes, parsed moves, style feature rows) and returns a JSON-serialisable dict:
 duplicates against the training index and between files (checks 1-2), length quantiles (4), legality (5), the opening-

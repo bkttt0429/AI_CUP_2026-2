@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """A sequence identity network trained for players it has NOT seen (METHOD_NOTES 2.39). Architecture, data and episode
-objective are the rank session's M90 (AI_CUP_2026-1 logs/nano4/m88_seqid.py --full; that module is imported read-only for
+objective are the rank session's M90 (AI_CUP_2026-1 scripts/m_series/m88_seqid.py --full; that module is imported read-only for
 the model and the part readers). M90's accuracy on unseen players plateaus at 10-30k steps and falls afterwards while the
 training players keep being learnt; the official players are all unseen. Changes offered here:
   --steps / --horizon   steps trained / the step where the cosine reaches zero (M90: 60,000; a 20k snapshot = --steps 20000
@@ -52,7 +52,7 @@ import numpy as np
 import pandas as pd
 
 AICUP1 = Path.cwd()
-sys.path[:0] = [str(AICUP1 / "src"), str(AICUP1 / "logs/nano4")]
+sys.path[:0] = [str(AICUP1 / "src"), str(AICUP1 / "scripts/m_series")]
 import m88_seqid as M  # noqa: E402
 
 T = M.T_MAX
@@ -90,7 +90,7 @@ def load_games(smoke, log, all_folds=False, ext_ply=None, ext_select=None, share
     large array exists and every part is written straight into preallocated arrays: the compute nodes run with strict
     overcommit, and a pool forked from a large parent exhausted the node's commit limit in the rank session's first run."""
     share = Path(share_dir) if share_dir else None
-    if share is not None and (share / "DONE").exists():  # arrays prepared once per job in shared memory (scripts/nano4/pid_seq_train_shared.sh)
+    if share is not None and (share / "DONE").exists():  # arrays prepared once per job in shared memory (experiments/nano4/pid_seq_train_shared.sh)
         G = {k: np.load(share / f"{k}.npy", mmap_mode="r") for k in SHARED}
         G.update({k: np.load(share / f"{k}.npy") for k in ("key", "pid", "fold")})
         log(f"games attached from {share}: {len(G['key'])} ({G['GL'].nbytes / 1e9:.1f} GB shared; process memory {_rss_gb():.1f} GB); games of fold 0: {int((G['fold'] == 0).sum())}")
@@ -238,7 +238,7 @@ def main(argv=None):
     ap.add_argument("--sup-only", action="store_true", help="with --sup-dims: every other input dimension is set to its mean")
     ap.add_argument("--sup-require", action="store_true", help="train only on games that have supervised features (the same games for every arm of the probe)")
     ap.add_argument("--sup-name", default=None, help="name of the supervised feature set, recorded in the checkpoint so that the pool fine-tune reads the matching pool features (None: the first set, METHOD_NOTES 2.88; js: the joint projection with the policy-expected vector + 4 scalars, 2.110)")
-    ap.add_argument("--ext-second", nargs="*", default=None, help="second.csv files of scripts/ext_fox_census.py: external games are also read from the other player's side")
+    ap.add_argument("--ext-second", nargs="*", default=None, help="second.csv files of experiments/ext_fox_census.py: external games are also read from the other player's side")
     ap.add_argument("--no-second", action="store_true", help="leave the second-side rows out (a control arm inside a job that loaded them)")
     ap.add_argument("--ext-deep", nargs="*", default=None, help="select.csv files (also given in --ext-select) of DEEPER selections: more games of accounts selected before (METHOD_NOTES 2.126)")
     ap.add_argument("--no-deep", action="store_true", help="leave the games of the deeper selections out (a control arm inside a job that loaded them)")

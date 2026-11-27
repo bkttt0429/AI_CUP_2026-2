@@ -2,8 +2,8 @@
 candidate, and its relatives.
 
 A sequence network returns a vector for the side flagged as the subject of a game; with the other colour flagged it describes
-the OPPONENT (scripts/pid_v2_opp_embed.py). A player meets some opponents again, so the opponent of a question game may also
-be the opponent in one of the owner's reference games. On the official candidates (leave-one-game-out, scripts/pid_probe_opp.py)
+the OPPONENT (experiments/pid_v2_opp_embed.py). A player meets some opponents again, so the opponent of a question game may also
+be the opponent in one of the owner's reference games. On the official candidates (leave-one-game-out, experiments/pid_probe_opp.py)
 the nearest opponent vector belongs to the same candidate in 3.4% of the games; 0.15% if nothing were there. The event is
 rare and then decisive, so only the tail counts:
   per network cos(o_g, o_r) of a question game g and a reference game r; the networks' cosines are averaged;

@@ -5,7 +5,7 @@
 As data/day_scripts/build_v2h.py for families of my official networks (tags <family>s<k>e), with one difference: a family
 named after the composition counts the members that have a linked checkpoint (/work/u2507115/pid_v2/seqnet/
 ckpt_-1_<family>s<k>e.pt) instead of the members that have a real-pool vector file. The readings only use the file NAMES of
-`seq_official` (scripts/pid_v2_offsim_par.py, scripts/pid_v2_oldsim.py); a submission file needs the real-pool vectors and
+`seq_official` (scripts/pid_v2_offsim_par.py, experiments/pid_v2_oldsim.py); a submission file needs the real-pool vectors and
 a document built by build_v2h.py.
 
   pid_build_doc_names.py <name> <family>[*k][+<family>[*k]...] [<new family> ...]

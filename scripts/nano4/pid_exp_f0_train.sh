@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # METHOD_NOTES 2.201: the four by-games families trained WITH FOLD 0 (the user's consent of 2026-11-18 00:29, "同意用 fold 0";
 # trainer option --all-folds: the 1,605 players of fold 0 train like the players of folds 1-4). Recipes, steps, sampling
-# and external accounts (scale3b, no scale4) exactly as the second-window families (scripts/nano4/pid_exp_w2fam_train2.sh;
+# and external accounts (scale3b, no scale4) exactly as the second-window families (experiments/nano4/pid_exp_w2fam_train2.sh;
 # 9x9 window + second window, scripts/pid_win2.py), with NEW seeds: the families are meant to be ADDED to the composition.
 #   o44 = o41's recipe + fold 0 (plain inputs, 40,000 steps)
 #   o45 = o42's recipe + fold 0 (second feature set, 40,000 steps)

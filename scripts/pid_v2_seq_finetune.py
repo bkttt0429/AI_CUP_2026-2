@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Pool adaptation of the sequence identity model (METHOD_NOTES 2.31): a short fine-tune of the rank session's network
-(AI_CUP_2026-1 logs/nano4/m88_seqid.py) on ONE pool's own candidates (600 players x 10 games, ids given by the organisers), with
+(AI_CUP_2026-1 scripts/m_series/m88_seqid.py) on ONE pool's own candidates (600 players x 10 games, ids given by the organisers), with
 the model's own objective: every game is a query against the prototypes of the players in the episode, its own game left out.
 No question game enters the fine-tune; a pool is adapted on its own candidates only (Public and Private never mixed).
 Why: the network identifies players it was trained on far better than unseen ones (held-out games: 0.21-0.23 against 0.15-0.17
@@ -27,7 +27,7 @@ import torch
 
 AICUP1 = Path.cwd()
 R2 = Path(__file__).resolve().parents[1]
-sys.path[:0] = [str(AICUP1 / "src"), str(AICUP1 / "logs/nano4"), str(R2 / "src"), str(R2 / "scripts")]
+sys.path[:0] = [str(AICUP1 / "src"), str(AICUP1 / "scripts/m_series"), str(R2 / "src"), str(R2 / "scripts")]
 import m88_seqid as m88  # noqa: E402
 
 
@@ -78,7 +78,7 @@ def embed(net, A, idx, batch=1024):
 
 
 def sym_table():
-    """[8, 363]: where a point goes under each board symmetry (361 = pass and 362 = padding stay); as scripts/pid_seq_train.py --sym-aug."""
+    """[8, 363]: where a point goes under each board symmetry (361 = pass and 362 = padding stay); as experiments/pid_seq_train.py --sym-aug."""
     yy, xx = np.divmod(np.arange(361), 19)
     maps = [(xx, yy), (18 - xx, yy), (xx, 18 - yy), (18 - xx, 18 - yy), (yy, xx), (18 - yy, xx), (yy, 18 - xx), (18 - yy, 18 - xx)]
     return np.stack([np.concatenate([b_ * 19 + a_, [361, 362]]) for a_, b_ in maps]).astype(np.int16)
@@ -132,7 +132,7 @@ def finetune(net, A, owner, steps_out, save, lr, p_ep, m_ep, seed, log, horizon=
         if mix_by is not None:
             mrows = np.concatenate([rng.choice(mix_by[c], m_ep, replace=False) for c in rng.choice(len(mix_by), p_ep - n_pool, replace=False)])
             batch = {k: np.concatenate([batch[k], mix[k][mrows]]) for k in batch}
-        if sym_aug:  # one random board symmetry per step, on the played points (as scripts/pid_seq_train.py --sym-aug)
+        if sym_aug:  # one random board symmetry per step, on the played points (as experiments/pid_seq_train.py --sym-aug)
             batch["POS"] = SYM[rng_sym.integers(8)][batch["POS"].astype(np.int64)]
         with torch.autocast("cuda", dtype=torch.bfloat16):
             z = fwd(torch.as_tensor(batch["GL"]).cuda(), torch.as_tensor(batch["POS"].astype(np.int64)).cuda(), torch.as_tensor(batch["MOV"].astype(np.int64)).cuda(),

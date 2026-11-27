@@ -12,13 +12,13 @@ AI CUP 2026 秋季賽「圍棋棋力與風格預測競賽—競賽一：從圍�
 | --- | --- |
 | [docs/TASK.md](docs/TASK.md) | 任務、資料與評分規則 |
 | [docs/PID_FINAL_NUMBERS.md](docs/PID_FINAL_NUMBERS.md) | 結案數字總表：最終流程、136 個網路的組成、各步驟的增益、未採用的項目、重現指令 |
-| [METHOD_NOTES.md](METHOD_NOTES.md) | 方法紀錄：每一項實驗於取得結果前登記的規則與其結果（節號 2.x） |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 問題分析與驗證協議（開案時） |
-| [docs/NANO4.md](docs/NANO4.md) | 叢集上的操作步驟與早期流程的完整指令 |
+| [docs/records/METHOD_NOTES.md](docs/records/METHOD_NOTES.md) | 方法紀錄：每一項實驗於取得結果前登記的規則與其結果（節號 2.x） |
+| [docs/records/ARCHITECTURE.md](docs/records/ARCHITECTURE.md) | 問題分析與驗證協議（開案時） |
+| [docs/records/NANO4.md](docs/records/NANO4.md) | 叢集上的操作步驟與早期流程的完整指令 |
 
 ## 2. 環境
 
-本倉庫不帶自己的環境，與競賽二的倉庫 [AI_CUP_2026-1](https://github.com/bkttt0429/AI_CUP_2026-1) 共用：SGF 解析、KataGo 特徵抽取、序列網路的定義（`logs/nano4/m88_seqid.py`）都在該倉庫。兩個倉庫須並排放置。
+本倉庫不帶自己的環境，與競賽二的倉庫 [AI_CUP_2026-1](https://github.com/bkttt0429/AI_CUP_2026-1) 共用：SGF 解析、KataGo 特徵抽取、序列網路的定義（`scripts/m_series/m88_seqid.py`）都在該倉庫。兩個倉庫須並排放置。
 
 ```bash
 git clone https://github.com/bkttt0429/AI_CUP_2026-1
@@ -50,7 +50,7 @@ cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.1
 
 | 步驟 | 程式 | 輸入 | 輸出 |
 | --- | --- | --- | --- |
-| 訓練棋局的逐手特徵 | `AI_CUP_2026-1/logs/nano4/m90_ply_extract.py` | 訓練集 CSV、Human SL 權重 | 逐手分片：每局前 256 手的主幹向量（全盤 64＋落點 64 維）、落點、執色 |
+| 訓練棋局的逐手特徵 | `AI_CUP_2026-1/scripts/m_series/m90_ply_extract.py` | 訓練集 CSV、Human SL 權重 | 逐手分片：每局前 256 手的主幹向量（全盤 64＋落點 64 維）、落點、執色 |
 | 新增池的逐手特徵 | `scripts/pid_v2_ply_extract.py` | `data/tests_1111/` 的候選與題目棋譜 | 每個分片一個 `.npz`：`GL`［256, 128］、`POS`、`MOV`、`LEN`、`SUBJ` |
 | 每局摘要特徵 | `scripts/pid_trunk_extract.py --official2` | 同上 | 每局一列 256 維（兩個主幹向量的平均與標準差），供統計成分與每局嵌入使用 |
 | 有監督投影的特徵 | `scripts/pid_sup_fit.py`、`scripts/pid_sup_ply_extract.py` | 訓練棋局、投影矩陣 | `sup_s<分片>_p<k>.npz`：逐手 68 維特徵 |
@@ -63,8 +63,8 @@ cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.1
 
 | 步驟 | 程式 | 輸入 | 輸出 |
 | --- | --- | --- | --- |
-| 序列網路 | `scripts/pid_seq_train.py` 及其變體（`_w`、`_w2`、`_w3`、`_wx`：加入棋形視窗） | 訓練與外部棋局的逐手分片、玩家分折（`AI_CUP_2026-1/splits/player_folds.csv`） | `ckpt_<網路>_<標記>e.pt`（權重的指數移動平均）、`train_<網路>_<標記>.json`（訓練紀錄） |
-| 各家族的啟動腳本 | `scripts/nano4/pid_exp_s4w_train.sh`、`pid_exp_w2fam_train2.sh`、`pid_exp_f0_train.sh` 等 | 家族名稱與成員編號 | 每個家族 8 個網路；腳本開頭記有該家族的配方 |
+| 序列網路 | `experiments/pid_seq_train.py` 及其變體（`_w`、`_w2`、`_w3`、`_wx`：加入棋形視窗） | 訓練與外部棋局的逐手分片、玩家分折（`AI_CUP_2026-1/splits/player_folds.csv`） | `ckpt_<網路>_<標記>e.pt`（權重的指數移動平均）、`train_<網路>_<標記>.json`（訓練紀錄） |
+| 各家族的啟動腳本 | `experiments/nano4/pid_exp_s4w_train.sh`、`pid_exp_w2fam_train2.sh`、`pid_exp_f0_train.sh` 等 | 家族名稱與成員編號 | 每個家族 8 個網路；腳本開頭記有該家族的配方 |
 | 每局嵌入 | `scripts/pid_embed_cv.py`（原題池）、`scripts/pid_v2_embed.py`（新增池）、`src/aicup_pid/embed.py` | 每局摘要特徵 | `results/embed/emb_final.pt`（原題池）、`results/embed/emb2_final.pt`（新增池） |
 
 主要設定：Transformer 寬 384、8 層、8 個注意力頭（四個家族為寬 512、10 層）；AdamW、學習率 3×10⁻⁴、權重衰減 0.05、1,000 步暖身、餘弦排程；每個情節 256 位玩家各 8 局，其中一半來自外部帳號；棋盤對稱擴增、隨機遮手 0.3、依局數抽樣；3 萬至 5.5 萬步。各家族的完整參數見啟動腳本與 [docs/PID_FINAL_NUMBERS.md](docs/PID_FINAL_NUMBERS.md) 第 4、5 節。
@@ -84,7 +84,7 @@ cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.1
 
 | 步驟 | 程式 | 說明 |
 | --- | --- | --- |
-| 官方候選人切出的擬題池 | `scripts/pid_v2_offsim.py`、`pid_v2_offsim_par.py` | 每位候選人保留 3 局為題目、7 局為參考；輸出各題數的分數與成對比較的信賴區間 |
+| 官方候選人切出的擬題池 | `experiments/pid_v2_offsim.py`、`pid_v2_offsim_par.py` | 每位候選人保留 3 局為題目、7 局為參考；輸出各題數的分數與成對比較的信賴區間 |
 | 訓練玩家的模擬題池 | `scripts/pid_v2_sim*.py` | 與新增池同形的模擬題池；用於擬合融合權重 |
 | 檔案差異 | `scripts/pid_diff_files.py` | 比較兩個提交檔逐題的差異 |
 

@@ -1,4 +1,4 @@
-"""Raw style statistics of a game's Black moves and a Gaussian candidate model (docs/ARCHITECTURE.md ladder (2a)).
+"""Raw style statistics of a game's Black moves and a Gaussian candidate model (docs/records/ARCHITECTURE.md ladder (2a)).
 
 game_features replays the game on a small board (captures handled) and summarises Black's moves: lines, distances to the
 previous Black move and to White's last move, contact moves, captures, the first two Black moves' point types, length.
