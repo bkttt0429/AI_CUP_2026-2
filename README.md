@@ -49,6 +49,8 @@ AI_CUP_2026-2/
 | [docs/records/ARCHITECTURE.md](docs/records/ARCHITECTURE.md) | 問題分析與驗證協議（開案時） |
 | [docs/records/NANO4.md](docs/records/NANO4.md) | 叢集上的操作步驟與早期流程的完整指令 |
 
+`docs/records/` 是封存紀錄，內文的程式路徑是 2026-11-27 整理前的位置（例如 `scripts/pid_v2_sim2.py` 現在是 `experiments/pid_v2_sim2.py`）；新舊路徑對照見 [docs/layout_migration.tsv](docs/layout_migration.tsv)，AI_CUP_2026-1 的路徑對照見該儲存庫的 `docs/layout_migration.tsv`。
+
 ## 2. 環境
 
 本儲存庫不帶自己的環境，與競賽二的儲存庫 [AI_CUP_2026-1](https://github.com/bkttt0429/AI_CUP_2026-1) 共用：SGF 解析、KataGo 特徵抽取、序列網路的定義（`scripts/m_series/m88_seqid.py`）都在該儲存庫。兩個儲存庫須並排放置。
