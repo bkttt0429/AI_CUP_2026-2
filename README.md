@@ -3,10 +3,43 @@
 AI CUP 2026 秋季賽「圍棋棋力與風格預測競賽—競賽一：從圍棋棋譜集辨識玩家」，TEAM_11820 的程式與紀錄。
 
 - 任務：每題給同一位未知玩家的數局棋譜，自對應候選庫中辨識該玩家，輸出信心最高的前 5 名。
-- 成績：Public 0.9313515、Private 0.9341401（最終提交檔 `pid_v2fin11_c_a2k_p3.csv`，md5 `c7397211f0ca0af7225ad1d04566f969`）。
-- `main` 即最終提交所用的程式（原分支 `nano4/pid-b3-assign`；2026-11-27 起倉庫整併為單一分支，紀錄見 [docs/BRANCHES.md](docs/BRANCHES.md)）。
+- `main` 即最終提交所用的程式（原分支 `nano4/pid-b3-assign`；2026-11-27 起儲存庫整併為單一分支，紀錄見 [docs/BRANCHES.md](docs/BRANCHES.md)）。
+- 專案規則（AI 工具與成員都要遵守）見 [AGENTS.md](AGENTS.md)。
 
-## 1. 文件
+<!-- final-status:begin -->
+| 項目 | 內容 |
+| --- | --- |
+| 競賽 | AI CUP 2026 秋季賽「圍棋棋力與風格預測競賽—競賽一：從圍棋棋譜集辨識玩家」 |
+| 隊伍 | TEAM_11820 |
+| 最終提交檔 | `pid_v2fin11_c_a2k_p3.csv`（不在儲存庫內） |
+| 最終提交檔 md5 | `c7397211f0ca0af7225ad1d04566f969` |
+| Public 成績 | 0.9313515 |
+| Private 成績 | 0.9341401（第 1 名） |
+<!-- final-status:end -->
+
+## 1. 文件與目錄結構
+
+### 1.1 目錄結構
+
+```text
+AI_CUP_2026-2/
+├── AGENTS.md          專案規則（AI 工具與成員都要遵守）
+├── src/aicup_pid/     玩家辨識套件：統計成分、融合、配對、序列網路的資料處理
+├── scripts/           最終流程的程式：特徵抽取、外部資料、序列網路訓練、題池微調、預測與合併
+│   └── nano4/         最終網路家族的訓練與向量輸出啟動腳本（nano4 是國網的叢集名稱）
+├── results/           最終融合文件、最終提交檔的檢查報告、embed/、final/（不在儲存庫內的權重清單與資料閘門紀錄）
+│   └── archive/       封存的實驗結果
+├── tests/             pytest 測試
+├── tools/             規則檢查：run_checks.sh、check_code_rules.py、doc_rules.py
+├── docs/              現行文件（任務、結案數字、分支紀錄、成績來源 final_status.json、新舊路徑對照）
+│   ├── records/       封存紀錄：方法紀錄、計畫、備忘
+│   └── work/          工作檔（YYYY-MM-DD-主題.md）
+└── experiments/       封存的實驗程式與啟動腳本（以 tag pre-restructure-20261127 的目錄結構執行）
+```
+
+執行期資料夾不進版控：`data/`、`upload/`。2026-11-27 整理前的結構保存在 tag `pre-restructure-20261127`，每個檔案的新舊路徑見 [docs/layout_migration.tsv](docs/layout_migration.tsv)。
+
+### 1.2 文件
 
 | 文件 | 內容 |
 | --- | --- |
@@ -18,16 +51,16 @@ AI CUP 2026 秋季賽「圍棋棋力與風格預測競賽—競賽一：從圍�
 
 ## 2. 環境
 
-本倉庫不帶自己的環境，與競賽二的倉庫 [AI_CUP_2026-1](https://github.com/bkttt0429/AI_CUP_2026-1) 共用：SGF 解析、KataGo 特徵抽取、序列網路的定義（`scripts/m_series/m88_seqid.py`）都在該倉庫。兩個倉庫須並排放置。
+本儲存庫不帶自己的環境，與競賽二的儲存庫 [AI_CUP_2026-1](https://github.com/bkttt0429/AI_CUP_2026-1) 共用：SGF 解析、KataGo 特徵抽取、序列網路的定義（`scripts/m_series/m88_seqid.py`）都在該儲存庫。兩個儲存庫須並排放置。
 
 ```bash
 git clone https://github.com/bkttt0429/AI_CUP_2026-1
 git clone https://github.com/bkttt0429/AI_CUP_2026-2
-cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.12、PyTorch 2.14.1（CUDA 12.6）與 requirements.txt
+cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.12、PyTorch 2.14.1（CUDA 12.6）、requirements.txt 與 requirements-dev.txt
 ```
 
 - 作業系統：Red Hat Enterprise Linux 9.6；排程：Slurm；GPU：NVIDIA H200（每節點 8 張）。
-- 預訓練模型：KataGo Human SL 網路 `b18c384nbt-humanv0`，置於 `AI_CUP_2026-1/models/katago/`（取自 KataGo 官方釋出，不隨倉庫散布）。
+- 預訓練模型：KataGo Human SL 網路 `b18c384nbt-humanv0`，置於 `AI_CUP_2026-1/models/katago/`（取自 KataGo 官方釋出，不隨儲存庫散布）。
 - 所有程式由 AI_CUP_2026-1 的根目錄執行，使用其 `.venv`；`aicup_pid.paths` 會自動尋找並排的 AI_CUP_2026-1，亦可用環境變數 `AICUP1_ROOT`、`AICUP_TRAIN_DIR` 指定。
 - 計算一律以 `sbatch scripts/nano4/run.sbatch <指令>` 送至計算節點；8 張 GPU 的分片以 `bash scripts/nano4/shards.sh 8 <指令>` 執行。
 - `scripts/nano4/` 內的啟動腳本含本隊叢集上的絕對路徑（`/home/u2507115/BK_AICUP_2026-2`、`/work/u2507115/...`），於其他環境執行時須改為自己的路徑。
@@ -36,8 +69,8 @@ cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.1
 
 | 資料 | 位置 | 說明 |
 | --- | --- | --- |
-| 官方訓練集 v1.1 | `AI_CUP_2026-1/data/training/` | 100 萬局、8,007 位玩家；不隨倉庫散布 |
-| 官方測試與候選檔（2026-11-08 v2） | `data/tests_1111/` | 原題池四檔與新增池四檔；不隨倉庫散布 |
+| 官方訓練集 v1.1 | `AI_CUP_2026-1/data/training/` | 100 萬局、8,007 位玩家；不隨儲存庫散布 |
+| 官方測試與候選檔（2026-11-08 v2） | `data/tests_1111/` | 原題池四檔與新增池四檔；不隨儲存庫散布 |
 | 外部棋譜 | 叢集上的獨立資料夾 | Fox Go Dataset（<https://github.com/featurecat/go-dataset>，GPL-3.0）；處理方式見第 4 節 |
 
 `data/`、`upload/`、`*.npz`、`*.pt` 與 `results/**/*.csv` 均不進版控（見 `.gitignore`）。
@@ -63,8 +96,8 @@ cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.1
 
 | 步驟 | 程式 | 輸入 | 輸出 |
 | --- | --- | --- | --- |
-| 序列網路 | `experiments/pid_seq_train.py` 及其變體（`_w`、`_w2`、`_w3`、`_wx`：加入棋形視窗） | 訓練與外部棋局的逐手分片、玩家分折（`AI_CUP_2026-1/splits/player_folds.csv`） | `ckpt_<網路>_<標記>e.pt`（權重的指數移動平均）、`train_<網路>_<標記>.json`（訓練紀錄） |
-| 各家族的啟動腳本 | `experiments/nano4/pid_exp_s4w_train.sh`、`pid_exp_w2fam_train2.sh`、`pid_exp_f0_train.sh` 等 | 家族名稱與成員編號 | 每個家族 8 個網路；腳本開頭記有該家族的配方 |
+| 序列網路 | `scripts/pid_seq_train_w.py`、`pid_seq_train_w2.py`、`pid_seq_train_w3.py`（加入棋形視窗的三個訓練程式；最初的 `pid_seq_train.py` 與其他變體已封存於 `experiments/`） | 訓練與外部棋局的逐手分片、玩家分折（`AI_CUP_2026-1/splits/player_folds.csv`） | `ckpt_<網路>_<標記>e.pt`（權重的指數移動平均）、`train_<網路>_<標記>.json`（訓練紀錄） |
+| 各家族的啟動腳本 | `scripts/nano4/pid_exp_s3bw_train.sh`（o32F–o35F）、`pid_exp_f0_train.sh`（o44F–o47F）、`pid_exp_len_train.sh`（o53F、o56F）、`pid_exp_len2_train.sh`（o57F、o58F）、`pid_exp_capfam_train.sh`（o49F）、`pid_exp_ns_train.sh`（o60F–o63F） | 家族名稱與成員編號 | 17 個家族、每個家族 8 個網路；腳本開頭記有該家族的配方 |
 | 每局嵌入 | `scripts/pid_embed_cv.py`（原題池）、`scripts/pid_v2_embed.py`（新增池）、`src/aicup_pid/embed.py` | 每局摘要特徵 | `results/embed/emb_final.pt`（原題池）、`results/embed/emb2_final.pt`（新增池） |
 
 主要設定：Transformer 寬 384、8 層、8 個注意力頭（四個家族為寬 512、10 層）；AdamW、學習率 3×10⁻⁴、權重衰減 0.05、1,000 步暖身、餘弦排程；每個情節 256 位玩家各 8 局，其中一半來自外部帳號；棋盤對稱擴增、隨機遮手 0.3、依局數抽樣；3 萬至 5.5 萬步。各家族的完整參數見啟動腳本與 [docs/PID_FINAL_NUMBERS.md](docs/PID_FINAL_NUMBERS.md) 第 4、5 節。
@@ -84,8 +117,8 @@ cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.1
 
 | 步驟 | 程式 | 說明 |
 | --- | --- | --- |
-| 官方候選人切出的擬題池 | `experiments/pid_v2_offsim.py`、`pid_v2_offsim_par.py` | 每位候選人保留 3 局為題目、7 局為參考；輸出各題數的分數與成對比較的信賴區間 |
-| 訓練玩家的模擬題池 | `scripts/pid_v2_sim*.py` | 與新增池同形的模擬題池；用於擬合融合權重 |
+| 官方候選人切出的擬題池 | `scripts/pid_v2_offsim_par.py`（擬合最終融合權重 w11c 時使用；逐題的單機版 `pid_v2_offsim.py` 已封存於 `experiments/`） | 每位候選人保留 3 局為題目、7 局為參考；輸出各題數的分數與成對比較的信賴區間 |
+| 訓練玩家的模擬題池 | `experiments/pid_v2_sim*.py`（封存） | 與新增池同形的模擬題池；早期用於擬合融合權重 |
 | 檔案差異 | `scripts/pid_diff_files.py` | 比較兩個提交檔逐題的差異 |
 
 ## 5. 重現
@@ -109,10 +142,10 @@ python -I ../AI_CUP_2026-2/scripts/predict_pid_v2.py \
 
 **從頭訓練**：依第 4.1、4.2、4.3 節的順序執行；各家族的配方、種子與步數記於對應的啟動腳本。
 
-## 6. 不在倉庫內的檔案
+## 6. 不在儲存庫內的檔案
 
 - 136 個基礎檢查點、各題庫的輸出向量、每局嵌入的權重與提交檔：檔案過大或屬競賽資料，保存於本隊的本地備份，可依主辦單位要求提供；清單與 sha256 見 `results/final/move_20261121/MANIFEST_home.sha256`、`MANIFEST_work.sha256`。
-- `data/day_scripts/` 下的輔助腳本（例如由家族清單產生融合文件的 `build_v2h.py`）：位於不進版控的 `data/` 內，目前不在倉庫。重建最終提交檔不需要這些腳本（最終的融合文件已在 `results/`）；要組出新的網路組成時才需要。
+- `data/day_scripts/` 下的輔助腳本（例如由家族清單產生融合文件的 `build_v2h.py`）：位於不進版控的 `data/` 內，目前不在儲存庫。重建最終提交檔不需要這些腳本（最終的融合文件已在 `results/`）；要組出新的網路組成時才需要。
 
 ## 7. 測試
 
@@ -120,6 +153,8 @@ python -I ../AI_CUP_2026-2/scripts/predict_pid_v2.py \
 cd AI_CUP_2026-1
 python -I -m pytest -q ../AI_CUP_2026-2/tests
 ```
+
+規則檢查（中文註解、重複函式、封存區、文件規則、ruff、pytest；見 [AGENTS.md](AGENTS.md) 第 7 節）：`bash tools/run_checks.sh --all`。
 
 ## 8. 外部資源
 

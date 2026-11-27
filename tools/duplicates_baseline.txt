@@ -1,0 +1,9 @@
+# 既有的重複函式（最終流程維持比賽時的程式，不重構）；新增的重複會讓檢查失敗
+scripts/pid_seq_train_w.py:alloc | scripts/pid_seq_train_w2.py:alloc | scripts/pid_seq_train_w3.py:alloc
+scripts/pid_seq_train_w.py:embed | scripts/pid_seq_train_w2.py:embed | scripts/pid_seq_train_w3.py:embed
+scripts/pid_seq_train_w.py:evaluate | scripts/pid_seq_train_w2.py:evaluate | scripts/pid_seq_train_w3.py:evaluate
+scripts/pid_seq_train_w.py:load_games | scripts/pid_seq_train_w2.py:load_games | scripts/pid_seq_train_w3.py:load_games
+scripts/pid_seq_train_w.py:main_fork | scripts/pid_seq_train_w2.py:main_fork | scripts/pid_seq_train_w3.py:main_fork
+scripts/pid_seq_train_w.py:rank_draw | scripts/pid_seq_train_w2.py:rank_draw | scripts/pid_seq_train_w3.py:rank_draw
+scripts/pid_seq_train_w.py:sup_in | scripts/pid_seq_train_w2.py:sup_in | scripts/pid_seq_train_w3.py:sup_in
+scripts/pid_win.py:forward | scripts/pid_win2.py:forward | scripts/pid_win3.py:forward

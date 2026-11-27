@@ -1,8 +1,10 @@
 # 玩家辨識（競賽一）結案數字總表
 
-整理日期：2026-11-21。所有數字的出處是 `METHOD_NOTES.md`（括號裡的 § 是章節）。分數都是官方的計分方式：正解排第 r 名得 e^-(r-1)，前五名以外 0 分。
+整理日期：2026-11-21。所有數字的出處是 `docs/records/METHOD_NOTES.md`（括號裡的 § 是章節）。分數都是官方的計分方式：正解排第 r 名得 e^-(r-1)，前五名以外 0 分。
 
 ## 1. 定案
+
+最終提交檔、md5 與 Public／Private 成績以 [README 的成績表](../README.md)（來源 `docs/final_status.json`）為準；本表保留 2026-11-21 結案時的紀錄。
 
 | 項目 | 內容 |
 |---|---|
@@ -135,7 +137,7 @@ Private 總分 =（原題池 400 題 + 新增池 400 題）÷ 2。
   bash scripts/nano4/pid_exp_f0_files_w.sh 'NAME=o33F+o32F+o35F+o34F+o45F*4+o44F*4+o46F*4+o47F*4+o57F*4+o58F*4+o53F*4+o56F*4+o49F*4+o60F*4+o61F*4+o62F*4+o63F*4' w11c pid_v2fin11_c_a2k_p3.csv
   ```
 
-- 搬回個人電腦用的整理（硬連結，不佔空間）：`/work/u2507115/AICUP2_MOVE_20261121`（檢查點、題庫的逐手輸入）與 `/home/u2507115/AICUP2_MOVE_20261121`（提交檔、結果、題庫向量），各附 sha256 清單；沒有放進去的項目列在 `LEFT_OUT.txt`。
+- 不在儲存庫內的檔案（136 個檢查點、題庫的逐手輸入、提交檔、題庫向量）保存於本隊的本地備份；清單與 sha256 見 `results/final/move_20261121/`（`MANIFEST_home.sha256`、`MANIFEST_work.sha256`），沒有放進去的項目列在同一資料夾的 `LEFT_OUT_work.txt`。叢集上的兩個整理資料夾（`/work/u2507115/AICUP2_MOVE_20261121`、`/home/u2507115/AICUP2_MOVE_20261121`）已於 2026-11-22 刪除。
 
 ## 11. 分數風險（11-22，§2.256）
 

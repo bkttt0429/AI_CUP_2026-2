@@ -1,0 +1,11 @@
+{
+  "note": "成績與最終提交檔的唯一來源。README 的成績表由 python -I tools/doc_rules.py --update 依本檔產生，不要手動改表格。",
+  "rows": [
+    {"label": "競賽", "value": "AI CUP 2026 秋季賽「圍棋棋力與風格預測競賽—競賽一：從圍棋棋譜集辨識玩家」"},
+    {"label": "隊伍", "value": "TEAM_11820"},
+    {"label": "最終提交檔", "value": "`pid_v2fin11_c_a2k_p3.csv`（不在儲存庫內）"},
+    {"label": "最終提交檔 md5", "value": "`c7397211f0ca0af7225ad1d04566f969`"},
+    {"label": "Public 成績", "value": "0.9313515"},
+    {"label": "Private 成績", "value": "0.9341401（第 1 名）"}
+  ]
+}
