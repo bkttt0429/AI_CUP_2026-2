@@ -126,15 +126,16 @@ Private 總分 =（原題池 400 題 + 新增池 400 題）÷ 2。
 - 題庫候選人的棋只用於校正與微調（各題庫分開、沒有混用），沒有用到任何題目的答案；Public 原題池的答案只用來評估。
 - 定案檔是兩段式：原題池 800 列由 11-10 的 embt 流程產生（每局嵌入 `emb_final.pt`＋統計成分＋分區塊配對），11-12 起每個檔都原樣沿用；新增池 800 列才是 136 個序列網路的輸出（§2.257）。
 - 新增池打分用的是每個網路對題庫候選人微調 50 步後的版本；微調後的權重沒有存，只存了輸出向量。驗證材料＝136 個基礎檢查點＋微調程式與設定＋保存的向量；重跑微調不是逐位元可重現（§2.244、§2.257）。
-- 生成式 AI 的使用說明：文字尚未定稿，待使用者決定。
+- 生成式 AI 的使用說明：見 [README](../README.md) 第 8 節。
 
 ## 10. 重現與資料位置
 
 - 程式與筆記：GitHub `bkttt0429/AI_CUP_2026-2` 的 `main`（原分支 `nano4/pid-b3-assign`，2026-11-27 整併）。
-- 由已有的向量重建定案檔（需要 `data/seq_ft`、`results/pid_fusion_w11c.json`、`results/submission_old_embt_assign/`）：
+- 由已有的向量重建定案檔：用 [README](../README.md) 第 5 節的 `predict_pid_v2.py` 指令。它直接讀儲存庫內的融合文件 `results/pid_fusion_v2fin11_c.json`（下面這個網路組成，配上 `results/pid_fusion_w11c.json` 的融合權重）；需要的向量（`data/seq_ft`）與原題池 800 列（`results/submission_old_embt_assign/`）在本地備份。
+- 比賽時在叢集上建檔的指令如下（從 AI_CUP_2026-1 的根目錄執行），留作紀錄。它的第一步以 `data/day_scripts/build_v2h.py` 由家族清單產生融合文件，這支腳本不在儲存庫，也不在本地備份的清單內，所以現在要改用上面的指令：
 
   ```
-  bash scripts/nano4/pid_exp_f0_files_w.sh 'NAME=o33F+o32F+o35F+o34F+o45F*4+o44F*4+o46F*4+o47F*4+o57F*4+o58F*4+o53F*4+o56F*4+o49F*4+o60F*4+o61F*4+o62F*4+o63F*4' w11c pid_v2fin11_c_a2k_p3.csv
+  bash ../AI_CUP_2026-2/scripts/nano4/pid_exp_f0_files_w.sh 'NAME=o33F+o32F+o35F+o34F+o45F*4+o44F*4+o46F*4+o47F*4+o57F*4+o58F*4+o53F*4+o56F*4+o49F*4+o60F*4+o61F*4+o62F*4+o63F*4' w11c pid_v2fin11_c_a2k_p3.csv
   ```
 
 - 不在儲存庫內的檔案（136 個檢查點、題庫的逐手輸入、提交檔、題庫向量）保存於本隊的本地備份；清單與 sha256 見 `results/final/move_20261121/`（`MANIFEST_home.sha256`、`MANIFEST_work.sha256`），沒有放進去的項目列在同一資料夾的 `LEFT_OUT_work.txt`。叢集上的兩個整理資料夾（`/work/u2507115/AICUP2_MOVE_20261121`、`/home/u2507115/AICUP2_MOVE_20261121`）已於 2026-11-22 刪除。

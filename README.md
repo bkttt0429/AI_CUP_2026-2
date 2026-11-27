@@ -56,14 +56,22 @@ AI_CUP_2026-2/
 ```bash
 git clone https://github.com/bkttt0429/AI_CUP_2026-1
 git clone https://github.com/bkttt0429/AI_CUP_2026-2
-cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.12、PyTorch 2.14.1（CUDA 12.6）、requirements.txt 與 requirements-dev.txt
+cd AI_CUP_2026-1
+# setup.sh 的兩個前置檔案：KataGo 的 Python 套件（d91ea855，只取 python/）與 Human SL 網路（KataGo v1.15.0 釋出）
+git clone --filter=blob:none --no-checkout https://github.com/lightvector/KataGo.git repo/KataGo
+git -C repo/KataGo sparse-checkout set python
+git -C repo/KataGo checkout d91ea855110dae533f0aada947b2b7d78cc8a4e1
+mkdir -p models/katago && curl -fL -o models/katago/b18c384nbt-humanv0.ckpt https://github.com/lightvector/KataGo/releases/download/v1.15.0/b18c384nbt-humanv0.ckpt
+echo "84b23476b56a73a775a0f09bad7d1c5c435690adb343aa851e80bf198c0c8b27  models/katago/b18c384nbt-humanv0.ckpt" | sha256sum -c
+bash scripts/nano4/setup.sh          # 建立 .venv：Python 3.12、PyTorch 2.14.1（CUDA 12.6）、requirements.txt 與 requirements-dev.txt
+.venv/bin/python -I repo/KataGo/python/migrate_defaultdict_to_dict.py -checkpoint models/katago/b18c384nbt-humanv0.ckpt   # 比賽時也做了這一步（說明見 AI_CUP_2026-1 的 README 第 2 節）
 ```
 
 - 作業系統：Red Hat Enterprise Linux 9.6；排程：Slurm；GPU：NVIDIA H200（每節點 8 張）。
 - 預訓練模型：KataGo Human SL 網路 `b18c384nbt-humanv0`，置於 `AI_CUP_2026-1/models/katago/`（取自 KataGo 官方釋出，不隨儲存庫散布）。
 - 所有程式由 AI_CUP_2026-1 的根目錄執行，使用其 `.venv`；`aicup_pid.paths` 會自動尋找並排的 AI_CUP_2026-1，亦可用環境變數 `AICUP1_ROOT`、`AICUP_TRAIN_DIR` 指定。
 - 計算一律以 `sbatch scripts/nano4/run.sbatch <指令>` 送至計算節點；8 張 GPU 的分片以 `bash scripts/nano4/shards.sh 8 <指令>` 執行。
-- `scripts/nano4/` 內的啟動腳本含本隊叢集上的絕對路徑（`/home/u2507115/BK_AICUP_2026-2`、`/work/u2507115/...`），於其他環境執行時須改為自己的路徑。
+- `scripts/nano4/` 內的啟動腳本，以及 `scripts/` 部分程式的預設路徑（例如 `pid_v2_seq_finetune.py`、`pid_seq_train_w*.py` 的 `--out`、`ext_fox_ingest.py` 的 `--aicup1`），含本隊叢集上的絕對路徑（`/home/u2507115/BK_AICUP_2026-2`、`~/BK_AICUP_2026-1`、`/work/u2507115/...`；`BK_AICUP_2026-1`、`BK_AICUP_2026-2` 是兩個儲存庫當時的資料夾名稱），於其他環境執行時須改為自己的路徑。
 
 ## 3. 資料
 
@@ -118,7 +126,7 @@ cd AI_CUP_2026-1 && bash scripts/nano4/setup.sh      # 建立 .venv：Python 3.1
 | 步驟 | 程式 | 說明 |
 | --- | --- | --- |
 | 官方候選人切出的擬題池 | `scripts/pid_v2_offsim_par.py`（擬合最終融合權重 w11c 時使用；逐題的單機版 `pid_v2_offsim.py` 已封存於 `experiments/`） | 每位候選人保留 3 局為題目、7 局為參考；輸出各題數的分數與成對比較的信賴區間 |
-| 訓練玩家的模擬題池 | `experiments/pid_v2_sim*.py`（封存） | 與新增池同形的模擬題池；早期用於擬合融合權重 |
+| 訓練玩家的模擬題池 | `experiments/pid_v2_sim*.py`（封存；`scripts/pid_v2_seq_finetune.py --mode sim` 匯入的 `pid_v2_sim2.py` 與精確視窗 `pid_winx.py` 也在 `experiments/`，要用時兩個儲存庫都切到 tag `pre-restructure-20261127`） | 與新增池同形的模擬題池；早期用於擬合融合權重 |
 | 檔案差異 | `scripts/pid_diff_files.py` | 比較兩個提交檔逐題的差異 |
 
 ## 5. 重現
@@ -138,14 +146,14 @@ python -I ../AI_CUP_2026-2/scripts/predict_pid_v2.py \
 
 需要的檔案：融合文件所列的向量檔（`data/seq_ft/official_*_t50.npz`）、每局嵌入 `results/embed/emb2_final.pt`、每局摘要特徵 `data/trunk/tests_1111_v2`、原題池的 800 列。融合文件內的路徑為本隊叢集上的絕對路徑，須先改為實際位置。
 
-**由基礎檢查點重建**：以 `scripts/pid_v2_seq_finetune.py` 對兩個新增題庫各微調 50 步後輸出向量，再執行上述指令。微調後的權重未保存；重新微調時向量的單一分量會有 0.002 至 0.007 的差異，重建結果可能有少數名次不同（METHOD_NOTES 2.244、2.257）。
+**由基礎檢查點重建**：以 `scripts/pid_v2_seq_finetune.py` 對兩個新增題庫各微調 50 步後輸出向量，再執行上述指令。微調後的權重未保存；重新微調時向量的單一分量會有 0.002 至 0.007 的差異，重建結果可能有少數名次不同（METHOD_NOTES 2.244、2.257）。微調程式的 `SUP_SETS` 常數寫死了叢集上監督特徵集的位置（`/work/u2507115/pid_v2/...`，沒有對應的命令列參數，要直接修改）；其中 `probep/`（統計與投影）與 `supj/` 的訓練局特徵沒有放進本地備份，需依程式重新產生（見 `results/final/move_20261121/LEFT_OUT_work.txt`）。
 
 **從頭訓練**：依第 4.1、4.2、4.3 節的順序執行；各家族的配方、種子與步數記於對應的啟動腳本。
 
 ## 6. 不在儲存庫內的檔案
 
 - 136 個基礎檢查點、各題庫的輸出向量、每局嵌入的權重與提交檔：檔案過大或屬競賽資料，保存於本隊的本地備份，可依主辦單位要求提供；清單與 sha256 見 `results/final/move_20261121/MANIFEST_home.sha256`、`MANIFEST_work.sha256`。
-- `data/day_scripts/` 下的輔助腳本（例如由家族清單產生融合文件的 `build_v2h.py`）：位於不進版控的 `data/` 內，目前不在儲存庫。重建最終提交檔不需要這些腳本（最終的融合文件已在 `results/`）；要組出新的網路組成時才需要。
+- `data/day_scripts/` 下的輔助腳本（例如由家族清單產生融合文件的 `build_v2h.py`）：不在儲存庫，也不在本地備份的清單內（見 [docs/PID_FINAL_NUMBERS.md](docs/PID_FINAL_NUMBERS.md) 第 10 節）。重建最終提交檔不需要這些腳本（最終的融合文件已在 `results/`）；要組出新的網路組成時才需要。
 
 ## 7. 測試
 
@@ -154,7 +162,7 @@ cd AI_CUP_2026-1
 python -I -m pytest -q ../AI_CUP_2026-2/tests
 ```
 
-規則檢查（中文註解、重複函式、封存區、文件規則、ruff、pytest；見 [AGENTS.md](AGENTS.md) 第 7 節）：`bash tools/run_checks.sh --all`。
+規則檢查（中文註解、重複函式、封存區、文件規則、ruff、pytest；見 [AGENTS.md](AGENTS.md) 第 7 節）：在本儲存庫根目錄執行 `bash tools/run_checks.sh --all`，或從 AI_CUP_2026-1 的根目錄執行 `bash ../AI_CUP_2026-2/tools/run_checks.sh --all`。兩個儲存庫各有一份 `tools/run_checks.sh`，各自只檢查所在的儲存庫。
 
 ## 8. 外部資源
 

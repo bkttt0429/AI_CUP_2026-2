@@ -55,7 +55,7 @@ def wrap(net, cfg):  # 為網路加上視窗編碼器（也是各變體的分派
         import sys  # 調整搜尋路徑
         from pathlib import Path  # 取本檔所在的資料夾
         sys.path.insert(0, str(Path(__file__).resolve().parent))  # 讓同資料夾的模組可以匯入
-        import pid_winx  # 精確視窗的實作
+        import pid_winx  # 精確視窗的實作（已封存於 experiments/，要用時兩個儲存庫都切到 tag pre-restructure-20261127）
         return pid_winx.wrap(net, cfg)  # 交給它包裝
     if cfg.get("age") or cfg.get("prev"):  # METHOD_NOTES 2.192：視窗變體（棋子年齡、第二個視窗）在 pid_win2.py
         import sys  # 調整搜尋路徑

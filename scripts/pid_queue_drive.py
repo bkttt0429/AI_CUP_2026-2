@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""METHOD_NOTES 2.193: a task-queue driver for a multi-node job (scripts/nano4/run_multi.sbatch).
+"""METHOD_NOTES 2.193: a task-queue driver for a multi-node job (../AI_CUP_2026-2/scripts/nano4/run_multi.sbatch, submitted from the AI_CUP_2026-1 root).
 
 pid_s4_drive.py has its task graph built in; steps added later had to be started with srun from the login node and would
 have died with the session. This driver runs on the first node of the job and takes its tasks from a directory, so tasks
@@ -19,7 +19,7 @@ A task waits until all of its "needs" are done; when one of them failed or was c
 "prio" starts first. The driver ends - and with it the job - when nothing has been running or waiting for --idle-exit
 minutes (0 = never), so an empty queue does not hold the nodes.
 
-  sbatch -p 128gpus -N <nodes> --time=<limit> scripts/nano4/run_multi.sbatch python3 -u <this file> --dir <dir>
+  sbatch -p 128gpus -N <nodes> --time=<limit> ../AI_CUP_2026-2/scripts/nano4/run_multi.sbatch python3 -u ../AI_CUP_2026-2/scripts/pid_queue_drive.py --dir <dir>
   --dry-run: no srun; every command is run as given on this machine (for a check with trivial commands).
 """
 import argparse  # 命令列參數

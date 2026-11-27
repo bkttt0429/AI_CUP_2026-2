@@ -50,7 +50,7 @@
 
 ## 7. 強制檢查
 
-所有 AI 工具和成員，在回報完成或 commit 前都要執行：
+所有 AI 工具和成員，在回報完成或 commit 前都要在本儲存庫的根目錄執行（從 AI_CUP_2026-1 的根目錄則執行 `bash ../AI_CUP_2026-2/tools/run_checks.sh --all`）：
 
 ```bash
 bash tools/run_checks.sh --all
@@ -62,7 +62,7 @@ bash tools/run_checks.sh --all
 | --- | --- |
 | Claude Code、Codex、Cursor 等工具，或手動修改 | 沒有 hook，要自己執行上面的指令 |
 | 國網 nano4 | 登入節點不可執行測試，要從 AI_CUP_2026-1 的根目錄送到計算節點：`sbatch -J checks -t 00:30:00 scripts/nano4/run.sbatch bash ../AI_CUP_2026-2/tools/run_checks.sh --all` |
-| 所有 push 和 pull request | GitHub Actions（`.github/workflows/checks.yml`） |
+| 所有 push 和 pull request | GitHub Actions（`.github/workflows/code-rules.yml`） |
 
 `ruff` 對 `tools/` 套用基本規則（E4、E7、E9、F，含未使用的 import 與變數）；`src/`、`scripts/`、`tests/` 只檢查語法錯誤與未定義的名稱，因為最終流程的程式維持比賽時的寫法。工具擋不住「寫法不同但功能相同」的重複，這部分仍要靠第 5 節的規則。
 
@@ -70,7 +70,7 @@ bash tools/run_checks.sh --all
 
 不同工具和成員會同時工作，這些規則是為了避免文件互相蓋掉或變亂。
 
-1. **每個事實只有一個來源。** 最終提交檔、md5 與成績一律來自 `docs/final_status.json`；`README.md` 的成績表由 `python -I tools/doc_rules.py --update` 依它產生，不要手動改，其他地方要提這些數字時改用連結。最終網路組成與融合權重以 `results/pid_fusion_v2fin11_c.json` 為準。
+1. **每個事實只有一個來源。** 最終提交檔、md5 與成績一律來自 `docs/final_status.json`；`README.md` 的成績表由 `python -I tools/doc_rules.py --update`（在本儲存庫的根目錄執行）依它產生，不要手動改，其他地方要提這些數字時改用連結。最終網路組成與融合權重以 `results/pid_fusion_v2fin11_c.json` 為準。
 2. **計畫和進度寫在工作檔。** 每項工作一個 `docs/work/YYYY-MM-DD-主題.md`，開頭要有下面三個欄位。只改自己負責的工作檔，不要改別人的。
 
    ```markdown
@@ -87,8 +87,8 @@ bash tools/run_checks.sh --all
 
 ## 9. 專案慣例
 
-- 環境：本儲存庫沒有自己的環境。在並排的 AI_CUP_2026-1 執行 `bash scripts/nano4/setup.sh` 建立 `.venv`，所有程式從 AI_CUP_2026-1 的根目錄、以該 `.venv` 執行；`aicup_pid.paths` 會自動找到並排的 AI_CUP_2026-1，也可用環境變數 `AICUP1_ROOT` 指定。沒有 `.venv` 時，`tools/run_checks.sh` 以結束碼 2 回報未完成。
-- 計算：國網 nano4 的所有計算（含 pytest、分析與語法樹比對）一律以 AI_CUP_2026-1 的 `sbatch scripts/nano4/run.sbatch <指令>` 送到計算節點；登入節點只做編輯、送件與查詢。`scripts/nano4/` 的啟動腳本含本隊叢集上的絕對路徑，在其他環境執行時要改成自己的路徑。
+- 環境：本儲存庫沒有自己的環境。在並排的 AI_CUP_2026-1 依 README 第 2 節取得兩個前置檔案、執行 `bash scripts/nano4/setup.sh` 建立 `.venv`，並轉換 Human SL 檢查點；所有程式從 AI_CUP_2026-1 的根目錄、以該 `.venv` 執行；`aicup_pid.paths` 會自動找到並排的 AI_CUP_2026-1，也可用環境變數 `AICUP1_ROOT` 指定。沒有 `.venv` 時，`tools/run_checks.sh` 以結束碼 2 回報未完成。
+- 計算：國網 nano4 的所有計算（含 pytest、分析與語法樹比對）一律以 AI_CUP_2026-1 的 `sbatch scripts/nano4/run.sbatch <指令>` 送到計算節點；登入節點只做編輯、送件與查詢。`scripts/nano4/` 的啟動腳本與 `scripts/` 部分程式的預設路徑含本隊叢集上的絕對路徑（見 README 第 2 節），在其他環境執行時要改成自己的路徑。
 - 目錄：
   - `src/aicup_pid/`：玩家辨識套件（統計成分、融合、配對、序列網路的資料處理）。
   - `scripts/`：最終流程的程式（特徵抽取、外部資料、序列網路訓練、題池微調、預測與合併）。

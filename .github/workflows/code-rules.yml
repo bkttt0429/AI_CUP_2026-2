@@ -1,13 +1,15 @@
 # 每次 push 與 pull request 都執行全部規則檢查（AGENTS.md 第 7、8 節）
-name: checks
+name: code-rules
 
 on:
   push:
   pull_request:
 
 jobs:
-  checks:
+  check:
     runs-on: ubuntu-24.04
+    # 卡住時 45 分鐘後以失敗結束（預設要等 6 小時）
+    timeout-minutes: 45
     steps:
       # 本儲存庫（競賽一）；完整歷史供 push 範圍檢查使用
       - uses: actions/checkout@v4
@@ -29,13 +31,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "torch==2.14.1" --index-url https://download.pytorch.org/whl/cpu
           python -m pip install -r requirements.txt -r requirements-dev.txt
-      # KataGo 的 Python 套件（2026-10-15 取用的 master，即 d91ea855），以 .pth 加入環境
-      - name: KataGo Python 套件
+      # KataGo 的 Python 套件（2026-10-15 取用的 master，即 d91ea855）與並排的競賽一套件 aicup_pid，以 .pth 加入環境
+      - name: KataGo Python 套件與 aicup_pid
         run: |
           git clone --filter=blob:none --no-checkout https://github.com/lightvector/KataGo.git KataGo
           git -C KataGo sparse-checkout set python
           git -C KataGo checkout d91ea855110dae533f0aada947b2b7d78cc8a4e1
           echo "$PWD/KataGo/python" > "$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/katago.pth"
+          echo "$PWD/AI_CUP_2026-2/src" > "$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')/aicup_pid.pth"
       - name: 規則檢查、ruff 與 pytest
         working-directory: AI_CUP_2026-2
         env:

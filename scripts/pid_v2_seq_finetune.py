@@ -37,7 +37,7 @@ def _exact(net, A):  # 精確視窗網路需要的顏色打包
     if A is None or not getattr(net, "win_exact", False):  # 沒有資料，或不是精確視窗網路
         return A  # 原樣回傳
     if "MOVX" not in A:  # 這組陣列還沒打包過
-        import pid_winx  # 精確視窗的模組
+        import pid_winx  # 精確視窗的模組（已封存於 experiments/，要用精確視窗時兩個儲存庫都切到 tag pre-restructure-20261127）
         A["MOVX"] = pid_winx.pack_mov(A["POS"], A["MOV"], A["LEN"])  # 把每手那顆子被提走的手數一併編進顏色值
     return dict(A, MOV=A["MOVX"])  # 以打包後的顏色取代 MOV
 
@@ -221,7 +221,7 @@ def main(argv=None):  # 命令列進入點
         import aicup_pid  # 訓練資料的位置
         from aicup_pid import v2  # 每局列與訓練棋局清單
         from aicup_pid.paths import FOLDS_CSV  # 玩家分折表
-        from pid_v2_sim2 import build  # 與 pid_v2_sim2.py 相同的題池建法
+        from pid_v2_sim2 import build  # 與 pid_v2_sim2.py 相同的題池建法（該檔已封存於 experiments/，--mode sim 要兩個儲存庫都切到 tag pre-restructure-20261127）
         games = v2.training_games(aicup_pid.TRAIN_DIR).merge(pd.read_csv(FOLDS_CSV, dtype={"player_id": str})[["player_id", "fold"]], on="player_id")  # 訓練棋局標上所屬的折
         rows = v2.load_side_rows(AICUP1)  # 每局列（決定哪些局可用）
         z = np.load(R2 / "data" / "seq" / f"fold{a.fold}.npz")  # 該折已有序列向量的棋局

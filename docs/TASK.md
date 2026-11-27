@@ -5,10 +5,10 @@
 ## 資料
 
 - 來源：日本棋院幽玄網站 19 路棋譜（2021–2023，已授權）。匿名化：移除姓名、段位、勝負、註解，只留棋盤設定與落子；`player_id` 不可回推身分。資料集只供本競賽使用，**不得用於識別真實使用者**。
-- **訓練集（兩項任務共用）**：100 萬局，10 級各 10 萬局、執黑執白各半；`train_D.csv … train_6D.csv`；欄位 `player_id, game_id, rank, color, sgf_content`。和 AI_CUP_2026-1 的 REPORT.md §3 同一份（8,007 位玩家，每人只屬一級，`game_id` 只在檔內唯一，SGF 只有 `SZ[19]` 與落子）。
+- **訓練集（兩項任務共用）**：100 萬局，10 級各 10 萬局、執黑執白各半；`train_D.csv … train_6D.csv`；欄位 `player_id, game_id, rank, color, sgf_content`。和 AI_CUP_2026-1 的 docs/records/REPORT.md §3 同一份（8,007 位玩家，每人只屬一級，`game_id` 只在檔內唯一，SGF 只有 `SZ[19]` 與落子）。
 - **候選庫**：`player_identification_candidates_public.csv`、`…_private.csv`，各 400 位候選玩家 × 100 局，共 40,000 局，**只收執黑棋譜**；欄位 `game_id, player_id, sgf_content, color`（恆為 B）。正解必在對應候選庫中。Public 與 Private 候選庫不得混用。
 - **測試題**：`player_identification_test_public.csv`、`…_private.csv`，各 400 題；每題 5／10／15／20 局（各 100 題），只用執黑棋譜；欄位 `question_id, num_games, sgf_1…sgf_20（不足補空）, color_1…color_20（恆為 B）`。`question_id` 前綴 `pub_`／`priv_`。
-- 候選庫與測試題的 `player_id` 是否與訓練集一致、候選玩家是否在訓練集內：**未知**，11/04 拿到檔案後第一件事就是比對（見 ARCHITECTURE §4）。
+- 候選庫與測試題的 `player_id` 是否與訓練集一致、候選玩家是否在訓練集內：**未知**，11/04 拿到檔案後第一件事就是比對（見 docs/records/ARCHITECTURE.md §4）。
 
 ## 評分
 

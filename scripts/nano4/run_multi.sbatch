@@ -12,7 +12,7 @@
 #   srun --nodes=1 --ntasks=1 --cpus-per-task=96 --gres=gpu:8 --nodelist=<節點> ...
 # （METHOD_NOTES 2.188：自 2026-11-17 起小分割區不再收新工作——所有使用者合計 64 張 GPU 的群組上限——
 # 而較大的分割區每個工作要不只一個節點）。從 AI_CUP_2026-1 的工作目錄送出：
-#   sbatch -p 128gpus -N 13 <本檔> python3 -u <驅動程式> ...
+#   sbatch -p 128gpus -N 13 ../AI_CUP_2026-2/scripts/nano4/run_multi.sbatch python3 -u ../AI_CUP_2026-2/scripts/pid_queue_drive.py --dir <任務目錄>
 set -euo pipefail  # 任何錯誤即中止，未定義變數即報錯，管線中任一步失敗即算失敗
 ROOT="${SLURM_SUBMIT_DIR:-$PWD}"  # 送出工作時的目錄（AI_CUP_2026-1 的工作目錄）
 source "$ROOT/scripts/nano4/common.sh"  # 進入專案、啟用 .venv 並印出工作標頭
